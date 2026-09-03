@@ -1,0 +1,16 @@
+import api from './api';
+
+export const adminService = {
+  getStats: () => api.get('/api/admin/stats'),
+  getUsers: (params) => api.get('/api/admin/users', { params }),
+  updateUserStatus: (id, isActive) =>
+    api.put(`/api/admin/users/${id}/status`, { is_active: isActive }),
+  getOrders: (params) => api.get('/api/admin/orders', { params }),
+  getGrievances: (params) => api.get('/api/admin/grievances', { params }),
+  resolveGrievance: (id, note) =>
+    api.put(`/api/admin/grievances/${id}`, {
+      status: 'resolved',
+      resolution_note: note,
+    }),
+  getAnalytics: () => api.get('/api/admin/reports/orders'),
+};

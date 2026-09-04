@@ -10,6 +10,11 @@ const initialGreeting = {
   timestamp: Date.now(),
 };
 
+const greetings = {
+  en: 'Hi! I am Kisan Mitra. How can I help you?',
+  hi: 'नमस्ते! मैं किसान मित्र हूँ। मैं आपकी कैसे मदद कर सकता हूँ?',
+};
+
 const fallbackEn =
   'Sorry, I am having trouble right now. Please try again in a moment.';
 const fallbackHi =
@@ -66,6 +71,19 @@ const ChatbotWidget = () => {
   const user = useAuthStore((s) => s.user);
   const userRole = user?.role || 'consumer';
 
+  const localizedQuickReplies = language === 'hi'
+    ? ['ऑर्डर ट्रैक करें', 'ताज़ी उपज खोजें', 'सहायता लें']
+    : userRole === 'farmer'
+      ? ['Track my order', 'List a crop', 'Talk to support']
+      : ['Track my order', 'Find fresh produce', 'Talk to support'];
+
+  useEffect(() => {
+    setMessages((current) => {
+      if (current.length !== 1 || current[0].role !== 'assistant') return current;
+      return [{ ...current[0], content: greetings[language] }];
+    });
+  }, [language]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping, isOpen]);
@@ -94,7 +112,7 @@ const ChatbotWidget = () => {
       const data = response?.data?.data || response?.data;
       const botReply =
         (data && (data.response || data.message)) ||
-        fallbackEn;
+        (language === 'hi' ? fallbackHi : fallbackEn);
 
       setMessages((prev) => [
         ...prev,
@@ -121,11 +139,6 @@ const ChatbotWidget = () => {
       setIsTyping(false);
     }
   };
-
-  const quickReplies =
-    userRole === 'farmer'
-      ? ['Track my order', 'List a crop', 'Talk to support']
-      : ['Track my order', 'Find fresh produce', 'Talk to support'];
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -208,7 +221,7 @@ const ChatbotWidget = () => {
                       </p>
                       {idx === messages.length - 1 && !isTyping && (
                         <div className="flex flex-wrap gap-2 mt-2">
-                          {quickReplies.map((qr) => (
+                          {localizedQuickReplies.map((qr) => (
                             <button
                               key={qr}
                               onClick={() => sendMessage(qr)}
@@ -248,7 +261,7 @@ const ChatbotWidget = () => {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type a message..."
+                placeholder={language === 'hi' ? 'संदेश लिखें...' : 'Type a message...'}
                 className="flex-1 rounded-full border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
               />
               <button

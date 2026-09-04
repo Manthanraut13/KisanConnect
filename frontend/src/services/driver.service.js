@@ -5,7 +5,5 @@ export const driverService = {
   updateDeliveryStatus: (id, status) =>
     api.put(`/api/logistics/delivery/${id}/start`, { status }),
   confirmDelivery: (id, formData) =>
-    api.put(`/api/logistics/delivery/${id}/confirm`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+    api.put(`/api/logistics/delivery/${id}/confirm`, formData),
 };

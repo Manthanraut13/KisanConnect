@@ -34,6 +34,7 @@ const statusStyles = {
 const DriverDashboard = () => {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
 
@@ -46,9 +47,11 @@ const DriverDashboard = () => {
     try {
       const res = await driverService.getAssignments();
       const data = res?.data?.data || res?.data;
-      setAssignments(Array.isArray(data) && data.length ? data : mockAssignments);
+      setAssignments(Array.isArray(data) ? data : []);
+      setError('');
     } catch (err) {
       setAssignments(mockAssignments);
+      setError('Could not load live assignments. Showing demo data.');
     } finally {
       setLoading(false);
     }
@@ -63,9 +66,9 @@ const DriverDashboard = () => {
       toast.success('Delivery started');
     } catch (err) {
       setAssignments((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, status: 'in_transit' } : a))
+        prev.map((a) => (a.id === id ? { ...a, status: 'assigned' } : a))
       );
-      toast.success('Delivery started (offline)');
+      toast.error('Could not start delivery. Please try again.');
     }
   };
 
@@ -98,6 +101,7 @@ const DriverDashboard = () => {
           <RefreshCw className="h-5 w-5 text-kisan-700" />
         </button>
       </header>
+      {error && <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{error}</p>}
 
       {assignments.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -114,7 +118,7 @@ const DriverDashboard = () => {
                 <div className="flex items-center justify-between mb-3">
                   <span className="font-mono text-sm">#{a.order?.id}</span>
                   <span className={`px-2 py-1 rounded text-xs ${statusStyles[a.status] || statusStyles.assigned}`}>
-                    {a.status.replace('_', ' ')}
+                    {(a.status || 'assigned').replace('_', ' ')}
                   </span>
                 </div>
 

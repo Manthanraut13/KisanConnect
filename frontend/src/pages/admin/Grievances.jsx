@@ -40,14 +40,17 @@ const Grievances = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
   const [severityFilter, setSeverityFilter] = useState('all');
+  const [error, setError] = useState('');
+  const userName = (grievance) => grievance.user?.full_name || grievance.user?.name || grievance.user_name || 'Unknown user';
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await adminService.getGrievances();
-        if (res?.data?.data) setGrievances(res.data.data);
+        const data = res?.data?.data || res?.data;
+        if (Array.isArray(data)) setGrievances(data);
       } catch (err) {
-        // API not ready - keep mock
+        setError('Could not load live grievances. Showing demo data.');
       } finally {
         setLoading(false);
       }
@@ -109,6 +112,7 @@ const Grievances = () => {
           <option value="low">Low</option>
         </select>
       </div>
+      {error && <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{error}</p>}
 
       {loading ? (
         <p className="text-gray-500">Loading...</p>
@@ -128,7 +132,9 @@ const Grievances = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((g) => {
+              {filtered.length === 0 ? (
+                <tr><td colSpan="8" className="py-8 text-center text-gray-500">No grievances found.</td></tr>
+              ) : filtered.map((g) => {
                 const overdue =
                   g.status !== 'resolved' &&
                   g.status !== 'closed' &&
@@ -137,9 +143,9 @@ const Grievances = () => {
                 return (
                   <tr key={g.id} className="border-b border-gray-50">
                     <td className="py-3 px-4 font-mono text-xs">
-                      #{g.id.replace('grievance-uuid-', '').slice(0, 8) || g.id.slice(0, 8)}
+                      #{String(g.id || 'unknown').replace('grievance-uuid-', '').slice(0, 8)}
                     </td>
-                    <td className="py-3 px-4">{g.user?.full_name}</td>
+                    <td className="py-3 px-4">{userName(g)}</td>
                     <td className="py-3 px-4">
                       <span className={`px-2 py-1 rounded text-xs ${categoryStyles[g.category] || categoryStyles.other}`}>
                         {g.category}
@@ -153,16 +159,16 @@ const Grievances = () => {
                     <td className="py-3 px-4 max-w-xs">
                       <span
                         className="truncate block"
-                        title={g.description}
+                        title={g.description || ''}
                       >
-                        {g.description.length > 45
-                          ? `${g.description.slice(0, 45)}...`
-                          : g.description}
+                        {(g.description || 'No description').length > 45
+                          ? `${(g.description || '').slice(0, 45)}...`
+                          : g.description || 'No description'}
                       </span>
                     </td>
                     <td className="py-3 px-4">
                       <span className={`px-2 py-1 rounded text-xs ${statusStyles[g.status]}`}>
-                        {g.status.replace('_', ' ')}
+                        {(g.status || 'open').replace('_', ' ')}
                       </span>
                     </td>
                     <td className={`py-3 px-4 ${overdue ? 'text-red-600' : ''}`}>
@@ -195,13 +201,13 @@ const Grievances = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="font-semibold text-lg mb-4">
-              Resolve Grievance #{selected.id.replace('grievance-uuid-', '').slice(0, 8)}
+              Resolve Grievance #{String(selected.id || 'unknown').replace('grievance-uuid-', '').slice(0, 8)}
             </h3>
             <div className="text-sm text-gray-700 space-y-1 mb-4">
-              <p><span className="text-gray-500">User:</span> {selected.user?.full_name}</p>
+              <p><span className="text-gray-500">User:</span> {userName(selected)}</p>
               <p><span className="text-gray-500">Category:</span> {selected.category}</p>
               <p><span className="text-gray-500">Severity:</span> {selected.severity}</p>
-              <p><span className="text-gray-500">Description:</span> {selected.description}</p>
+              <p><span className="text-gray-500">Description:</span> {selected.description || 'No description'}</p>
             </div>
             <textarea
               value={resolveNote}

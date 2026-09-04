@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
+import { toast } from 'sonner';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { adminService } from '../../services/admin.service';
 
@@ -28,14 +29,17 @@ const AdminOrders = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
+  const [error, setError] = useState('');
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await adminService.getOrders();
-        if (res?.data?.data) setOrders(res.data.data);
+        const data = res?.data?.data || res?.data;
+        if (Array.isArray(data)) setOrders(data);
       } catch (err) {
-        // API not ready - keep mock
+        setError('Could not load live orders. Showing demo data.');
       } finally {
         setLoading(false);
       }
@@ -48,13 +52,33 @@ const AdminOrders = () => {
       orders.filter(
         (o) =>
           !search ||
-          o.id.toLowerCase().includes(search.toLowerCase()) ||
-          o.buyer?.full_name?.toLowerCase().includes(search.toLowerCase())
+          String(o.id || '').toLowerCase().includes(search.toLowerCase()) ||
+          (o.buyer?.full_name || o.buyer?.name || o.buyer_name || 'Unknown buyer').toLowerCase().includes(search.toLowerCase())
       ),
     [orders, search]
   );
 
-  const shortId = (id) => id.replace('order-uuid-', '').slice(0, 8) || id.slice(0, 8);
+  const shortId = (id) => String(id || 'unknown').replace('order-uuid-', '').slice(0, 8);
+  const buyerName = (order) => order.buyer?.full_name || order.buyer?.name || order.buyer_name || 'Unknown buyer';
+  const orderDate = (order) => (order.createdAt || order.created_at || '').slice(0, 10) || '—';
+  const orderStatus = (order) => order.status || 'pending';
+
+  const handleStatusChange = async (order, status) => {
+    if (status === orderStatus(order)) return;
+    setUpdatingId(order.id);
+    try {
+      await adminService.updateOrderStatus(order.id, status);
+      setOrders((current) => current.map((item) => (
+        item.id === order.id ? { ...item, status } : item
+      )));
+      setSelected((current) => current?.id === order.id ? { ...current, status } : current);
+      toast.success('Order status updated');
+    } catch (err) {
+      toast.error('Could not update order status');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   return (
     <AdminLayout pageTitle="Orders">
@@ -67,6 +91,7 @@ const AdminOrders = () => {
           className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
         />
       </div>
+      {error && <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{error}</p>}
 
       {loading ? (
         <p className="text-gray-500">Loading...</p>
@@ -85,22 +110,32 @@ const AdminOrders = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((o) => (
+              {filtered.length === 0 ? (
+                <tr><td colSpan="7" className="py-8 text-center text-gray-500">No orders found.</td></tr>
+              ) : filtered.map((o) => (
                 <tr key={o.id} className="border-b border-gray-50">
                   <td className="py-3 px-4 font-mono text-xs">#{shortId(o.id)}</td>
-                  <td className="py-3 px-4">{o.buyer?.full_name}</td>
+                  <td className="py-3 px-4">{buyerName(o)}</td>
                   <td className="py-3 px-4">₹{(o.total_amount || 0).toLocaleString('en-IN')}</td>
                   <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded text-xs ${statusStyles[o.status] || statusStyles.pending}`}>
-                      {o.status.replace('_', ' ')}
-                    </span>
+                    <select
+                      value={orderStatus(o)}
+                      onChange={(event) => handleStatusChange(o, event.target.value)}
+                      disabled={updatingId === o.id}
+                      aria-label={`Update status for order ${o.id}`}
+                      className={`px-2 py-1 rounded text-xs border-0 ${statusStyles[orderStatus(o)] || statusStyles.pending}`}
+                    >
+                      {Object.keys(statusStyles).map((status) => (
+                        <option key={status} value={status}>{status.replace('_', ' ')}</option>
+                      ))}
+                    </select>
                   </td>
                   <td className="py-3 px-4">
                     <span className={`px-2 py-1 rounded text-xs ${paymentStyles[o.payment_status] || paymentStyles.pending}`}>
                       {o.payment_status}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-gray-500">{o.createdAt?.slice(0, 10)}</td>
+                  <td className="py-3 px-4 text-gray-500">{orderDate(o)}</td>
                   <td className="py-3 px-4">
                     <button
                       onClick={() => setSelected(o)}
@@ -124,7 +159,7 @@ const AdminOrders = () => {
           >
             <h3 className="font-semibold text-lg mb-2">Order #{shortId(selected.id)}</h3>
             <p className="text-sm text-gray-700 mb-4">
-              Buyer: {selected.buyer?.full_name} · ₹{(selected.total_amount || 0).toLocaleString('en-IN')}
+              Buyer: {buyerName(selected)} · ₹{(selected.total_amount || 0).toLocaleString('en-IN')}
             </p>
             <div className="border border-gray-100 rounded-lg overflow-hidden">
               <table className="w-full text-sm">

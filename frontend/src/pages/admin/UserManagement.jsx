@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Search, User as UserIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { adminService } from '../../services/admin.service';
+import { adminService, getPaginatedData } from '../../services/admin.service';
 
 const mockUsers = [
   { id: '1', full_name: 'Ramesh Patil', mobile: '9876543210', role: 'farmer', district: 'Nashik', is_active: true, email: 'ramesh@example.com' },
@@ -19,7 +19,14 @@ const roleStyles = {
   admin: 'bg-red-100 text-red-800',
 };
 
-const roleOptions = ['All', 'Farmer', 'Consumer', 'Bulk Buyer', 'Logistics', 'Admin'];
+const roleOptions = [
+  { label: 'All', value: 'all' },
+  { label: 'Farmer', value: 'farmer' },
+  { label: 'Consumer', value: 'consumer' },
+  { label: 'Bulk Buyer', value: 'bulk_buyer' },
+  { label: 'Logistics', value: 'logistics' },
+  { label: 'Admin', value: 'admin' },
+];
 
 const UserManagement = () => {
   const [users, setUsers] = useState(mockUsers);
@@ -29,6 +36,7 @@ const UserManagement = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [error, setError] = useState('');
 
   const normRole = (r) =>
     ({ bulk_buyer: 'Bulk Buyer', farmer: 'Farmer', consumer: 'Consumer', logistics: 'Logistics', admin: 'Admin' }[r] || r);
@@ -43,9 +51,13 @@ const UserManagement = () => {
           role: roleFilter !== 'all' ? roleFilter.toLowerCase().replace(' ', '_') : undefined,
         };
         const res = await adminService.getUsers(params);
-        if (res?.data?.data) setUsers(res.data.data);
+        const { items, total } = getPaginatedData(res);
+        if (items.length || total) {
+          setUsers(items);
+          setTotalPages(Math.max(1, Math.ceil(total / params.limit)));
+        }
       } catch (err) {
-        // API not ready - keep mock data
+        setError('Could not load live users. Showing demo data.');
       } finally {
         setLoading(false);
       }
@@ -71,7 +83,14 @@ const UserManagement = () => {
     }
   };
 
-  const filteredUsers = searchQuery || roleFilter !== 'all' ? users : users;
+  const filteredUsers = users.filter((user) => {
+    const query = searchQuery.trim().toLowerCase();
+    const matchesSearch = !query || [user.full_name, user.mobile, user.email]
+      .filter(Boolean)
+      .some((value) => value.toLowerCase().includes(query));
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   return (
     <AdminLayout pageTitle="User Management">
@@ -97,12 +116,13 @@ const UserManagement = () => {
           className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
         >
           {roleOptions.map((r) => (
-            <option key={r} value={r}>
-              {r}
+            <option key={r.value} value={r.value}>
+              {r.label}
             </option>
           ))}
         </select>
       </div>
+      {error && <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{error}</p>}
 
       {loading ? (
         <p className="text-gray-500">Loading...</p>
@@ -120,7 +140,9 @@ const UserManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map((u) => (
+              {filteredUsers.length === 0 ? (
+                <tr><td colSpan="6" className="py-8 text-center text-gray-500">No users found.</td></tr>
+              ) : filteredUsers.map((u) => (
                 <tr key={u.id} className="border-b border-gray-50">
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">

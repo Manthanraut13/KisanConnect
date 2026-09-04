@@ -43,12 +43,10 @@ const ActiveDelivery = () => {
     try {
       const res = await driverService.getAssignments();
       const data = res?.data?.data || res?.data;
-      const list = Array.isArray(data) && data.length ? data : mockAssignments;
-      const found = list.find((a) => a.id === id) || list[0];
-      setAssignment(found);
+      const list = Array.isArray(data) ? data : [];
+      setAssignment(list.find((a) => a.id === id) || null);
     } catch (err) {
-      const found = mockAssignments.find((a) => a.id === id) || mockAssignments[0];
-      setAssignment(found);
+      setAssignment(mockAssignments.find((a) => a.id === id) || null);
     } finally {
       setLoading(false);
     }
@@ -67,8 +65,7 @@ const ActiveDelivery = () => {
       toast.success('Delivery confirmed!');
       navigate('/driver');
     } catch (err) {
-      toast.success('Delivery confirmed!');
-      navigate('/driver');
+      toast.error('Could not confirm delivery. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -94,7 +91,7 @@ const ActiveDelivery = () => {
   }
 
   const dl = assignment.delivery_location || {};
-  const hasCoords = dl.latitude && dl.longitude;
+  const hasCoords = Number.isFinite(Number(dl.latitude)) && Number.isFinite(Number(dl.longitude));
   const items = assignment.order?.items || [];
 
   return (

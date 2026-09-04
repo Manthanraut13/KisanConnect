@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Truck, Phone, MapPin, Package, CheckCircle } from 'lucide-react';
+import { Truck, Phone, MapPin, Package, CheckCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { driverService } from '../../services/driver.service';
 import { useAuthStore } from '../../stores/authStore';
@@ -84,9 +84,19 @@ const DriverDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 max-w-lg mx-auto p-4">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold">My Deliveries Today</h1>
-        <p className="text-gray-600">{user?.full_name || 'Driver'}</p>
+      <header className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">My Deliveries Today</h1>
+          <p className="text-gray-600">{user?.full_name || 'Driver'}</p>
+        </div>
+        <button
+          onClick={load}
+          className="p-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50"
+          aria-label="Refresh"
+          title="Refresh"
+        >
+          <RefreshCw className="h-5 w-5 text-kisan-700" />
+        </button>
       </header>
 
       {assignments.length === 0 ? (

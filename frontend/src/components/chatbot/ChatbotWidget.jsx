@@ -15,6 +15,46 @@ const fallbackEn =
 const fallbackHi =
   'माफ कीजिए, अभी कोई तकनीकी समस्या है। थोड़ी देर बाद प्रयास करें।';
 
+// Offline / demo keyword replies so the widget stays interactive
+// even when Siddhesh's AI service is not reachable yet.
+const demoEn = {
+  order: 'You can track your order from the "My Orders" section in your account. Need the order ID?',
+  track: 'You can track your order from the "My Orders" section in your account. Need the order ID?',
+  list: 'To list a crop, go to your Farmer Dashboard → "List a crop", add photos, price, and available quantity.',
+  produce: 'Fresh produce is available in the Marketplace. Search for tomatoes, onions, potatoes, and more near you.',
+  support: 'For support, please raise a grievance from your profile page and our team will resolve it within 24 hours.',
+  price: 'Today’s prices trend well for tomatoes and onions. Check the Farmer Dashboard for AI-suggested prices.',
+  hello: 'Hi! I am Kisan Mitra. Ask me about orders, listings, prices, or support.',
+};
+
+const demoHi = {
+  order:
+    'आप अपने खाते में "My Orders" सेक्शन से अपना ऑर्डर ट्रैक कर सकते हैं। क्या आपके पास ऑर्डर आईडी है?',
+  track:
+    'आप अपने खाते में "My Orders" सेक्शन से अपना ऑर्डर ट्रैक कर सकते हैं। क्या आपके पास ऑर्डर आईडी है?',
+  list:
+    'फसल लिस्ट करने के लिए Farmer Dashboard → "List a crop" पर जाएं, फोटो, कीमत और उपलब्ध मात्रा जोड़ें।',
+  produce:
+    'ताज़ी उपज Marketplace में उपलब्ध है। टमाटर, प्याज़, आलू और अन्य चीज़ें अपने पास खोजें।',
+  support:
+    'सहायता के लिए अपने प्रोफ़ाइल से शिकायत दर्ज करें, हमारी टीम 24 घंटे में समाधान करेगी।',
+  price:
+    'आज टमाटर और प्याज़ की कीमतें अच्छी चल रही हैं। AI सुझाई गई कीमतों के लिए Farmer Dashboard देखें।',
+  hello:
+    'नमस्ते! मैं किसान मित्र हूँ। ऑर्डर, लिस्टिंग, कीमत या सहायता के बारे में पूछें।',
+};
+
+const getDemoReply = (text, lang) => {
+  const t = text.toLowerCase();
+  const dict = lang === 'hi' ? demoHi : demoEn;
+  if (/(order|track|deliver)/.test(t)) return dict.order;
+  if (/(list|sell|add)/.test(t)) return dict.list;
+  if (/(produce|buy|vegetable|tomato|onion|potato)/.test(t)) return dict.produce;
+  if (/(support|help|grievance|complaint)/.test(t)) return dict.support;
+  if (/(price|cost|rate|forecast)/.test(t)) return dict.price;
+  return dict.hello;
+};
+
 const ChatbotWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [language, setLanguage] = useState('en');
@@ -66,7 +106,8 @@ const ChatbotWidget = () => {
         },
       ]);
     } catch (err) {
-      const fallback = language === 'hi' ? fallbackHi : fallbackEn;
+      // AI service offline - return a helpful demo reply
+      const fallback = getDemoReply(text, language);
       setMessages((prev) => [
         ...prev,
         {

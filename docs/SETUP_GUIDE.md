@@ -18,9 +18,9 @@ Copy this file and check off as you complete each service:
 - [ ] 9. Groq API (AI Chatbot)
 - [ ] 10. Google Maps API (Optional for maps)
 - [ ] 11. OpenRouteService (Route Optimization)
-- [ ] 12. Webhook Secret (generate locally)
+- [ ] 12. Antigravity (Workflow Automation)
 
-**Estimated Time:** 40-50 minutes total
+**Estimated Time:** 45-60 minutes total
 
 ---
 
@@ -387,29 +387,21 @@ ORS_API_KEY=5b3ce3597851110001cf6248xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ---
 
-## 🔐 12. WEBHOOK SECRET — For External Integrations (2 minutes)
+## ⚡ 12. ANTIGRAVITY — Workflow Automation (5 minutes)
 
-This is a security token to verify webhook calls from external services (like n8n, Zapier, or custom scripts).
+### Step 1: Sign Up
+1. Go to Antigravity platform (you have access based on project context)
+2. Create a new project: `Kisan Connect`
 
-### Generate Secret
-Use the **same method from JWT Secrets section** (Step 1):
-
-**PowerShell:**
-```powershell
--join ((48..57) + (65..90) + (97..122) | Get-Random -Count 32 | ForEach-Object {[char]$_})
-```
-
-**Node.js:**
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
+### Step 2: Generate Webhook Secret
+1. Go to project settings
+2. Under **"Webhooks"** or **"Security"**, generate a webhook secret
+3. This will be used to verify webhook calls from Antigravity to your backend
 
 **What to copy:**
 ```env
-WEBHOOK_SECRET=<your generated 32+ char random string>
+ANTIGRAVITY_WEBHOOK_SECRET=<generate a random 32-char string using method from JWT section>
 ```
-
-This will be used in the `x-webhook-secret` header when external services call your webhook endpoints (like `/api/webhooks/refresh-forecasts`).
 
 ---
 
@@ -487,8 +479,8 @@ ENAM_API_KEY=
 # ===== OPEN ROUTING =====
 ORS_API_KEY=5b3ce3597851110001cf6248xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-# ===== WEBHOOK SECURITY =====
-WEBHOOK_SECRET=<your generated 32+ char string>
+# ===== ANTIGRAVITY =====
+ANTIGRAVITY_WEBHOOK_SECRET=<your generated 32+ char string>
 
 # ===== APP SECRETS =====
 OTP_EXPIRY_MINUTES=10

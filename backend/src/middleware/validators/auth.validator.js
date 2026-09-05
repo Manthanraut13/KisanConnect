@@ -10,7 +10,18 @@ const registerSchema = Joi.object({
     'string.pattern.base': 'Password must have uppercase, lowercase, and a number',
   }),
   role: Joi.string().valid('farmer', 'consumer', 'bulk_buyer', 'logistics').required(),
-});
+  district: Joi.string().max(100).optional(),
+  state: Joi.string().max(100).optional(),
+  village: Joi.string().max(100).optional(),
+  taluka: Joi.string().max(100).optional(),
+  land_area_acres: Joi.number().optional(),
+  business_name: Joi.string().max(200).optional(),
+  gstin: Joi.string().max(15).optional(),
+  business_type: Joi.string().optional(),
+  vehicle_type: Joi.string().optional(),
+  vehicle_number: Joi.string().optional(),
+  license_number: Joi.string().optional(),
+}).unknown(true);
 
 const loginSchema = Joi.object({
   mobile: Joi.string().pattern(/^[6-9]\d{9}$/).optional(),

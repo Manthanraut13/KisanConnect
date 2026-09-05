@@ -4,8 +4,9 @@ const axios = require('axios');
 const logger = require('../utils/logger');
 
 const verifySecret = (req) => {
-  const secret = req.headers['x-antigravity-secret'];
-  return secret && secret === process.env.ANTIGRAVITY_WEBHOOK_SECRET;
+  const secret = req.headers['x-webhook-secret'] || req.headers['x-antigravity-secret'];
+  const expected = process.env.WEBHOOK_SECRET || process.env.ANTIGRAVITY_WEBHOOK_SECRET;
+  return secret && expected && secret === expected;
 };
 
 const refreshForecasts = async (req, res, next) => {
@@ -104,12 +105,12 @@ const newGrievance = async (req, res, next) => {
     const groqResponse = await axios.post(
       'https://api.groq.com/openai/v1/chat/completions',
       {
-        model: 'llama-3.1-8b-instant',
+        model: 'openai/gpt-oss-20b',
         messages: [
           {
             role: 'system',
             content:
-              'Classify the grievance. Return JSON only: {"category": "payment|logistics|quality|fraud|other", "severity": "low|medium|high|critical", "suggested_resolution": "string"}',
+              'Classify the grievance. Return valid JSON only: {"category": "payment|logistics|quality|fraud|other", "severity": "low|medium|high|critical", "suggested_resolution": "string"}',
           },
           { role: 'user', content: description },
         ],

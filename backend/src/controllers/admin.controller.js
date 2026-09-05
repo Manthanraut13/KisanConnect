@@ -7,7 +7,10 @@ const AppError = require('../utils/AppError');
 const getStats = async (req, res, next) => {
   try {
     const cached = await redis.get('admin:stats');
-    if (cached) return res.json({ success: true, message: 'Stats fetched (cached)', data: JSON.parse(cached) });
+    if (cached) {
+      const data = typeof cached === 'string' ? JSON.parse(cached) : cached;
+      return res.json({ success: true, message: 'Stats fetched (cached)', data });
+    }
 
     const [totalUsers, totalFarmers, totalOrders, totalListings, gmvResult] = await Promise.all([
       User.count({ where: { is_active: true } }),

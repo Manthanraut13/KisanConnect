@@ -30,7 +30,7 @@ const verifyOTP = async (mobile, otp) => {
     throw new AppError('OTP expired. Please request a new one.', 400);
   }
 
-  const parsed = JSON.parse(data);
+  const parsed = typeof data === 'string' ? JSON.parse(data) : data;
   if (parsed.otp !== otp) {
     parsed.attempts += 1;
     if (parsed.attempts >= MAX_ATTEMPTS) {

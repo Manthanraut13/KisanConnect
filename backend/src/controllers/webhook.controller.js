@@ -4,8 +4,8 @@ const axios = require('axios');
 const logger = require('../utils/logger');
 
 const verifySecret = (req) => {
-  const secret = req.headers['x-antigravity-secret'];
-  return secret && secret === process.env.ANTIGRAVITY_WEBHOOK_SECRET;
+  const secret = req.headers['x-webhook-secret'];
+  return secret && secret === process.env.WEBHOOK_SECRET;
 };
 
 const refreshForecasts = async (req, res, next) => {

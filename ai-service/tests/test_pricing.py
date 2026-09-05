@@ -28,7 +28,30 @@ def test_price_recommender_organic_premium():
 
     assert organic["recommended_price"] > regular["recommended_price"]
 
-def test_pricing_route(client):
+def test_price_recommender_bulk_discount():
+    recommender = PriceRecommender()
+    small = recommender.recommend(crop_name="Tomato", district="Nashik", quantity_kg=100, quality_grade="B", is_organic=False)
+    bulk = recommender.recommend(crop_name="Tomato", district="Nashik", quantity_kg=1000, quality_grade="B", is_organic=False)
+
+    assert bulk["recommended_price"] < small["recommended_price"]
+
+def test_price_recommender_grade_variations():
+    recommender = PriceRecommender()
+    grade_a = recommender.recommend(crop_name="Tomato", district="Nashik", quantity_kg=100, quality_grade="A")
+    grade_b = recommender.recommend(crop_name="Tomato", district="Nashik", quantity_kg=100, quality_grade="B")
+    grade_c = recommender.recommend(crop_name="Tomato", district="Nashik", quantity_kg=100, quality_grade="C")
+
+    assert grade_a["recommended_price"] > grade_b["recommended_price"] > grade_c["recommended_price"]
+
+def test_price_recommender_unknown_crop_fallback():
+    recommender = PriceRecommender()
+    result = recommender.recommend(crop_name="UnknownCrop", district="Nashik", quantity_kg=100)
+
+    assert result is not None
+    assert result["recommended_price"] == 15.0
+    assert "fallback" in result["rationale"].lower()
+
+def test_pricing_route_valid(client):
     res = client.post('/ai/price/recommend', json={
         "crop_name": "Tomato",
         "district": "Nashik",
@@ -39,3 +62,17 @@ def test_pricing_route(client):
     data = res.get_json()
     assert data["success"] is True
     assert "recommended_price" in data["data"]
+
+def test_pricing_route_missing_quantity(client):
+    res = client.post('/ai/price/recommend', json={
+        "crop_name": "Tomato",
+        "district": "Nashik"
+    })
+    assert res.status_code == 400
+
+def test_pricing_route_missing_crop(client):
+    res = client.post('/ai/price/recommend', json={
+        "district": "Nashik",
+        "quantity_kg": 100
+    })
+    assert res.status_code == 400

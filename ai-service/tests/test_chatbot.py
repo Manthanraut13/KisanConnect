@@ -46,7 +46,23 @@ def test_chatbot_marathi_query(client):
     assert data["success"] is True
     assert "response" in data["data"]
 
-def test_chatbot_voice_endpoint(client):
+def test_chatbot_user_roles(client):
+    for role in ["consumer", "logistics", "default"]:
+        res = client.post('/ai/chatbot/query', json={
+            "message": "Hello",
+            "language": "en",
+            "user_role": role
+        })
+        assert res.status_code == 200
+        assert res.get_json()["success"] is True
+
+def test_chatbot_missing_message(client):
+    res = client.post('/ai/chatbot/query', json={
+        "language": "en"
+    })
+    assert res.status_code == 400
+
+def test_chatbot_voice_endpoint_valid(client):
     res = client.post('/ai/chatbot/voice', json={
         "transcript": "टोमॅटोचा भाव सांगा",
         "language": "mr",
@@ -57,3 +73,9 @@ def test_chatbot_voice_endpoint(client):
     assert data["success"] is True
     assert "response_text" in data["data"]
     assert "tts_provider" in data["data"]
+
+def test_chatbot_voice_endpoint_missing_transcript(client):
+    res = client.post('/ai/chatbot/voice', json={
+        "language": "mr"
+    })
+    assert res.status_code == 400

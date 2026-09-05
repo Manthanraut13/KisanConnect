@@ -37,9 +37,8 @@ def batch_forecast():
     Triggered by Antigravity daily cron job to refresh forecasts across all 20 crops and 10 districts.
     """
     secret = request.headers.get('x-antigravity-secret')
-    expected_secret = os.getenv('ANTIGRAVITY_SECRET')
-    
-    if expected_secret and secret != expected_secret:
+    expected_secret = os.getenv('ANTIGRAVITY_SECRET', 'demo_antigravity_secret_2026')
+    if not secret or secret != expected_secret:
         return error_response(message="Unauthorized: Invalid Antigravity secret header", status_code=401)
         
     from concurrent.futures import ThreadPoolExecutor

@@ -3,15 +3,46 @@
 
 ---
 
+## 0. PHASED IMPLEMENTATION STRATEGY & CHATBOT PURPOSE
+
+### 0.1 Purpose & Target Use Cases
+The **Kisan Mitra** AI Chatbot is built to solve key accessibility barriers in agricultural digital platforms:
+- **Low-Literacy Farmer Assistance**: Farmers can speak directly via microphone in **Marathi, Hindi, or English** to inquire about crop listing procedures, market prices, and payment statuses without typing.
+- **Real-Time Price & Demand Advisories**: Answers queries regarding 7-day crop demand forecasts, peak selling times, and recommended market prices.
+- **Consumer Order Guidance**: Provides instant answers regarding order tracking, payment verification, delivery slots, and refund policies.
+- **Logistics Driver Hands-Free Support**: Provides hands-free audio guidance to drivers regarding delivery assignments and route stops.
+
+### 0.2 Implementation Phases
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PHASE 1: IMMEDIATE / CURRENT FOCUS (Real-Time Voice & Text Engine)       │
+│                                                                         │
+│  • Languages: English ('en'), Hindi ('hi'), Marathi ('mr')              │
+│  • Text Input  ──► Text Output                                          │
+│  • Voice Input (Microphone Stream) ──► Real-Time Voice Audio Output     │
+│  • Pipeline: Microphone Audio ──► Sarvam STT ──► Groq LLM ──► Sarvam TTS│
+└─────────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼ (After Full Platform Build)
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PHASE 2: POST-PLATFORM COMPLETION (Complex Vector RAG Indexing)         │
+│                                                                         │
+│  • Vector Indexing over live PostgreSQL DB, Data Tables & User FAQs     │
+│  • Hybrid Search (ChromaDB + BM25) for Deep Contextual Retrieval         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## 1. OVERVIEW & OBJECTIVES
 
 This document specifies the upgrade of **Kisan Mitra** from a basic prompt-based assistant to a **Production-Grade Advanced Multilingual Voice-Enabled RAG (Retrieval-Augmented Generation) Bot**.
 
 ### Key Additions:
 1. **Languages**: English (`en`), Hindi (`hi`), **Marathi (`mr`)**.
-2. **Voice Interface**: Speech-to-Text (STT) and Text-to-Speech (TTS) pipeline.
-3. **Advanced RAG Engine**: Hybrid retrieval (Dense Vector + Sparse BM25 keyword search) over **ALL Kisan Connect Knowledge Base** (DPR.md, Agmarknet Crop Prices, Crop Calendars, Platform Rules, FAQs, HSN/GST Codes, Logistics Policies).
-4. **Sarvam AI Integration**: High-accuracy Indian language STT/TTS (`saaras` / `bulbul`) and translation models tailored for Marathi and Hindi dialects.
+2. **Real-time Voice Interface**: Direct microphone Speech-to-Text (STT) and Text-to-Speech (TTS) audio output pipeline.
+3. **Sarvam AI Integration**: High-accuracy Indian language STT/TTS (`saaras` / `bulbul`) and translation models tailored for Marathi and Hindi dialects.
+4. **Phase 2 Hybrid RAG Engine**: Retrieval over user-facing rules (commission rates, refund policies, KYC requirements, and listing guidelines).
 
 ---
 
@@ -22,53 +53,41 @@ This document specifies the upgrade of **Kisan Mitra** from a basic prompt-based
 | **Sarvam AI** | STT, TTS, Translation | `SARVAM_API_KEY` | High-accuracy Marathi & Hindi Speech-to-Text (`saaras:v1`) and Text-to-Speech (`bulbul:v1`) | Free trial credits (sarvam.ai) |
 | **Groq AI** | Primary LLM Generator | `GROQ_API_KEY` | Rapid LLaMA 3.1 8B generation (sub-second response) | 14,400 req/day Free |
 | **Google AI** | Secondary LLM Generator | `GEMINI_API_KEY` | Gemini 1.5 Flash fallback for long context | 1M tokens/mo Free |
-| **HuggingFace / Local** | Vector Embeddings | N/A (Local / `sentence-transformers`) | `all-MiniLM-L6-v2` or `bge-small-en-v1.5` for vector indexing | 100% Free (Runs locally) |
-| **ChromaDB / FAISS** | Vector Database | N/A (In-memory / Persistent Disk) | Embeddings storage & similarity search | 100% Free |
+| **HuggingFace / Local** | Vector Embeddings (Phase 2) | N/A (Local / `sentence-transformers`) | `all-MiniLM-L6-v2` or `bge-small-en-v1.5` for vector indexing | 100% Free (Runs locally) |
+| **ChromaDB / FAISS** | Vector Database (Phase 2) | N/A (In-memory / Persistent Disk) | Embeddings storage & similarity search | 100% Free |
 
 ---
 
-## 3. ADVANCED HYBRID RAG ARCHITECTURE
+## 3. REAL-TIME VOICE & TEXT ARCHITECTURE (PHASE 1)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           INPUT PIPELINE                                │
-│   Audio Input (.wav / .mp3) ──► Sarvam STT (saaras) ──► Text Query      │
-│   Text Input ("मराठी / हिंदी / English") ──────────────► Text Query      │
+│   Audio (Microphone Stream / Blob) ──► Sarvam STT (saaras) ──► Text Query│
+│   Text Input ("मराठी / हिंदी / English") ─────────────► Text Query      │
 └────────────────────────────────────┬────────────────────────────────────┘
                                      │
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                       ADVANCED RAG RETRIEVAL                            │
-│                                                                         │
-│   Query ──► Hybrid Search (Ensemble Retriever)                          │
-│             ├─► Dense Vector Search (ChromaDB + SentenceTransformers)   │
-│             └─► Sparse Keyword Search (BM25 Algorithm)                  │
-│                                    │                                    │
-│                                    ▼                                    │
-│                     Re-Ranking & Context Compression                    │
-│             Top K Relevant Chunks (DPR, Agmarknet CSV, FAQs)           │
+│                       LLM PROCESSING                                    │
+│   Prompt = System Role + Query ──► Groq LLaMA 3.1 8B                    │
 └────────────────────────────────────┬────────────────────────────────────┘
                                      │
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                       LLM GENERATION & TTS                              │
-│   Prompt = System Role + Context + Query ──► Groq LLaMA 3.1 8B          │
-│                                                    │                    │
-│                                                    ▼                    │
-│   Text Response ────────────────────────► Sarvam TTS (bulbul)           │
-│                                                    │                    │
-│                                                    ▼                    │
-│                                           Audio Base64 Output           │
+│                       OUTPUT SELECTION                                  │
+│   Text Input  ──► Returns Text Response                                 │
+│   Voice Input ──► Sarvam TTS (bulbul) ──► Returns Spoken Audio (Base64) │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 4. KNOWLEDGE BASE DATA SOURCES FOR RAG
+## 4. KNOWLEDGE BASE DATA SOURCES FOR RAG (PHASE 2)
 
-The RAG index will ingest and chunk data from 5 core sources across the repository:
+The RAG index will ingest and chunk data from core sources across the repository after platform completion:
 
-1. **Detailed Project Report (`docs/DPR.md`)**: Filtered user-facing rules (commission rates, refund policies, KYC requirements, listing guidelines, and complaint resolution SLAs). Technical architectural code details are excluded from user RAG chunking.
+1. **Detailed Project Report (`docs/DPR.md`)**: Filtered user-facing rules (commission rates, refund policies, KYC requirements, listing guidelines, and complaint resolution SLAs). Technical architectural code details are excluded.
 2. **Agmarknet Price Dataset (`ai-service/app/data/agmarknet_sample.csv`)**: Historical minimum, maximum, and average prices for 20 crops across 10 districts.
 3. **District Coordinates (`ai-service/app/data/district_coords.json`)**: District coordinates, state mappings, and market hubs.
 4. **Crop Seasonal Calendar**: Recommended planting, harvesting, and peak pricing windows per crop.
@@ -78,7 +97,7 @@ The RAG index will ingest and chunk data from 5 core sources across the reposito
 
 ## 5. API ENDPOINTS DESIGN
 
-### Endpoint 1: Text Query RAG
+### Endpoint 1: Text Query (Text In -> Text Out)
 - **Route**: `POST /ai/chatbot/query`
 - **Request Body**:
 ```json
@@ -93,20 +112,19 @@ The RAG index will ingest and chunk data from 5 core sources across the reposito
 ```json
 {
   "success": true,
-  "message": "Query processed via Hybrid RAG",
+  "message": "Text query processed successfully",
   "data": {
-    "response": "नाशिकमध्ये टोमॅटोचा सरासरी दर ₹18.50 प्रति किलो आहे. पुढील आठवड्यात दर वाढण्याची शक्यता आहे.",
+    "response": "नाशिकमध्ये टोमॅटोचा सरासरी दर ₹18.50 प्रति किलो आहे.",
     "language": "mr",
-    "sources": ["agmarknet_sample.csv", "DPR.md Section 13.1"],
     "is_fallback": false
   }
 }
 ```
 
-### Endpoint 2: Voice Audio Query (STT -> RAG -> TTS)
+### Endpoint 2: Real-time Voice Audio Query (Voice In -> Voice Audio Out)
 - **Route**: `POST /ai/chatbot/voice`
 - **Request Body**: (Multipart form-data)
-  - `audio`: Base64 audio string or file blob (`.wav` / `.mp3`)
+  - `audio`: Base64 audio string or microphone audio blob (`.wav` / `.mp3`)
   - `language`: `mr` | `hi` | `en`
   - `user_role`: `farmer` | `consumer` | `logistics`
 - **Response**:
@@ -122,11 +140,6 @@ The RAG index will ingest and chunk data from 5 core sources across the reposito
 }
 ```
 
-### Endpoint 3: RAG Ingestion / Re-index Trigger
-- **Route**: `POST /ai/chatbot/rag/ingest`
-- **Headers**: `x-internal-secret: <secret>`
-- **Description**: Parses all files in `docs/` and `app/data/`, creates embeddings, and builds ChromaDB vector index.
-
 ---
 
 ## 6. MARATHI, HINDI & ENGLISH SYSTEM PROMPTS
@@ -136,28 +149,22 @@ The RAG index will ingest and chunk data from 5 core sources across the reposito
 तुमचे नाव 'किसान मित्र' (Kisan Mitra) आहे - किसान कनेक्ट (Kisan Connect) डिजिटल मार्केटप्लेसचे AI सहाय्यक.
 वापरकर्ता भूमिका: {user_role}
 
-खालील संदर्भ माहितीचा (Context) वापर करून अचूक आणि सोप्या मराठीत उत्तर द्या:
----
-{retrieved_context}
----
-
 नियम:
 1. उत्तर ३ वाक्यांपेक्षा मोठे नसावे.
 2. शेतकरी/ग्राहकांशी आदराने आणि सोप्या मराठीत बोला (उदा. "नमस्कार शेतकरी बंधू").
-3. संदर्भात उत्तर नसल्यास स्पष्ट सांगा की माहिती उपलब्ध नाही.
+3. थेट आणि स्पष्ट माहिती द्या.
 ```
 
 ---
 
 ## 7. IMPLEMENTATION ROADMAP
 
+- [x] Phase 1 Text Chatbot active with Groq API (LLaMA 3.1 8B).
 - [ ] Obtain **`SARVAM_API_KEY`** from [sarvam.ai](https://www.sarvam.ai).
-- [ ] Add `chromadb`, `rank_bm25`, `sentence-transformers`, `pydub` to `requirements.txt`.
-- [ ] Build `ai-service/app/services/rag_engine.py` (Hybrid BM25 + Vector Search).
-- [ ] Build `ai-service/app/services/sarvam_voice.py` (STT & TTS API wrappers).
-- [ ] Update `ai-service/app/routes/chatbot.py` to support Marathi, hybrid RAG context, and voice audio payloads.
-- [ ] Add unit tests for RAG retrieval and Marathi language processing.
+- [ ] Build `ai-service/app/services/sarvam_voice.py` (STT `saaras` & TTS `bulbul` integration).
+- [ ] Implement `POST /ai/chatbot/voice` endpoint for real-time audio interaction.
+- [ ] Post-Platform Completion: Deploy Phase 2 Hybrid RAG over live PostgreSQL DB tables.
 
 ---
 
-*Specification Version: 1.0 | Kisan Connect SIH 2026 | Siddhesh — AI/ML Engineer*
+*Specification Version: 2.0 | Kisan Connect SIH 2026 | Siddhesh — AI/ML Engineer*

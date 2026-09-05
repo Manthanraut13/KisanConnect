@@ -35,6 +35,8 @@ app.use('/api/listings', require('./routes/listing.routes'));
 app.use('/api/cart', require('./routes/cart.routes'));
 app.use('/api/orders', require('./routes/order.routes'));
 app.use('/api/payments', require('./routes/payment.routes'));
+app.use('/api/logistics', require('./routes/logistics.routes'));
+app.use('/api/internal', require('./routes/internal.routes'));
 app.use(errorHandler);
 
 module.exports = app;

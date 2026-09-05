@@ -33,3 +33,15 @@ def test_chatbot_hindi_query(client):
     data = res.get_json()
     assert data["success"] is True
     assert "response" in data["data"]
+
+def test_chatbot_marathi_query(client):
+    res = client.post('/ai/chatbot/query', json={
+        "message": "पिकाची नोंदणी कशी करावी?",
+        "language": "mr",
+        "user_role": "farmer",
+        "conversation_history": []
+    })
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["success"] is True
+    assert "response" in data["data"]

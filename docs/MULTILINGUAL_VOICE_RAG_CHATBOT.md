@@ -68,7 +68,7 @@ This document specifies the upgrade of **Kisan Mitra** from a basic prompt-based
 
 The RAG index will ingest and chunk data from 5 core sources across the repository:
 
-1. **Detailed Project Report (`docs/DPR.md`)**: Full platform workflows, commission structures, logistics rules, KYC rules.
+1. **Detailed Project Report (`docs/DPR.md`)**: Filtered user-facing rules (commission rates, refund policies, KYC requirements, listing guidelines, and complaint resolution SLAs). Technical architectural code details are excluded from user RAG chunking.
 2. **Agmarknet Price Dataset (`ai-service/app/data/agmarknet_sample.csv`)**: Historical minimum, maximum, and average prices for 20 crops across 10 districts.
 3. **District Coordinates (`ai-service/app/data/district_coords.json`)**: District coordinates, state mappings, and market hubs.
 4. **Crop Seasonal Calendar**: Recommended planting, harvesting, and peak pricing windows per crop.

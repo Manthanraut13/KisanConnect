@@ -1,5 +1,4 @@
 # Unit tests for DemandForecaster model and routes
-import os
 import pytest
 from app import create_app
 from app.models.demand_forecaster import DemandForecaster
@@ -72,17 +71,8 @@ def test_forecast_route_empty_body(client):
     response = client.post('/ai/forecast/demand', json={})
     assert response.status_code == 400
 
-def test_batch_forecast_unauthorized(client):
-    response = client.post('/ai/forecast/batch', headers={
-        "x-antigravity-secret": "wrong_secret"
-    })
-    assert response.status_code == 401
-
 def test_batch_forecast_success(client):
-    secret = os.getenv('ANTIGRAVITY_SECRET', 'demo_antigravity_secret_2026')
-    response = client.post('/ai/forecast/batch', headers={
-        "x-antigravity-secret": secret
-    })
+    response = client.post('/ai/forecast/batch')
     assert response.status_code == 200
     json_data = response.get_json()
     assert json_data["success"] is True

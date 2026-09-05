@@ -1,0 +1,12 @@
+{
+  "Nashik": { "lat": 20.0059, "lng": 73.7797, "state": "Maharashtra" },
+  "Pune": { "lat": 18.5204, "lng": 73.8567, "state": "Maharashtra" },
+  "Amritsar": { "lat": 31.6340, "lng": 74.8723, "state": "Punjab" },
+  "Ludhiana": { "lat": 30.9010, "lng": 75.8573, "state": "Punjab" },
+  "Coimbatore": { "lat": 11.0168, "lng": 76.9558, "state": "Tamil Nadu" },
+  "Mysuru": { "lat": 12.2958, "lng": 76.6394, "state": "Karnataka" },
+  "Guntur": { "lat": 16.3067, "lng": 80.4365, "state": "Andhra Pradesh" },
+  "Jaipur": { "lat": 26.9124, "lng": 75.7873, "state": "Rajasthan" },
+  "Indore": { "lat": 22.7196, "lng": 75.8577, "state": "Madhya Pradesh" },
+  "Varanasi": { "lat": 25.3176, "lng": 82.9739, "state": "Uttar Pradesh" }
+}

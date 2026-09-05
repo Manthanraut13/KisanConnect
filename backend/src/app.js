@@ -33,6 +33,7 @@ app.use('/api/grievances', require('./routes/grievance.routes'));
 app.use('/api/webhooks', require('./routes/webhook.routes'));
 app.use('/api/listings', require('./routes/listing.routes'));
 app.use('/api/cart', require('./routes/cart.routes'));
+app.use('/api/orders', require('./routes/order.routes'));
 app.use(errorHandler);
 
 module.exports = app;

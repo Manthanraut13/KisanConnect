@@ -139,15 +139,15 @@ def voice_chat():
         else:
             response_text = "नमस्कार! मी किसान मित्र आहे. मी तुम्हाला कशी मदत करू शकतो?"
 
-        # Attempt server-side Sarvam TTS if configured
-        audio_b64 = voice_engine.process_tts(response_text, language=language)
+        # Attempt server-side TTS (Sarvam AI -> gTTS fallback -> Web Speech API)
+        audio_b64, tts_provider = voice_engine.process_tts(response_text, language=language)
 
         return success_response(data={
             "transcript": message,
             "response_text": response_text,
             "audio_base64": audio_b64,
             "language": language,
-            "tts_provider": "sarvam" if audio_b64 else "web_speech_api"
+            "tts_provider": tts_provider
         }, message="Voice chat processed successfully")
 
     except Exception as e:

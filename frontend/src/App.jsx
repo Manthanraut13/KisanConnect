@@ -11,6 +11,7 @@ import ActiveDelivery from './pages/driver/ActiveDelivery';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import ChatbotWidget from './components/chatbot/ChatbotWidget';
 
+
 const App = () => {
   return (
     <>

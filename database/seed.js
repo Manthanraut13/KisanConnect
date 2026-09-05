@@ -1,5 +1,6 @@
-require('dotenv').config({ path: '../backend/.env' });
-const bcrypt = require('bcryptjs');
+const path = require('path');
+require(path.join(__dirname, '../backend/node_modules/dotenv')).config({ path: path.join(__dirname, '../backend/.env') });
+const bcrypt = require(path.join(__dirname, '../backend/node_modules/bcryptjs'));
 const { sequelize, User, Farmer, BulkBuyer, LogisticsPartner, Listing, Grievance } = require('../backend/src/models');
 const logger = require('../backend/src/utils/logger');
 

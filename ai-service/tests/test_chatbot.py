@@ -45,3 +45,15 @@ def test_chatbot_marathi_query(client):
     data = res.get_json()
     assert data["success"] is True
     assert "response" in data["data"]
+
+def test_chatbot_voice_endpoint(client):
+    res = client.post('/ai/chatbot/voice', json={
+        "transcript": "टोमॅटोचा भाव सांगा",
+        "language": "mr",
+        "user_role": "farmer"
+    })
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["success"] is True
+    assert "response_text" in data["data"]
+    assert "tts_provider" in data["data"]

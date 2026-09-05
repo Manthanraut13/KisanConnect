@@ -1,12 +1,14 @@
-# Multilingual AI Chatbot blueprint definitions using Groq API (LLaMA 3.1 8B)
+# Multilingual AI Chatbot blueprint definitions using Groq API (LLaMA 3.1 8B) & Voice Engine
 import os
 import logging
 from flask import Blueprint, request
 from groq import Groq
 from app.utils.response import success_response, error_response
+from app.utils.voice_engine import VoiceEngine
 
 chatbot_bp = Blueprint('chatbot', __name__)
 logger = logging.getLogger(__name__)
+voice_engine = VoiceEngine()
 
 # Lazy initialization of Groq client
 def get_groq_client():
@@ -68,7 +70,6 @@ def chat():
 
         client = get_groq_client()
         if not client:
-            # Automatic graceful fallback when API key is missing or unconfigured
             fallback_map = {
                 'mr': "मला सध्या तांत्रिक अडचण येत आहे. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.",
                 'hi': "मुझे अभी तकनीकी समस्या है। कृपया बाद में प्रयास करें。",
@@ -105,3 +106,50 @@ def chat():
         }
         fallback_reply = fallback_map.get(language, fallback_map['en'])
         return success_response(data={'response': fallback_reply, 'is_fallback': True}, message="Fallback response served")
+
+@chatbot_bp.route('/voice', methods=['POST'])
+def voice_chat():
+    """
+    POST /ai/chatbot/voice
+    Supports real-time microphone text transcript or audio stream processing.
+    Returns generated response text along with Sarvam/WebSpeech TTS metadata.
+    """
+    try:
+        data = request.get_json() or {}
+        message = data.get('transcript', data.get('message', '')).strip()
+        language = str(data.get('language', 'hi')).strip().lower()
+        user_role = str(data.get('user_role', 'default')).strip().lower()
+
+        if not message:
+            return error_response(message="Missing transcript or audio message", status_code=400)
+
+        # Generate text response via LLM
+        client = get_groq_client()
+        if client:
+            role_dict = SYSTEM_PROMPTS.get(user_role, SYSTEM_PROMPTS['default'])
+            system_prompt = role_dict.get(language, role_dict['en'])
+            messages = [{'role': 'system', 'content': system_prompt}, {'role': 'user', 'content': message}]
+            groq_response = client.chat.completions.create(
+                model='llama-3.1-8b-instant',
+                messages=messages,
+                max_tokens=300,
+                temperature=0.7
+            )
+            response_text = groq_response.choices[0].message.content.strip()
+        else:
+            response_text = "नमस्कार! मी किसान मित्र आहे. मी तुम्हाला कशी मदत करू शकतो?"
+
+        # Attempt server-side Sarvam TTS if configured
+        audio_b64 = voice_engine.process_tts(response_text, language=language)
+
+        return success_response(data={
+            "transcript": message,
+            "response_text": response_text,
+            "audio_base64": audio_b64,
+            "language": language,
+            "tts_provider": "sarvam" if audio_b64 else "web_speech_api"
+        }, message="Voice chat processed successfully")
+
+    except Exception as e:
+        logger.error(f"Voice chat endpoint error: {str(e)}")
+        return error_response(message=f"Failed to process voice query: {str(e)}", status_code=500)

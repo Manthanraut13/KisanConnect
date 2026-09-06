@@ -1,6 +1,13 @@
 import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import OrderSuccess from './pages/OrderSuccess';
+import Orders from './pages/Orders';
+import OrderDetail from './pages/OrderDetail';
+import ConsumerLayout from './components/ConsumerLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import AdminOrders from './pages/admin/AdminOrders';
@@ -17,7 +24,20 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
+        {/* Consumer Routes with Navbar */}
+        <Route element={<ConsumerLayout />}>
+          <Route element={<ProtectedRoute roles={['consumer', 'farmer', 'bulk_buyer', 'logistics']} />}>
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-success/:id" element={<OrderSuccess />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/orders/:id" element={<OrderDetail />} />
+          </Route>
+        </Route>
+
+        {/* Admin Routes */}
         <Route element={<ProtectedRoute roles={['admin']} />}>
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<UserManagement />} />
@@ -26,6 +46,7 @@ const App = () => {
           <Route path="/admin/analytics" element={<Analytics />} />
         </Route>
 
+        {/* Driver Routes */}
         <Route element={<ProtectedRoute roles={['logistics']} />}>
           <Route path="/driver" element={<DriverDashboard />} />
           <Route path="/driver/delivery/:id" element={<ActiveDelivery />} />

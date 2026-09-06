@@ -3,6 +3,9 @@ export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        hindi: ['"Noto Sans Devanagari"', 'sans-serif'],
+      },
       colors: {
         kisan: {
           50: '#f0fdf4',

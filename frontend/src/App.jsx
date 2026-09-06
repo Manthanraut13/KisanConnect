@@ -11,7 +11,9 @@ import ActiveDelivery from './pages/driver/ActiveDelivery';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import ChatbotWidget from './components/chatbot/ChatbotWidget';
 import Marketplace from './pages/Marketplace';
-
+import ProductDetail from './pages/ProductDetail';
+import MyListings from './pages/farmer/MyListings';
+import FarmerDashboard from './pages/farmer/FarmerDashboard';
 const App = () => {
   return (
     <>
@@ -19,6 +21,9 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
 	<Route path="/marketplace" element={<Marketplace />} />
+	<Route path="/marketplace/:id" element={<ProductDetail />} />
+	<Route path="/farmer/listings" element={<MyListings />} />
+	<Route path="/farmer/dashboard" element={<FarmerDashboard />} />
 
         <Route element={<ProtectedRoute roles={['admin']} />}>
           <Route path="/admin" element={<AdminDashboard />} />

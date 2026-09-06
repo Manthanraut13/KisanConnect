@@ -31,7 +31,12 @@ app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/grievances', require('./routes/grievance.routes'));
 app.use('/api/webhooks', require('./routes/webhook.routes'));
-
+app.use('/api/listings', require('./routes/listing.routes'));
+app.use('/api/cart', require('./routes/cart.routes'));
+app.use('/api/orders', require('./routes/order.routes'));
+app.use('/api/payments', require('./routes/payment.routes'));
+app.use('/api/logistics', require('./routes/logistics.routes'));
+app.use('/api/internal', require('./routes/internal.routes'));
 app.use(errorHandler);
 
 module.exports = app;

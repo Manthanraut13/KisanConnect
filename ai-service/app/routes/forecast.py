@@ -1,8 +1,9 @@
 # Demand forecasting route blueprint definitions
 import os
+import requests
 from flask import Blueprint, request
 from app.models.demand_forecaster import DemandForecaster
-from app.utils.response import success_response, error_response
+from app.utils.response import success_response, error_response, require_internal_secret
 
 forecast_bp = Blueprint('forecast', __name__)
 forecaster = DemandForecaster()  # Initialize once at module level
@@ -30,6 +31,7 @@ def get_demand_forecast():
         return error_response(message=f"Failed to generate demand forecast: {str(e)}", status_code=500)
 
 @forecast_bp.route('/batch', methods=['POST'])
+@require_internal_secret
 def batch_forecast():
     """
     POST /ai/forecast/batch

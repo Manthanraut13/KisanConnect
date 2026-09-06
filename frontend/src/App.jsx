@@ -10,7 +10,7 @@ import DriverDashboard from './pages/driver/DriverDashboard';
 import ActiveDelivery from './pages/driver/ActiveDelivery';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import ChatbotWidget from './components/chatbot/ChatbotWidget';
-
+import Marketplace from './pages/Marketplace';
 
 const App = () => {
   return (
@@ -18,6 +18,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+	<Route path="/marketplace" element={<Marketplace />} />
 
         <Route element={<ProtectedRoute roles={['admin']} />}>
           <Route path="/admin" element={<AdminDashboard />} />
@@ -26,6 +27,7 @@ const App = () => {
           <Route path="/admin/grievances" element={<Grievances />} />
           <Route path="/admin/analytics" element={<Analytics />} />
         </Route>
+	
 
         <Route element={<ProtectedRoute roles={['logistics']} />}>
           <Route path="/driver" element={<DriverDashboard />} />

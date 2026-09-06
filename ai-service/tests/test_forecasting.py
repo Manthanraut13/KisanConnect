@@ -71,8 +71,14 @@ def test_forecast_route_empty_body(client):
     response = client.post('/ai/forecast/demand', json={})
     assert response.status_code == 400
 
-def test_batch_forecast_success(client):
+def test_batch_forecast_unauthorized(client):
     response = client.post('/ai/forecast/batch')
+    assert response.status_code == 401
+    json_data = response.get_json()
+    assert json_data["success"] is False
+
+def test_batch_forecast_success(client):
+    response = client.post('/ai/forecast/batch', headers={'x-internal-secret': 'kisan_connect_internal_2026'})
     assert response.status_code == 200
     json_data = response.get_json()
     assert json_data["success"] is True

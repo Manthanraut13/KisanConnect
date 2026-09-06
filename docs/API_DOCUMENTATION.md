@@ -227,3 +227,137 @@
 - `POST /api/webhooks/refresh-forecasts` — Triggers batch forecast recalculation
 - `POST /api/webhooks/order-placed` — Dispatches SMS/Email/Push alerts on order placement
 - `POST /api/webhooks/new-grievance` — Auto-triages grievance with Groq LLaMA AI
+
+---
+
+## 🤖 6. AI Microservice Endpoints (`/ai/*`)
+**Base URL:** `http://localhost:8000` (Local) / Railway Deployment URL (Prod)
+
+### 6.1 Crop Demand Forecast
+- **Method:** `POST`
+- **Path:** `/ai/forecast/demand`
+- **Auth Required:** No
+- **Request Body:**
+```json
+{
+  "crop_name": "Tomato",
+  "district": "Nashik",
+  "forecast_days": 7
+}
+```
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Demand forecast generated successfully",
+  "data": {
+    "crop_name": "Tomato",
+    "district": "Nashik",
+    "forecast": [
+      {
+        "date": "2026-09-06",
+        "predicted_price": 18.5,
+        "lower_bound": 14.2,
+        "upper_bound": 22.8,
+        "demand_index": 72,
+        "confidence": 0.85
+      }
+    ],
+    "advisory": "Tomato prices expected to rise 12% this week. Good time to sell.",
+    "model_version": "prophet-v1.1"
+  }
+}
+```
+
+### 6.2 Daily Batch Forecast Refresh (Protected Internal Endpoint)
+- **Method:** `POST`
+- **Path:** `/ai/forecast/batch`
+- **Auth Required:** **YES** (`x-internal-secret: kisan_connect_internal_2026`)
+- **Headers:**
+  - `x-internal-secret`: `kisan_connect_internal_2026`
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Batch forecast refresh completed",
+  "data": {
+    "processed": 200,
+    "failed": 0
+  }
+}
+```
+- **Response (401 Unauthorized):**
+```json
+{
+  "success": false,
+  "message": "Unauthorized: Invalid or missing internal secret key"
+}
+```
+
+### 6.3 Price Recommendation
+- **Method:** `POST`
+- **Path:** `/ai/price/recommend`
+- **Auth Required:** No
+- **Request Body:**
+```json
+{
+  "crop_name": "Tomato",
+  "district": "Nashik",
+  "quantity_kg": 100,
+  "quality_grade": "A",
+  "is_organic": false
+}
+```
+
+### 6.4 Route Optimization
+- **Method:** `POST`
+- **Path:** `/ai/logistics/optimize-route`
+- **Auth Required:** No
+- **Request Body:**
+```json
+{
+  "driver_location": { "lat": 19.99, "lng": 73.78 },
+  "orders": [
+    { "id": "uuid-1", "lat": 20.01, "lng": 73.79, "address": "Market 1" }
+  ]
+}
+```
+
+### 6.5 Multilingual AI Chatbot (Kisan Mitra)
+- **Method:** `POST`
+- **Path:** `/ai/chatbot/query`
+- **Auth Required:** No
+- **Request Body:**
+```json
+{
+  "message": "टमाटर का भाव क्या रहेगा?",
+  "language": "hi",
+  "user_role": "farmer",
+  "conversation_history": []
+}
+```
+
+---
+
+## 🔑 7. Internal Security & Credentials Setup (For Team / Backend Reference)
+
+### 7.1 Shared Internal Secret Configuration
+To prevent unauthorized access to batch data operations and backend internal endpoints, both **Backend Node.js Service** and **AI Python Service** must use the shared `INTERNAL_SECRET`.
+
+- **Environment Variable Name:** `INTERNAL_SECRET`
+- **Secret Value:** `kisan_connect_internal_2026`
+
+#### Setup for `.env` (Backend & AI Service):
+```env
+INTERNAL_SECRET=kisan_connect_internal_2026
+```
+
+#### How Backend / Inter-service calls must authenticate:
+When Node.js Backend or Antigravity cron calls protected AI Service endpoints (such as `POST /ai/forecast/batch`), or when AI Service posts predictions to Backend (`POST /api/internal/forecasts/upsert`), pass the following HTTP Header:
+
+```http
+x-internal-secret: kisan_connect_internal_2026
+```
+
+*(Accepted header variants: `x-internal-secret`, `X-Internal-Secret`, `x-antigravity-secret`)*
+

@@ -20,6 +20,7 @@ import Marketplace from './pages/Marketplace';
 import ProductDetail from './pages/ProductDetail';
 import MyListings from './pages/farmer/MyListings';
 import FarmerDashboard from './pages/farmer/FarmerDashboard';
+import CreateListing from './pages/farmer/CreateListing';
 const App = () => {
   return (
     <>
@@ -31,6 +32,7 @@ const App = () => {
         <Route path="/marketplace/:id" element={<ProductDetail />} />
         <Route path="/farmer/listings" element={<MyListings />} />
         <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
+	<Route path="/farmer/listings/new" element={<CreateListing />} />
 
         {/* Consumer Routes */}
         <Route element={<ProtectedRoute roles={['consumer', 'farmer', 'bulk_buyer', 'logistics']} />}>

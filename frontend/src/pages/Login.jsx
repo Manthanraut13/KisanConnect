@@ -13,12 +13,12 @@ const loginSchema = z.object({
   path: ['mobile'],
 });
 
-type LoginForm = z.infer<typeof loginSchema>;
+//type LoginForm = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [loginMode, setLoginMode] = useState<'password' | 'otp'>('password');
+  const [loginMode, setLoginMode] = useState('password');
   const navigate = useNavigate();
 
   const {
@@ -26,12 +26,12 @@ const Login = () => {
     handleSubmit,
     formState: { errors },
     watch,
-  } = useForm<LoginForm>({
+  } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: { password: '' },
   });
 
-  const onSubmit = async (data: LoginForm) => {
+  const onSubmit = async (data) => {
     setIsLoading(true);
     setError('');
 
@@ -53,14 +53,14 @@ const Login = () => {
       localStorage.setItem('user', JSON.stringify(result.data.user));
 
       navigate('/');
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOTPLogin = async (data: LoginForm) => {
+  const handleOTPLogin = async (data) => {
     setIsLoading(true);
     setError('');
 
@@ -97,7 +97,7 @@ const Login = () => {
       localStorage.setItem('user', JSON.stringify(result.data.user));
 
       navigate('/');
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'OTP login failed. Please try again.');
     } finally {
       setIsLoading(false);

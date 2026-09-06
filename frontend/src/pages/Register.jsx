@@ -14,7 +14,7 @@ const registerSchema = z.object({
   state: z.string().min(2, 'State is required'),
 });
 
-type RegisterForm = z.infer<typeof registerSchema>;
+//type RegisterForm = z.infer<typeof registerSchema>;
 
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -22,14 +22,14 @@ const Register = () => {
   const navigate = useNavigate();
 
   const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
-  });
+  register,
+  handleSubmit,
+  formState: { errors },
+} = useForm({
+  resolver: zodResolver(registerSchema),
+});
 
-  const onSubmit = async (data: RegisterForm) => {
+  const onSubmit = async (data) => {
     setIsLoading(true);
     setError('');
 
@@ -47,7 +47,7 @@ const Register = () => {
       }
 
       navigate('/login');
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);

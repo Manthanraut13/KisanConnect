@@ -13,10 +13,7 @@ import { logger } from './lib/logger';
 
 logger.info('APP', 'Kisan Connect frontend starting');
 
-<<<<<<< HEAD
 
-=======
->>>>>>> dev
 L.Marker.prototype.options.icon = L.icon({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,

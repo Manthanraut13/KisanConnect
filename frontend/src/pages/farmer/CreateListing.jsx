@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
+import PhotoUpload from '../../components/farmer/PhotoUpload';
 import { Input } from '../../components/ui/input';
 import {
   Select,
@@ -109,12 +110,16 @@ function StepIndicator({ current }) {
 
 export default function CreateListing() {
   const [step, setStep] = useState(1);
+  const [photoFiles, setPhotoFiles] = useState([]);
+  const [priceRecommendation, setPriceRecommendation] = useState(null);
+  const [loadingPrice, setLoadingPrice] = useState(false);
 
   const {
     register,
     control,
     handleSubmit,
     trigger,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(step1Schema),
@@ -132,7 +137,9 @@ export default function CreateListing() {
       expiry_date: '',
       images: [],
     },
-  });
+  }); 
+  
+  const watchedValues = watch();
 
   const STEP_FIELDS = {
   1: ['crop_name', 'crop_category', 'variety', 'quantity_kg', 'harvest_date', 'description'],
@@ -141,17 +148,43 @@ export default function CreateListing() {
 
 const nextStep = async () => {
   const valid = await trigger(STEP_FIELDS[step]);
-  if (valid) setStep((s) => Math.min(3, s + 1));
+  if (valid) {
+    const newStep = Math.min(3, step + 1);
+    setStep(newStep);
+    if (newStep === 3 && !priceRecommendation) {
+      fetchPriceRecommendation();
+    }
+  }
+};
+
+const fetchPriceRecommendation = () => {
+  setLoadingPrice(true);
+  // Mock AI price recommendation (Siddhesh's /ai/price/recommend endpoint not live yet)
+  setTimeout(() => {
+    setPriceRecommendation({
+      min: 18,
+      max: 26,
+      recommended: 22,
+    });
+    setLoadingPrice(false);
+  }, 1200);
 };
   const backStep = () => {
     setStep((s) => Math.max(1, s - 1));
   };
 
   const onSubmit = (data) => {
-    toast.success('Listing submitted');
-    // eslint-disable-next-line no-console
-    console.log(data);
-  };
+  const formData = new FormData();
+  Object.entries(data).forEach(([key, value]) => {
+    if (key !== 'images') formData.append(key, value);
+  });
+  photoFiles.forEach((file) => formData.append('images', file));
+
+  // Mock submission (real POST /api/listings endpoint not live yet)
+  toast.success('Listing created successfully!');
+  // eslint-disable-next-line no-console
+  console.log('FormData ready for submission:', Object.fromEntries(formData));
+};
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
@@ -312,21 +345,40 @@ const nextStep = async () => {
               </div>
 
               <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-700">Photos</label>
-                <input type="file" multiple accept="image/*" className="text-sm text-gray-600" />
-              </div>
+  		<label className="text-sm font-medium text-gray-700">Photos</label>
+  		<PhotoUpload files={photoFiles} onFilesChange={setPhotoFiles} />
+	      </div>
             </div>
           )}
 
           {step === 3 && (
-            <div className="space-y-3 text-sm">
-              <h2 className="font-semibold text-gray-800">Review your listing</h2>
-              <p className="text-gray-600">
-                Step 3 will show a full summary before publishing. The form keeps all entered
-                values in react-hook-form state across steps.
-              </p>
-            </div>
-          )}
+  <div className="space-y-4 text-sm">
+    <h2 className="font-semibold text-gray-800">Review your listing</h2>
+
+    <div className="rounded-lg border border-gray-200 p-4 space-y-1 text-gray-700">
+      <p><strong>Crop:</strong> {watchedValues.crop_name} ({watchedValues.crop_category})</p>
+      <p><strong>Quantity:</strong> {watchedValues.quantity_kg} kg</p>
+      <p><strong>Grade:</strong> {watchedValues.quality_grade} {watchedValues.is_organic ? '• Organic' : ''}</p>
+      <p><strong>Your Price:</strong> ₹{watchedValues.price_per_kg}/kg</p>
+      <p><strong>Photos:</strong> {photoFiles.length} attached</p>
+    </div>
+
+    <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+      {loadingPrice ? (
+        <p className="text-green-800">Getting AI price suggestion...</p>
+      ) : priceRecommendation ? (
+        <>
+          <p className="text-green-800 font-medium">
+            💡 AI Suggests: ₹{priceRecommendation.min}–₹{priceRecommendation.max}/kg | Best price: ₹{priceRecommendation.recommended}/kg
+          </p>
+          <p className="text-xs text-green-700 mt-1">
+            Based on current {watchedValues.district || 'local'} mandi prices for Grade {watchedValues.quality_grade} {watchedValues.crop_name}
+          </p>
+        </>
+      ) : null}
+    </div>
+  </div>
+)}
         </div>
 
         <div className="flex justify-between items-center px-6 py-4 border-t">

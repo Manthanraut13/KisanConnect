@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
+import api from '../../services/api';
+import { logger } from '../../lib/logger';
 
 const COMMON_CROPS = [
   'Tomato',
@@ -113,6 +116,7 @@ export default function CreateListing() {
   const [photoFiles, setPhotoFiles] = useState([]);
   const [priceRecommendation, setPriceRecommendation] = useState(null);
   const [loadingPrice, setLoadingPrice] = useState(false);
+  const navigate = useNavigate();
 
   const {
     register,
@@ -173,18 +177,26 @@ const fetchPriceRecommendation = () => {
     setStep((s) => Math.max(1, s - 1));
   };
 
-  const onSubmit = (data) => {
-  const formData = new FormData();
-  Object.entries(data).forEach(([key, value]) => {
-    if (key !== 'images') formData.append(key, value);
-  });
-  photoFiles.forEach((file) => formData.append('images', file));
-
-  // Mock submission (real POST /api/listings endpoint not live yet)
-  toast.success('Listing created successfully!');
-  // eslint-disable-next-line no-console
-  console.log('FormData ready for submission:', Object.fromEntries(formData));
-};
+const onSubmit = async (data) => {
+    try {
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        if (key !== 'images' && value !== undefined && value !== null && value !== '') {
+          formData.append(key, value);
+        }
+      });
+      photoFiles.forEach((file) => formData.append('images', file));
+      await api.post('/api/listings', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      logger.form.submit('CreateListing', { crop_name: data.crop_name, quantity_kg: data.quantity_kg });
+      toast.success('Listing submitted successfully');
+      navigate('/farmer/listings');
+    } catch (error) {
+      logger.form.error('CreateListing', error);
+      toast.error(error.response?.data?.message || 'Failed to create listing');
+    }
+  };
 
   return (
     <div className="p-6 max-w-3xl mx-auto">

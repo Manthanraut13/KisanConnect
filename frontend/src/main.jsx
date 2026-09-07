@@ -8,6 +8,9 @@ import './index.css';
 import App from './App.jsx';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import { logger } from './lib/logger';
+
+logger.info('APP', 'Kisan Connect frontend starting');
 
 L.Marker.prototype.options.icon = L.icon({
   iconUrl: markerIcon,

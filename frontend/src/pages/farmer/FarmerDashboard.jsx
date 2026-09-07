@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/ui/table';
+import { logger } from '../../lib/logger';
 
 function StatCard({ title, hindi, value, sub }) {
   return (
@@ -79,15 +80,12 @@ const [forecastData, setForecastData] = useState({
   advisory: "Tomato prices expected to rise 12% this week in Nashik. Good time to sell.",
 });
 
-const [recentOrders, setRecentOrders] = useState([
-  { id: "ORD001", crop_name: "Tomato", buyer_name: "Fresh Mart", amount: 4400, status: "pending" },
-  { id: "ORD002", crop_name: "Onion", buyer_name: "City Traders", amount: 1800, status: "completed" },
-]);
+const [recentOrders, setRecentOrders] = useState([]);
 
 const [loading, setLoading] = useState(false);
-const [activeListings, setActiveListings] = useState(1);
+const [activeListings, setActiveListings] = useState(0);
 
-  /*useEffect(() => {
+  useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
@@ -113,9 +111,8 @@ const [activeListings, setActiveListings] = useState(1);
         const primaryCrop = listingsArr[0]?.crop_name;
 
         const ordersData = ordersRes.data ?? ordersRes;
-        setRecentOrders(
-          ordersData.orders ?? ordersData.items ?? ordersData.results ?? ordersData.data ?? []
-        );
+        const recentOrdersData = ordersData.orders ?? ordersData.items ?? ordersData.results ?? ordersData.data ?? [];
+        setRecentOrders(recentOrdersData);
 
         if (primaryCrop) {
           try {
@@ -129,8 +126,17 @@ const [activeListings, setActiveListings] = useState(1);
             if (!cancelled) setForecastData(null);
           }
         }
-      } catch {
-        if (!cancelled) toast.error('Could not load dashboard');
+        logger.info('FARMER_DASHBOARD', 'Dashboard loaded', {
+          farmerName: me.full_name,
+          activeListings: listingsArr.length,
+          recentOrders: recentOrdersData.length,
+          primaryCrop,
+        });
+      } catch (err) {
+        if (!cancelled) {
+          logger.error('FARMER_DASHBOARD', 'Failed to load dashboard', err);
+          toast.error('Could not load dashboard');
+        }
       }
     };
 
@@ -138,7 +144,7 @@ const [activeListings, setActiveListings] = useState(1);
     return () => {
       cancelled = true;
     };
-  }, []);*/
+  }, []);
 
   const profile = farmerData?.farmerProfile || {};
   const fullName = farmerData?.full_name || farmerData?.name || 'Farmer';

@@ -1,18 +1,65 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../stores/cartStore';
+import cartService from '../services/cart.service';
+import { toast } from 'sonner';
+import { logger } from '../lib/logger';
 
 const Cart = () => {
-  const { items, updateQuantity, removeFromCart, clearCart, totalAmount, subtotal, deliveryCharge, gstAmount } = useCartStore();
-  const [isEditing, setIsEditing] = useState(false);
+  const { items, updateQuantity, removeFromCart, setCart, totalAmount, subtotal, deliveryCharge, gstAmount, totalItems } = useCartStore();
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const handleQuantityChange = (listingId, newQuantity) => {
-    if (newQuantity > 0) {
-      updateQuantity(listingId, newQuantity);
+  useEffect(() => {
+    loadCart();
+  }, []);
+
+  const loadCart = async () => {
+    try {
+      const response = await cartService.getCart();
+      const data = response.data?.data ?? response.data;
+      if (data?.items) {
+        logger.cart.load(data.items.length);
+        setCart(data.items);
+      }
+    } catch (error) {
+      logger.cart.error('load cart', error);
+      toast.error('Failed to load cart');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  if (items.length === 0) {
+  const handleQuantityChange = async (listingId, newQuantity) => {
+    if (newQuantity < 1) return;
+    try {
+      await cartService.updateItem(listingId, newQuantity);
+      updateQuantity(listingId, newQuantity);
+    } catch (error) {
+      logger.cart.error('update quantity', error);
+      toast.error('Failed to update quantity');
+    }
+  };
+
+  const handleRemove = async (listingId) => {
+    try {
+      await cartService.removeItem(listingId);
+      removeFromCart(listingId);
+    } catch (error) {
+      logger.cart.error('remove item', error);
+      toast.error('Failed to remove item');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-kisan-700"></div>
+      </div>
+    );
+  }
+
+  if (totalItems === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4">
@@ -21,10 +68,10 @@ const Cart = () => {
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Your Cart is Empty</h2>
             <p className="text-gray-600 mb-6">Looks like you haven't added any products to your cart yet.</p>
             <Link
-              to="/"
+              to="/marketplace"
               className="inline-block bg-kisan-700 text-white px-6 py-3 rounded-lg hover:bg-kisan-800"
             >
-              Start Shopping
+              Browse Marketplace
             </Link>
           </div>
         </div>
@@ -68,7 +115,7 @@ const Cart = () => {
                       +
                     </button>
                     <button
-                      onClick={() => removeFromCart(item.listing_id)}
+                      onClick={() => handleRemove(item.listing_id)}
                       className="ml-auto text-red-500 text-sm hover:underline"
                     >
                       Remove
@@ -111,7 +158,7 @@ const Cart = () => {
               </Link>
 
               <Link
-                to="/"
+                to="/marketplace"
                 className="w-full mt-3 border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 text-center block"
               >
                 Continue Shopping

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCartStore } from '../stores/cartStore';
-import api from '../services/api';
+import orderService from '../services/order.service';
+import { logger } from '../lib/logger';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -11,16 +11,17 @@ const Orders = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, [filter]);
+  }, []);
 
   const fetchOrders = async () => {
     try {
-      const result = await api.get('/api/orders');
-      if (result.data.success) {
-        setOrders(result.data.data || []);
-      }
+      const response = await orderService.getOrders();
+      const data = response.data?.data ?? response.data;
+      const ordersData = Array.isArray(data) ? data : data?.orders || [];
+      logger.info('ORDERS', 'Orders loaded', { count: ordersData.length });
+      setOrders(ordersData);
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      logger.error('ORDERS', 'Failed to fetch orders', error);
     } finally {
       setIsLoading(false);
     }
@@ -28,28 +29,18 @@ const Orders = () => {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'bg-gray-100 text-gray-800',
+      pending: 'bg-yellow-100 text-yellow-800',
       confirmed: 'bg-blue-100 text-blue-800',
-      'in_transit': 'bg-yellow-100 text-yellow-800',
+      packed: 'bg-purple-100 text-purple-800',
+      in_transit: 'bg-orange-100 text-orange-800',
       delivered: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800',
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  const getStatusLabel = (status) => {
-    const labels = {
-      pending: 'Pending',
-      confirmed: 'Confirmed',
-      in_transit: 'In Transit',
-      delivered: 'Delivered',
-      cancelled: 'Cancelled',
-    };
-    return labels[status] || status;
-  };
-
-  const filteredOrders = filter === 'all' 
-    ? orders 
+  const filteredOrders = filter === 'all'
+    ? orders
     : orders.filter(o => o.status === filter);
 
   if (isLoading) {
@@ -66,17 +57,16 @@ const Orders = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Order History</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">My Orders</h1>
 
-        {/* Filter Buttons */}
         <div className="flex flex-wrap gap-2 mb-6">
           {['all', 'pending', 'confirmed', 'in_transit', 'delivered', 'cancelled'].map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-lg capitalize ${
+              className={`px-4 py-2 rounded-lg capitalize text-sm font-medium ${
                 filter === status
-                  ? 'bg-kisan-700 text-white'
+                  ? 'bg-green-700 text-white'
                   : 'bg-white border border-gray-300 hover:bg-gray-50'
               }`}
             >
@@ -85,15 +75,14 @@ const Orders = () => {
           ))}
         </div>
 
-        {/* Orders List */}
         {filteredOrders.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <div className="text-6xl mb-4">📦</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">No Orders Found</h2>
             <p className="text-gray-600">You haven't placed any orders yet.</p>
             <button
-              onClick={() => navigate('/')}
-              className="mt-4 bg-kisan-700 text-white px-6 py-2 rounded-lg"
+              onClick={() => navigate('/marketplace')}
+              className="mt-4 bg-kisan-700 text-white px-6 py-2 rounded-lg hover:bg-kisan-800"
             >
               Start Shopping
             </button>
@@ -108,18 +97,18 @@ const Orders = () => {
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <p className="text-sm text-gray-600">Order ID: #{order.id?.slice(-8)}</p>
-                    <p className="text-sm text-gray-500">{new Date(order.created_at || order.created_at).toLocaleDateString()}</p>
+                    <p className="text-sm font-mono text-gray-800">Order #{order.id?.slice(0, 8).toUpperCase()}</p>
+                    <p className="text-sm text-gray-500">{new Date(order.createdAt || order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                    {getStatusLabel(order.status)}
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                    {order.status?.replace('_', ' ') || 'Pending'}
                   </span>
                 </div>
 
-                <div className="space-y-2 mb-4">
+                <div className="space-y-1 mb-4">
                   {order.items?.slice(0, 3).map((item, idx) => (
                     <p key={idx} className="text-sm text-gray-700">
-                      {item.crop_name || item.listing?.crop_name} x {item.quantity_kg}kg
+                      {item.crop_name || item.listing?.crop_name} × {item.quantity_kg}kg
                     </p>
                   ))}
                   {order.items?.length > 3 && (
@@ -128,8 +117,8 @@ const Orders = () => {
                 </div>
 
                 <div className="border-t pt-4 flex justify-between items-center">
-                  <span className="text-gray-600">Total Amount</span>
-                  <span className="text-xl font-bold text-kisan-700">₹{order.total_amount || order.totalAmount}</span>
+                  <span className="text-gray-600">Total</span>
+                  <span className="text-xl font-bold text-green-700">₹{order.total_amount || order.totalAmount}</span>
                 </div>
               </div>
             ))}

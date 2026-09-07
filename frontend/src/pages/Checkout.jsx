@@ -1,150 +1,177 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../stores/cartStore';
+import { useAuthStore } from '../stores/authStore';
 import { toast } from 'sonner';
 import api from '../services/api';
+import orderService from '../services/order.service';
+import paymentService from '../services/payment.service';
+import authService from '../services/auth.service';
+import { logger } from '../lib/logger';
+
+const DISTRICT_STATE_MAP = {
+  'Nashik': 'Maharashtra',
+  'Pune': 'Maharashtra',
+  'Amritsar': 'Punjab',
+  'Ludhiana': 'Punjab',
+  'Coimbatore': 'Tamil Nadu',
+  'Mysuru': 'Karnataka',
+  'Guntur': 'Andhra Pradesh',
+  'Jaipur': 'Rajasthan',
+  'Indore': 'Madhya Pradesh',
+  'Varanasi': 'Uttar Pradesh',
+};
 
 const Checkout = () => {
-  const { items, totalAmount, clearCart } = useCartStore();
+  const { items, totalAmount, clearCart, subtotal, deliveryCharge, gstAmount } = useCartStore();
+  const user = useAuthStore((s) => s.user);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minDate = tomorrow.toISOString().split('T')[0];
+
   const [formData, setFormData] = useState({
     full_name: '',
     mobile: '',
-    email: '',
-    street: '',
-    city: '',
+    full_address: '',
+    district: '',
     state: '',
     pin_code: '',
+    delivery_slot: minDate,
+    notes: '',
   });
-  const [loadingRazorpay, setLoadingRazorpay] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if (items.length === 0) {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        full_name: user.full_name || '',
+        mobile: user.mobile || '',
+      }));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (items.length === 0 && !isProcessing) {
       navigate('/cart');
     }
-  }, [items, navigate]);
+  }, [items, navigate, isProcessing]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
+    const { name, value } = e.target;
+    setFormData((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === 'district' && DISTRICT_STATE_MAP[value]) {
+        next.state = DISTRICT_STATE_MAP[value];
+      }
+      return next;
     });
   };
 
+  const loadRazorpay = () =>
+    new Promise((resolve) => {
+      if (window.Razorpay) return resolve(true);
+      const s = document.createElement('script');
+      s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      s.onload = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.body.appendChild(s);
+    });
+
   const handlePayment = async (e) => {
     e.preventDefault();
-    
+
     if (items.length === 0) {
       toast.error('Your cart is empty');
       return;
     }
 
-    if (!formData.full_name || !formData.street || !formData.pin_code) {
-      toast.error('Please fill all required address fields');
+    if (!formData.full_name || !formData.full_address || !formData.district || !formData.pin_code) {
+      toast.error('Please fill all required delivery fields');
       return;
     }
 
-    setLoadingRazorpay(true);
-    toast.info('Initializing payment...');
+    setPaymentLoading(true);
+    logger.payment.start('pending', totalAmount);
 
     try {
-      const isScriptLoaded = await loadRazorpayScript();
-      if (!isScriptLoaded) {
-        toast.error('Razorpay SDK failed to load. Check your internet connection.');
-        setLoadingRazorpay(false);
+      // Step 1: Place order
+      const orderRes = await orderService.placeOrder(
+        {
+          full_name: formData.full_name,
+          mobile: formData.mobile,
+          full_address: formData.full_address,
+          district: formData.district,
+          state: formData.state,
+          pin_code: formData.pin_code,
+        },
+        formData.delivery_slot
+      );
+
+      const orderId = orderRes.data?.data?.order_id || orderRes.data?.data?.id;
+      logger.info('CHECKOUT', 'Order placed', { orderId });
+
+      // Step 2: Create Razorpay order
+      const rpRes = await paymentService.createRazorpayOrder(orderId);
+      const rpData = rpRes.data?.data || rpRes.data;
+
+      // Step 3: Load Razorpay script
+      const scriptLoaded = await loadRazorpay();
+      if (!scriptLoaded) {
+        toast.error('Payment gateway failed to load. Check your internet.');
+        setPaymentLoading(false);
         return;
       }
 
-      // Step 1: Create order with backend
-      const response = await api.post('/api/payments/razorpay/order', {
-        amount: totalAmount * 100, // Razorpay expects amount in paise
-        currency: 'INR',
-        receipt: `order_${Date.now()}`,
-      });
-
-      const data = response.data.data || response.data;
-
+      // Step 4: Open Razorpay modal
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: data.amount,
-        currency: data.currency,
+        key: rpData.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: rpData.amount,
+        currency: rpData.currency || 'INR',
         name: 'Kisan Connect',
-        description: 'Farm to Consumer Marketplace',
-        image: { logo: { url: 'https://placehold.co/100' } },
-        order_id: data.order_id,
-        callback_url: `${import.meta.env.VITE_API_URL}/api/payments/razorpay/callback`,
+        description: 'Fresh Produce Order',
+        order_id: rpData.razorpay_order_id || rpData.order_id,
+        handler: async (response) => {
+          try {
+            await paymentService.verifyPayment({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              order_id: orderId,
+            });
+            logger.payment.success(orderId, response.razorpay_payment_id);
+            clearCart();
+            navigate('/order-success/' + orderId);
+          } catch {
+            clearCart();
+            navigate('/order-success/' + orderId);
+          }
+        },
         prefill: {
           name: formData.full_name,
-          email: formData.email,
           contact: formData.mobile,
         },
-        theme: {
-          color: '#0f766e',
-        },
+        theme: { color: '#2D7A2D' },
         modal: {
           ondismiss: () => {
-            setLoadingRazorpay(false);
+            setPaymentLoading(false);
             toast.info('Payment cancelled');
           },
         },
       };
 
-      const razorpayInstance = new window.Razorpay(options);
-      razorpayInstance.open();
-      setLoadingRazorpay(false);
-
-      razorpayInstance.on('payment.failed', (response) => {
-        toast.error(`Payment failed: ${response.error.description}`);
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', () => {
+        toast.error('Payment failed. Please try again.');
+        setPaymentLoading(false);
       });
+      rzp.open();
     } catch (error) {
-      toast.error(error.message || 'Payment initialization failed');
-      setLoadingRazorpay(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsProcessing(true);
-
-    try {
-      // Create order first
-      const response = await api.post('/api/orders', {
-        items: items.map(item => ({
-          listing_id: item.listing_id,
-          quantity_kg: item.quantity_kg,
-        })),
-        delivery_address: {
-          street: formData.street,
-          city: formData.city,
-          state: formData.state,
-          pin_code: formData.pin_code,
-          latitude: 0,
-          longitude: 0,
-        },
-        delivery_slot: null,
-        notes: '',
-      });
-
-      const result = response.data;
-
-      if (!response.data.success) {
-        throw new Error(result.message || 'Order creation failed');
-      }
-
-      clearCart();
-      navigate(`/order-success/${result.data.order_id}`);
-    } catch (error) {
-      toast.error(error.response?.data?.message || error.message || 'Order creation failed');
-    } finally {
-      setIsProcessing(false);
+      toast.error(error.message || error?.data?.message || 'Payment failed. Try again.');
+      setPaymentLoading(false);
     }
   };
 
@@ -155,168 +182,95 @@ const Checkout = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            {/* Delivery Address Form */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <h2 className="text-xl font-bold mb-4">Delivery Address</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handlePayment} className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <h2 className="text-xl font-bold mb-4">Delivery Details</h2>
+              <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-700 mb-1">Full Name</label>
-                    <input
-                      type="text"
-                      name="full_name"
-                      value={formData.full_name}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-kisan-500"
-                    />
+                    <label className="block text-gray-700 mb-1">Full Name *</label>
+                    <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" />
                   </div>
                   <div>
-                    <label className="block text-gray-700 mb-1">Mobile</label>
-                    <input
-                      type="text"
-                      name="mobile"
-                      value={formData.mobile}
-                      onChange={handleChange}
-                      required
-                      maxLength={10}
-                      className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-kisan-500"
-                    />
+                    <label className="block text-gray-700 mb-1">Mobile *</label>
+                    <input type="text" name="mobile" value={formData.mobile} onChange={handleChange} required maxLength={10} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-kisan-500"
-                  />
+                  <label className="block text-gray-700 mb-1">Full Address *</label>
+                  <textarea name="full_address" value={formData.full_address} onChange={handleChange} required minLength={10} rows={3} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" placeholder="House no, street, landmark..." />
                 </div>
-                <div>
-                  <label className="block text-gray-700 mb-1">Street Address</label>
-                  <input
-                    type="text"
-                    name="street"
-                    value={formData.street}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-kisan-500"
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-700 mb-1">City</label>
-                    <input
-                      type="text"
-                      name="city"
-                      value={formData.city}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-kisan-500"
-                    />
+                    <label className="block text-gray-700 mb-1">District *</label>
+                    <select name="district" value={formData.district} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600">
+                      <option value="">Select District</option>
+                      {Object.keys(DISTRICT_STATE_MAP).map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-gray-700 mb-1">State</label>
-                    <input
-                      type="text"
-                      name="state"
-                      value={formData.state}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-kisan-500"
-                    />
+                    <input type="text" name="state" value={formData.state} readOnly className="w-full px-3 py-2 border rounded-md bg-gray-50" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-700 mb-1">PIN Code *</label>
+                    <input type="text" name="pin_code" value={formData.pin_code} onChange={handleChange} required maxLength={6} pattern="\d{6}" className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" />
                   </div>
                   <div>
-                    <label className="block text-gray-700 mb-1">Pin Code</label>
-                    <input
-                      type="text"
-                      name="pin_code"
-                      value={formData.pin_code}
-                      onChange={handleChange}
-                      required
-                      maxLength={6}
-                      className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-kisan-500"
-                    />
+                    <label className="block text-gray-700 mb-1">Delivery Date *</label>
+                    <input type="date" name="delivery_slot" value={formData.delivery_slot} onChange={handleChange} min={minDate} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" />
                   </div>
                 </div>
-                <button
-                  type="submit"
-                  disabled={isProcessing || items.length === 0}
-                  className="w-full bg-kisan-700 text-white py-3 rounded-lg hover:bg-kisan-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  {isProcessing ? 'Processing...' : 'Place Order'}
-                </button>
-              </form>
-            </div>
-
-            {/* Payment Section */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold mb-4">Payment Options</h2>
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={handlePayment}
-                  disabled={loadingRazorpay || items.length === 0}
-                  className="w-full border border-gray-300 rounded-lg p-4 flex items-center gap-4 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <img
-                    src="https://razorpay.com/favicon.ico"
-                    alt="Razorpay"
-                    className="w-8 h-8"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-semibold">Pay with Razorpay</h3>
-                    <p className="text-sm text-gray-600">
-                      Credit Card, Debit Card, UPI, Net Banking, Wallets
-                    </p>
-                  </div>
-                  <div className="font-bold text-lg">₹{totalAmount}</div>
-                </button>
+                <div>
+                  <label className="block text-gray-700 mb-1">Order Notes (optional)</label>
+                  <textarea name="notes" value={formData.notes} onChange={handleChange} rows={2} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" />
+                </div>
               </div>
-              {loadingRazorpay && (
-                <div className="mt-4 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-kisan-700 mx-auto"></div>
-                  <p className="mt-2 text-gray-600">Redirecting to Razorpay...</p>
-                </div>
-              )}
-            </div>
+
+              <button
+                type="submit"
+                disabled={paymentLoading || items.length === 0}
+                className="w-full mt-6 bg-green-700 text-white py-3 rounded-lg hover:bg-green-800 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+              >
+                {paymentLoading ? 'Processing Payment...' : `Pay ₹${totalAmount.toFixed(2)}`}
+              </button>
+            </form>
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
               <h2 className="text-xl font-bold mb-4">Order Summary</h2>
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
                 {items.map((item) => (
                   <div key={item.listing_id} className="flex justify-between text-sm">
                     <span className="max-w-[200px] truncate">{item.crop_name}</span>
-                    <span>{item.quantity_kg}kg × ₹{item.price_per_kg} = ₹{item.total_price || (item.price_per_kg * item.quantity_kg)}</span>
+                    <span>{item.quantity_kg}kg × ₹{item.price_per_kg}</span>
                   </div>
                 ))}
               </div>
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span>₹{useCartStore.getState().subtotal.toFixed(2)}</span>
+                  <span>₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Delivery</span>
-                  <span>{useCartStore.getState().deliveryCharge === 0 ? 'Free' : `₹${useCartStore.getState().deliveryCharge}`}</span>
+                  <span>{deliveryCharge === 0 ? 'Free' : `₹${deliveryCharge}`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">GST (5%)</span>
-                  <span>₹{useCartStore.getState().gstAmount.toFixed(2)}</span>
+                  <span>₹{gstAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg pt-2">
                   <span>Total</span>
                   <span>₹{totalAmount.toFixed(2)}</span>
                 </div>
               </div>
-              <Link
-                to="/cart"
-                className="block w-full mt-4 border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 text-center text-sm"
-              >
+              <p className="text-xs text-gray-400 mt-3">0% GST on fresh produce</p>
+              <Link to="/cart" className="block w-full mt-4 border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 text-center text-sm">
                 Edit Cart
               </Link>
             </div>

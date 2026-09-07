@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuthStore } from '../stores/authStore';
 import { getRoleHome } from '../lib/roles';
 import api from '../services/api';
+import { logger } from '../lib/logger';
 
 const loginSchema = z.object({
   mobile: z.string().length(10, 'Mobile must be 10 digits').regex(/^[6-9]\d{9}$/, 'Enter a valid Indian mobile number').optional(),
@@ -15,8 +16,6 @@ const loginSchema = z.object({
   message: 'Either mobile or email is required',
   path: ['mobile'],
 });
-
-//type LoginForm = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -41,10 +40,12 @@ const Login = () => {
 
     try {
       const result = await api.post('/api/auth/login', data);
+      logger.form.submit('Login', { mobile: data.mobile });
 
       setUser(result.data.data.user, result.data.data.access_token);
       navigate(getRoleHome(result.data.data.user.role));
     } catch (err) {
+      logger.auth.error('login', err);
       setError(err.response?.data?.message || err.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -56,18 +57,17 @@ const Login = () => {
     setError('');
 
     try {
-      // Step 1: Send OTP
       await api.post('/api/auth/send-otp', { mobile: data.mobile });
-
-      // Step 2: Get OTP from user and verify
       const otp = prompt('Enter the OTP sent to your mobile:');
       if (!otp) return;
 
       const result = await api.post('/api/auth/verify-otp', { mobile: data.mobile, otp });
+      logger.form.submit('OTP Login', { mobile: data.mobile });
 
       setUser(result.data.data.user, result.data.data.access_token);
       navigate(getRoleHome(result.data.data.user.role));
     } catch (err) {
+      logger.auth.error('OTP login', err);
       setError(err.response?.data?.message || err.message || 'OTP login failed. Please try again.');
     } finally {
       setIsLoading(false);

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 import api from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
+import { logger } from '../../lib/logger';
 
 const initialGreeting = {
   role: 'assistant',
@@ -96,6 +97,7 @@ const ChatbotWidget = () => {
     setMessages((prev) => [...prev, userMsg]);
     setInputValue('');
     setIsTyping(true);
+    logger.info('CHATBOT', 'User message', { text, language });
 
     try {
       const conversationHistory = messages
@@ -114,6 +116,8 @@ const ChatbotWidget = () => {
         (data && (data.response || data.message)) ||
         (language === 'hi' ? fallbackHi : fallbackEn);
 
+      logger.info('CHATBOT', 'Bot replied', { usedFallback: data?.is_fallback || false });
+
       setMessages((prev) => [
         ...prev,
         {
@@ -124,6 +128,7 @@ const ChatbotWidget = () => {
         },
       ]);
     } catch (err) {
+      logger.error('CHATBOT', 'AI service failed, using demo reply', err);
       // AI service offline - return a helpful demo reply
       const fallback = getDemoReply(text, language);
       setMessages((prev) => [

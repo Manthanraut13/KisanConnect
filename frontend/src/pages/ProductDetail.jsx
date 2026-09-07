@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { listingService } from '../services/listing.service';
 import api from '../services/api';
+import { logger } from '../lib/logger';
 
 function RatingStars({ rating }) {
   return (
@@ -31,33 +32,13 @@ function Spinner() {
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const [listing, setListing] = useState({
-  id: "1",
-  crop_name: "Tomato",
-  crop_category: "Vegetable",
-  images: [],
-  price_per_kg: 22,
-  ai_suggested_price: 20.5,
-  available_kg: 350,
-  quantity_kg: 500,
-  min_order_kg: 5,
-  quality_grade: "A",
-  is_organic: true,
-  harvest_date: "2026-08-20",
-  expiry_date: "2026-09-05",
-  lot_number: "KC-2026-MH-NAS-00012",
-  qr_code_url: "",
-  district: "Nashik",
-  latitude: 20.0059,
-  longitude: 73.7797,
-  farmerProfile: { village: "Pimpalgaon", rating: 4.5, user: { full_name: "Ramesh Patil" } }
-});
+  const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedQty, setSelectedQty] = useState(0);
   const [adding, setAdding] = useState(false);
 
-  /*useEffect(() => {
+  useEffect(() => {
     let cancelled = false;
     setLoading(true);
     listingService
@@ -65,13 +46,17 @@ export default function ProductDetail() {
       .then((res) => {
         if (cancelled) return;
         const data = res.data ?? res;
+        logger.info('PRODUCT_DETAIL', 'Listing loaded', { id, crop: data?.crop_name });
         setListing(data);
         const minQty = data.min_order_kg ?? 0;
         setSelectedQty(minQty);
         setSelectedImage(0);
       })
-      .catch(() => {
-        if (!cancelled) toast.error('Could not load listing details');
+      .catch((err) => {
+        if (!cancelled) {
+          logger.error('PRODUCT_DETAIL', 'Failed to load listing', err);
+          toast.error('Could not load listing details');
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -79,7 +64,7 @@ export default function ProductDetail() {
     return () => {
       cancelled = true;
     };
-  }, [id]);*/
+  }, [id]);
 
   const handleAddToCart = async () => {
     if (!selectedQty || selectedQty < (listing.min_order_kg ?? 0)) return;
@@ -89,8 +74,10 @@ export default function ProductDetail() {
         listingId: listing.id ?? id,
         quantityKg: Number(selectedQty),
       });
+      logger.info('CART', 'Item added from product detail', { listingId: listing.id, qty: selectedQty });
       toast.success('Added to cart');
-    } catch {
+    } catch (err) {
+      logger.error('CART', 'Failed to add to cart', err);
       toast.error('Could not add to cart');
     } finally {
       setAdding(false);

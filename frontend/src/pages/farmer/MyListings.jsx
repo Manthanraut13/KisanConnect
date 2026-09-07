@@ -21,46 +21,31 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
+import { logger } from '../../lib/logger';
 
 export default function MyListings() {
   const navigate = useNavigate();
-  const [listings, setListings] = useState([
-  {
-    id: "1",
-    crop_name: "Tomato",
-    images: [],
-    available_kg: 350,
-    quantity_kg: 500,
-    price_per_kg: 22,
-    quality_grade: "A",
-    status: "active",
-  },
-  {
-    id: "2",
-    crop_name: "Onion",
-    images: [],
-    available_kg: 0,
-    quantity_kg: 200,
-    price_per_kg: 18,
-    quality_grade: "B",
-    status: "inactive",
-  },
-]);
+    const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const [deletingInProgress, setDeletingInProgress] = useState(false);
 
-  /*useEffect(() => {
+  useEffect(() => {
     let cancelled = false;
     api
       .get('/api/listings/farmer/mine')
       .then((res) => {
         if (cancelled) return;
         const data = res.data ?? res;
-        setListings(data.listings ?? data.items ?? data.results ?? data.data ?? []);
+        const listingsData = data.listings ?? data.items ?? data.results ?? data.data ?? [];
+        logger.info('MY_LISTINGS', 'Listings loaded', { count: listingsData.length });
+        setListings(listingsData);
       })
-      .catch(() => {
-        if (!cancelled) toast.error('Could not load your listings');
+      .catch((err) => {
+        if (!cancelled) {
+          logger.error('MY_LISTINGS', 'Failed to load listings', err);
+          toast.error('Could not load your listings');
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -68,17 +53,19 @@ export default function MyListings() {
     return () => {
       cancelled = true;
     };
-  }, []);*/
+  }, []);
 
   const handleDelete = async () => {
     if (!deleting) return;
     setDeletingInProgress(true);
     try {
-      //await api.delete(`/api/listings/${deleting.id}`);
+      await api.delete(`/api/listings/${deleting.id}`);
       setListings((prev) => prev.filter((l) => l.id !== deleting.id));
       toast.success('Listing deleted');
+      logger.info('MY_LISTINGS', 'Listing deleted', { id: deleting.id });
       setDeleting(null);
-    } catch {
+    } catch (err) {
+      logger.error('MY_LISTINGS', 'Failed to delete listing', err);
       toast.error('Could not delete listing');
     } finally {
       setDeletingInProgress(false);

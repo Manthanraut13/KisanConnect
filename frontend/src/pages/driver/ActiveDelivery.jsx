@@ -4,6 +4,7 @@ import { ArrowLeft, Phone, MapPin, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { driverService } from '../../services/driver.service';
+import { logger } from '../../lib/logger';
 
 const ActiveDelivery = () => {
   const { id } = useParams();
@@ -23,8 +24,11 @@ const ActiveDelivery = () => {
       const res = await driverService.getAssignments();
       const data = res?.data?.data || res?.data;
       const list = Array.isArray(data) ? data : [];
-      setAssignment(list.find((a) => a.id === id) || null);
+      const found = list.find((a) => a.id === id) || null;
+      logger.info('DRIVER_DELIVERY', 'Delivery loaded', { id, found: !!found });
+      setAssignment(found);
     } catch (err) {
+      logger.error('DRIVER_DELIVERY', 'Failed to load delivery', err);
       setAssignment(null);
     } finally {
       setLoading(false);
@@ -41,9 +45,11 @@ const ActiveDelivery = () => {
       const formData = new FormData();
       formData.append('proof_image', proofFile);
       await driverService.confirmDelivery(id, formData);
+      logger.info('DRIVER_DELIVERY', 'Delivery confirmed', { deliveryId: id });
       toast.success('Delivery confirmed!');
       navigate('/driver');
     } catch (err) {
+      logger.error('DRIVER_DELIVERY', 'Failed to confirm delivery', err);
       toast.error('Could not confirm delivery. Please try again.');
     } finally {
       setUploading(false);

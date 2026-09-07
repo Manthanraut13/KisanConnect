@@ -1,68 +1,74 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { logger } from '../lib/logger';
 
-export const useCartStore = create(
-  persist(
-    (set, get) => ({
-      items: [],
-      totalItems: 0,
-      subtotal: 0,
-      deliveryCharge: 0,
-      gstAmount: 0,
-      totalAmount: 0,
+export const useCartStore = create((set, get) => ({
+  items: [],
+  totalItems: 0,
+  subtotal: 0,
+  deliveryCharge: 0,
+  gstAmount: 0,
+  totalAmount: 0,
 
-      addToCart: (item) => {
-        const { items } = get();
-        const existingItem = items.find((i) => i.listing_id === item.listing_id);
+  setCart: (newItems) => {
+    logger.cart.load(newItems?.length || 0);
+    set({ items: newItems });
+    get().calculateTotals();
+  },
 
-        if (existingItem) {
-          set({
-            items: items.map((i) =>
-              i.listing_id === item.listing_id
-                ? { ...i, quantity_kg: i.quantity_kg + item.quantity_kg }
-                : i
-            ),
-          });
-        } else {
-          set({ items: [...items, item] });
-        }
-        get().calculateTotals();
-      },
+  addToCart: (item) => {
+    logger.cart.add(item);
+    const { items } = get();
+    const existingItem = items.find((i) => i.listing_id === item.listing_id);
 
-      removeFromCart: (listingId) => {
-        set({ items: get().items.filter((i) => i.listing_id !== listingId) });
-        get().calculateTotals();
-      },
-
-      updateQuantity: (listingId, quantityKg) => {
-        set({
-          items: get().items.map((i) =>
-            i.listing_id === listingId ? { ...i, quantity_kg: quantityKg } : i
-          ),
-        });
-        get().calculateTotals();
-      },
-
-      clearCart: () => set({ items: [] }),
-
-      calculateTotals: () => {
-        const { items } = get();
-        const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
-        const deliveryCharge = subtotal > 500 ? 0 : 50;
-        const gstAmount = subtotal * 0.05;
-        const totalAmount = subtotal + deliveryCharge + gstAmount;
-
-        set({
-          subtotal,
-          deliveryCharge,
-          gstAmount,
-          totalAmount,
-          totalItems: items.reduce((sum, item) => sum + item.quantity_kg, 0),
-        });
-      },
-    }),
-    {
-      name: 'cart-storage',
+    if (existingItem) {
+      set({
+        items: items.map((i) =>
+          i.listing_id === item.listing_id
+            ? { ...i, quantity_kg: i.quantity_kg + item.quantity_kg }
+            : i
+        ),
+      });
+    } else {
+      set({ items: [...items, item] });
     }
-  )
-);
+    get().calculateTotals();
+  },
+
+  removeFromCart: (listingId) => {
+    logger.cart.remove(listingId);
+    set({ items: get().items.filter((i) => i.listing_id !== listingId) });
+    get().calculateTotals();
+  },
+
+  updateQuantity: (listingId, quantityKg) => {
+    logger.cart.update(listingId, quantityKg);
+    set({
+      items: get().items.map((i) =>
+        i.listing_id === listingId ? { ...i, quantity_kg: quantityKg } : i
+      ),
+    });
+    get().calculateTotals();
+  },
+
+  clearCart: () => {
+    logger.cart.clear();
+    set({ items: [] });
+    get().calculateTotals();
+  },
+
+  calculateTotals: () => {
+    const { items } = get();
+    const subtotal = items.reduce((sum, item) => sum + (item.total_price || item.price_per_kg * item.quantity_kg), 0);
+    const deliveryCharge = subtotal > 500 ? 0 : 50;
+    const gstAmount = subtotal * 0.05;
+    const totalAmount = subtotal + deliveryCharge + gstAmount;
+
+    set({
+      subtotal,
+      deliveryCharge,
+      gstAmount,
+      totalAmount,
+      totalItems: items.length,
+    });
+  },
+}));

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import api from '../services/api';
+import { logger } from '../lib/logger';
 
 const registerSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -15,20 +16,18 @@ const registerSchema = z.object({
   state: z.string().min(2, 'State is required'),
 });
 
-//type RegisterForm = z.infer<typeof registerSchema>;
-
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const {
-  register,
-  handleSubmit,
-  formState: { errors },
-} = useForm({
-  resolver: zodResolver(registerSchema),
-});
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+  });
 
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -36,8 +35,10 @@ const Register = () => {
 
     try {
       await api.post('/api/auth/register', data);
+      logger.form.submit('Register', { mobile: data.mobile, role: data.role });
       navigate('/login');
     } catch (err) {
+      logger.auth.error('register', err);
       setError(err.response?.data?.message || err.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);

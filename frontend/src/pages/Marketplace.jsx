@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { listingService } from '../services/listing.service';
 import FilterSidebar from '../components/marketplace/FilterSidebar';
 import ProductGrid from '../components/marketplace/ProductGrid';
+import { logger } from '../lib/logger';
 
 const DEFAULT_FILTERS = {
   crop_category: '',
@@ -13,10 +14,7 @@ const DEFAULT_FILTERS = {
 
 export default function Marketplace() {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [listings, setListings] = useState([ { id: "1", crop_name: "Tomato", images: [], price_per_kg: 22, available_kg: 350, farmer_name: "Ramesh Patil", district: "Nashik", is_organic: true, quality_grade: "A" },
-  { id: "2", crop_name: "Onion", images: [], price_per_kg: 18, available_kg: 200, farmer_name: "Suresh Sharma", district: "Pune", is_organic: false, quality_grade: "B" },
-  { id: "3", crop_name: "Potato", images: [], price_per_kg: 15, available_kg: 500, farmer_name: "Vijay Kumar", district: "Nashik", is_organic: true, quality_grade: "A" },
-  { id: "4", crop_name: "Wheat", images: [], price_per_kg: 28, available_kg: 800, farmer_name: "Anil Deshmukh", district: "Pune", is_organic: false, quality_grade: "A" },]);
+  const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -26,7 +24,7 @@ export default function Marketplace() {
 
   const debounceTimer = useRef(null);
 
-  /*useEffect(() => {
+  useEffect(() => {
     let cancelled = false;
 
     setLoading(true);
@@ -35,11 +33,14 @@ export default function Marketplace() {
       .then((res) => {
         if (cancelled) return;
         const data = res.data ?? res;
-        setListings(data.listings ?? data.items ?? data.results ?? data.data ?? []);
+        const listingsData = data.listings ?? data.items ?? data.results ?? data.data ?? [];
+        logger.info('MARKETPLACE', 'Listings loaded', { count: listingsData.length, page, filters });
+        setListings(listingsData);
         setTotalPages(data.totalPages ?? data.total_pages ?? 1);
       })
-      .catch(() => {
+      .catch((err) => {
         if (cancelled) return;
+        logger.error('MARKETPLACE', 'Failed to load listings', err);
         setListings([]);
         setTotalPages(1);
       })
@@ -56,7 +57,7 @@ export default function Marketplace() {
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
-  }, []);*/
+  }, []);
 
   const handleSearchChange = (e) => {
     setSearchInput(e.target.value);

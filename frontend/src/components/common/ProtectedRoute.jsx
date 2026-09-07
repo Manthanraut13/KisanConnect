@@ -1,22 +1,15 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
-import { getRoleHome } from '../../lib/roles';
 
-/**
- * ProtectedRoute - Guards routes behind authentication + role checks.
- * Props: { roles: string[] } - only allow these roles through.
- */
-const ProtectedRoute = ({ roles }) => {
+const ProtectedRoute = ({ roles = [] }) => {
   const { isAuthenticated, user } = useAuthStore();
-  const location = useLocation();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
   }
 
-  if (roles && user && !roles.includes(user.role)) {
-    // Logged in but wrong role — send to their own home
-    return <Navigate to={getRoleHome(user?.role)} replace />;
+  if (roles.length > 0 && !roles.includes(user.role)) {
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;

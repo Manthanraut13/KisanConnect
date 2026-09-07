@@ -3,6 +3,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAuthStore } from '../stores/authStore';
+
+// Route per role after successful login
+const roleHome = {
+  admin: '/admin',
+  logistics: '/driver',
+  farmer: '/',
+  consumer: '/',
+  bulk_buyer: '/',
+};
 
 const loginSchema = z.object({
   mobile: z.string().length(10, 'Mobile must be 10 digits').regex(/^[6-9]\d{9}$/, 'Enter a valid Indian mobile number').optional(),
@@ -20,6 +30,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loginMode, setLoginMode] = useState('password');
   const navigate = useNavigate();
+  const setUser = useAuthStore((s) => s.setUser);
 
   const {
     register,
@@ -48,11 +59,8 @@ const Login = () => {
         throw new Error(result.message || 'Login failed');
       }
 
-      localStorage.setItem('token', result.data.access_token);
-      localStorage.setItem('refreshToken', result.data.refresh_token);
-      localStorage.setItem('user', JSON.stringify(result.data.user));
-
-      navigate('/');
+      setUser(result.data.user, result.data.access_token);
+      navigate(roleHome[result.data.user.role] || '/');
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {
@@ -92,11 +100,8 @@ const Login = () => {
         throw new Error(result.message || 'OTP verification failed');
       }
 
-      localStorage.setItem('token', result.data.access_token);
-      localStorage.setItem('refreshToken', result.data.refresh_token);
-      localStorage.setItem('user', JSON.stringify(result.data.user));
-
-      navigate('/');
+      setUser(result.data.user, result.data.access_token);
+      navigate(roleHome[result.data.user.role] || '/');
     } catch (err) {
       setError(err.message || 'OTP login failed. Please try again.');
     } finally {

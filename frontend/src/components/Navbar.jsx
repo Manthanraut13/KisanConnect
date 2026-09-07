@@ -1,46 +1,69 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuthStore } from '../stores/authStore';
+import { ShoppingCart } from 'lucide-react';
+import { useCartStore } from '../stores/cartStore';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const user = null; // Replace with actual auth store integration
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const totalItems = useCartStore((s) => s.totalItems);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <nav className="bg-kisan-800 text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <span className="text-2xl font-bold">Kisan Connect</span>
-          </div>
+          </Link>
 
           <div className="hidden md:flex items-center space-x-6">
-            <button onClick={() => navigate('/')} className="hover:text-kisan-400">
-              Home
-            </button>
-            {user && user.role === 'consumer' && (
-              <>
-                <button onClick={() => navigate('/cart')} className="hover:text-kisan-400">
-                  Cart
-                </button>
-                <button onClick={() => navigate('/orders')} className="hover:text-kisan-400">
-                  Orders
-                </button>
-              </>
+            <Link to="/" className="hover:text-kisan-200">Home</Link>
+            {isAuthenticated && user && user.role === 'admin' && (
+              <Link to="/admin" className="hover:text-kisan-200">Admin</Link>
+            )}
+            {isAuthenticated && user && user.role === 'logistics' && (
+              <Link to="/driver" className="hover:text-kisan-200">Driver</Link>
+            )}
+            {isAuthenticated && user && ['consumer', 'farmer', 'bulk_buyer'].includes(user.role) && (
+              <Link to="/orders" className="hover:text-kisan-200">Orders</Link>
             )}
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            {user ? (
-              <button onClick={() => navigate('/login')} className="text-sm">
-                Logout
-              </button>
+            {['consumer', 'farmer', 'bulk_buyer'].includes(user?.role) && (
+              <Link to="/cart" className="relative p-2 hover:text-kisan-200">
+                <ShoppingCart className="h-5 w-5" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {totalItems}
+                  </span>
+                )}
+              </Link>
+            )}
+            {isAuthenticated && user ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-kisan-200">{user.full_name}</span>
+                <button
+                  onClick={handleLogout}
+                  className="text-sm bg-kisan-700 px-4 py-2 rounded-lg hover:bg-kisan-600"
+                >
+                  Logout
+                </button>
+              </div>
             ) : (
               <>
-                <button onClick={() => navigate('/login')} className="text-sm">
-                  Login
-                </button>
-                <button onClick={() => navigate('/register')} className="text-sm">
+                <Link to="/login" className="text-sm hover:text-kisan-200">Login</Link>
+                <Link
+                  to="/register"
+                  className="text-sm bg-kisan-700 px-4 py-2 rounded-lg hover:bg-kisan-600"
+                >
                   Register
-                </button>
+                </Link>
               </>
             )}
           </div>

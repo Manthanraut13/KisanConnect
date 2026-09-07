@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../stores/cartStore';
 import { toast } from 'sonner';
+import api from '../services/api';
 
 const Checkout = () => {
   const { items, totalAmount, clearCart } = useCartStore();
@@ -63,24 +64,13 @@ const Checkout = () => {
       }
 
       // Step 1: Create order with backend
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/razorpay/order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          amount: totalAmount * 100, // Razorpay expects amount in paise
-          currency: 'INR',
-          receipt: `order_${Date.now()}`,
-        }),
+      const response = await api.post('/api/payments/razorpay/order', {
+        amount: totalAmount * 100, // Razorpay expects amount in paise
+        currency: 'INR',
+        receipt: `order_${Date.now()}`,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Payment order creation failed');
-      }
+      const data = response.data.data || response.data;
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
@@ -126,40 +116,33 @@ const Checkout = () => {
 
     try {
       // Create order first
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      const response = await api.post('/api/orders', {
+        items: items.map(item => ({
+          listing_id: item.listing_id,
+          quantity_kg: item.quantity_kg,
+        })),
+        delivery_address: {
+          street: formData.street,
+          city: formData.city,
+          state: formData.state,
+          pin_code: formData.pin_code,
+          latitude: 0,
+          longitude: 0,
         },
-        body: JSON.stringify({
-          items: items.map(item => ({
-            listing_id: item.listing_id,
-            quantity_kg: item.quantity_kg,
-          })),
-          delivery_address: {
-            street: formData.street,
-            city: formData.city,
-            state: formData.state,
-            pin_code: formData.pin_code,
-            latitude: 0,
-            longitude: 0,
-          },
-          delivery_slot: null,
-          notes: '',
-        }),
+        delivery_slot: null,
+        notes: '',
       });
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (!response.ok) {
+      if (!response.data.success) {
         throw new Error(result.message || 'Order creation failed');
       }
 
       clearCart();
       navigate(`/order-success/${result.data.order_id}`);
     } catch (error) {
-      toast.error(error.message || 'Order creation failed');
+      toast.error(error.response?.data?.message || error.message || 'Order creation failed');
     } finally {
       setIsProcessing(false);
     }

@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
+import { getRoleHome } from '../../lib/roles';
 
 /**
  * ProtectedRoute - Guards routes behind authentication + role checks.
@@ -14,9 +15,8 @@ const ProtectedRoute = ({ roles }) => {
   }
 
   if (roles && user && !roles.includes(user.role)) {
-    // Logged in but wrong role
-    const fallback = user.role === 'admin' ? '/admin' : '/';
-    return <Navigate to={fallback} replace />;
+    // Logged in but wrong role — send to their own home
+    return <Navigate to={getRoleHome(user?.role)} replace />;
   }
 
   return <Outlet />;

@@ -5,27 +5,6 @@ import { toast } from 'sonner';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { driverService } from '../../services/driver.service';
 
-const mockAssignments = [
-  {
-    id: 'assign-1',
-    order: {
-      id: 'ORDER-A1',
-      items: [{ crop_name: 'Tomato', quantity_kg: 5 }, { crop_name: 'Onion', quantity_kg: 3 }],
-    },
-    delivery_location: {
-      full_name: 'Priya Sharma',
-      mobile: '9765432109',
-      full_address: '12 MG Road, Nashik',
-      district: 'Nashik',
-      state: 'Maharashtra',
-      pin_code: '422001',
-      latitude: 20.01,
-      longitude: 73.79,
-    },
-    status: 'in_transit',
-  },
-];
-
 const ActiveDelivery = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -46,7 +25,7 @@ const ActiveDelivery = () => {
       const list = Array.isArray(data) ? data : [];
       setAssignment(list.find((a) => a.id === id) || null);
     } catch (err) {
-      setAssignment(mockAssignments.find((a) => a.id === id) || null);
+      setAssignment(null);
     } finally {
       setLoading(false);
     }

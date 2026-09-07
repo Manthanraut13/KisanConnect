@@ -32,10 +32,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>
 );
 
-if ('serviceWorker' in navigator) {
+// Register service worker only in production builds — it breaks Vite HMR in dev
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {
-      // SW registration is optional - ignore failures (e.g. dev / offline)
+      // SW registration is optional - ignore failures
     });
   });
 }

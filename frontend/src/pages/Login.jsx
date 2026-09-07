@@ -9,9 +9,9 @@ import { useAuthStore } from '../stores/authStore';
 const roleHome = {
   admin: '/admin',
   logistics: '/driver',
-  farmer: '/',
-  consumer: '/',
-  bulk_buyer: '/',
+  farmer: '/farmer/dashboard',
+  consumer: '/marketplace',
+  bulk_buyer: '/marketplace',
 };
 
 const loginSchema = z.object({

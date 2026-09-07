@@ -23,11 +23,15 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center space-x-6">
             <Link to="/" className="hover:text-kisan-200">Home</Link>
+            <Link to="/marketplace" className="hover:text-kisan-200">Marketplace</Link>
             {isAuthenticated && user && user.role === 'admin' && (
               <Link to="/admin" className="hover:text-kisan-200">Admin</Link>
             )}
             {isAuthenticated && user && user.role === 'logistics' && (
               <Link to="/driver" className="hover:text-kisan-200">Driver</Link>
+            )}
+            {isAuthenticated && user && ['farmer', 'fpo_admin'].includes(user.role) && (
+              <Link to="/farmer/dashboard" className="hover:text-kisan-200">Dashboard</Link>
             )}
             {isAuthenticated && user && ['consumer', 'farmer', 'bulk_buyer'].includes(user.role) && (
               <Link to="/orders" className="hover:text-kisan-200">Orders</Link>

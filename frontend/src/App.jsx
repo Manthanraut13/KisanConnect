@@ -23,6 +23,7 @@ import DriverDashboard from './pages/driver/DriverDashboard';
 import ActiveDelivery from './pages/driver/ActiveDelivery';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import ChatbotWidget from './components/chatbot/ChatbotWidget';
+import DemandAdvisory from './pages/farmer/DemandAdvisory';
 
 const App = () => {
   return (
@@ -56,6 +57,7 @@ const App = () => {
             <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
             <Route path="/farmer/listings" element={<MyListings />} />
             <Route path="/farmer/listings/new" element={<CreateListing />} />
+            <Route path="/farmer/advisory" element={<DemandAdvisory />} />
           </Route>
         </Route>
 

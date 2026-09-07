@@ -5,26 +5,6 @@ import { toast } from 'sonner';
 import { driverService } from '../../services/driver.service';
 import { useAuthStore } from '../../stores/authStore';
 
-const mockAssignments = [
-  {
-    id: 'assign-1',
-    order: {
-      id: 'ORDER-A1',
-      items: [{ crop_name: 'Tomato', quantity_kg: 5 }, { crop_name: 'Onion', quantity_kg: 3 }],
-      total_amount: 164,
-    },
-    delivery_location: {
-      full_name: 'Priya Sharma',
-      mobile: '9765432109',
-      full_address: '12 MG Road, Nashik',
-      district: 'Nashik',
-    },
-    status: 'assigned',
-    estimated_km: 8.2,
-    estimated_minutes: 30,
-  },
-];
-
 const statusStyles = {
   assigned: 'bg-yellow-100 text-yellow-800',
   in_transit: 'bg-blue-100 text-blue-800',
@@ -50,8 +30,8 @@ const DriverDashboard = () => {
       setAssignments(Array.isArray(data) ? data : []);
       setError('');
     } catch (err) {
-      setAssignments(mockAssignments);
-      setError('Could not load live assignments. Showing demo data.');
+      setAssignments([]);
+      setError('Could not load assignments.');
     } finally {
       setLoading(false);
     }

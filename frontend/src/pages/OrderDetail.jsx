@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import api from '../services/api';
 
 const OrderDetail = () => {
   const { id } = useParams();
@@ -13,10 +14,9 @@ const OrderDetail = () => {
 
   const fetchOrder = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/orders/${id}`);
-      const result = await response.json();
-      if (result.success) {
-        setOrder(result.data);
+      const result = await api.get(`/api/orders/${id}`);
+      if (result.data.success) {
+        setOrder(result.data.data);
       }
     } catch (error) {
       console.error('Error fetching order:', error);

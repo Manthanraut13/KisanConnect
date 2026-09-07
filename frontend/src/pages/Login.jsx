@@ -4,15 +4,8 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuthStore } from '../stores/authStore';
-
-// Route per role after successful login
-const roleHome = {
-  admin: '/admin',
-  logistics: '/driver',
-  farmer: '/farmer/dashboard',
-  consumer: '/marketplace',
-  bulk_buyer: '/marketplace',
-};
+import { getRoleHome } from '../lib/roles';
+import api from '../services/api';
 
 const loginSchema = z.object({
   mobile: z.string().length(10, 'Mobile must be 10 digits').regex(/^[6-9]\d{9}$/, 'Enter a valid Indian mobile number').optional(),
@@ -47,22 +40,12 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      const result = await api.post('/api/auth/login', data);
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Login failed');
-      }
-
-      setUser(result.data.user, result.data.access_token);
-      navigate(roleHome[result.data.user.role] || '/');
+      setUser(result.data.data.user, result.data.data.access_token);
+      navigate(getRoleHome(result.data.data.user.role));
     } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
+      setError(err.response?.data?.message || err.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -74,36 +57,18 @@ const Login = () => {
 
     try {
       // Step 1: Send OTP
-      const sendOtpResponse = await fetch('http://localhost:5000/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobile: data.mobile }),
-      });
-
-      if (!sendOtpResponse.ok) {
-        throw new Error('Failed to send OTP');
-      }
+      await api.post('/api/auth/send-otp', { mobile: data.mobile });
 
       // Step 2: Get OTP from user and verify
       const otp = prompt('Enter the OTP sent to your mobile:');
       if (!otp) return;
 
-      const verifyResponse = await fetch('http://localhost:5000/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobile: data.mobile, otp }),
-      });
+      const result = await api.post('/api/auth/verify-otp', { mobile: data.mobile, otp });
 
-      const result = await verifyResponse.json();
-
-      if (!verifyResponse.ok) {
-        throw new Error(result.message || 'OTP verification failed');
-      }
-
-      setUser(result.data.user, result.data.access_token);
-      navigate(roleHome[result.data.user.role] || '/');
+      setUser(result.data.data.user, result.data.data.access_token);
+      navigate(getRoleHome(result.data.data.user.role));
     } catch (err) {
-      setError(err.message || 'OTP login failed. Please try again.');
+      setError(err.response?.data?.message || err.message || 'OTP login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

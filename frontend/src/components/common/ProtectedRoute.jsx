@@ -1,14 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
-
-// Where each logged-in role should be redirected when hitting a route they can't access
-const roleHome = {
-  admin: '/admin',
-  logistics: '/driver',
-  farmer: '/farmer/dashboard',
-  consumer: '/marketplace',
-  bulk_buyer: '/marketplace',
-};
+import { getRoleHome } from '../../lib/roles';
 
 /**
  * ProtectedRoute - Guards routes behind authentication + role checks.
@@ -24,8 +16,7 @@ const ProtectedRoute = ({ roles }) => {
 
   if (roles && user && !roles.includes(user.role)) {
     // Logged in but wrong role — send to their own home
-    const fallback = roleHome[user.role] || '/';
-    return <Navigate to={fallback} replace />;
+    return <Navigate to={getRoleHome(user?.role)} replace />;
   }
 
   return <Outlet />;

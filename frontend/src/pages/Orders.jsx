@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../stores/cartStore';
+import api from '../services/api';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -14,10 +15,9 @@ const Orders = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/orders');
-      const result = await response.json();
-      if (result.success) {
-        setOrders(result.data || []);
+      const result = await api.get('/api/orders');
+      if (result.data.success) {
+        setOrders(result.data.data || []);
       }
     } catch (error) {
       console.error('Error fetching orders:', error);

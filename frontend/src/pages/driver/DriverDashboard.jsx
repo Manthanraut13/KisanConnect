@@ -4,26 +4,7 @@ import { Truck, Phone, MapPin, Package, CheckCircle, RefreshCw } from 'lucide-re
 import { toast } from 'sonner';
 import { driverService } from '../../services/driver.service';
 import { useAuthStore } from '../../stores/authStore';
-
-const mockAssignments = [
-  {
-    id: 'assign-1',
-    order: {
-      id: 'ORDER-A1',
-      items: [{ crop_name: 'Tomato', quantity_kg: 5 }, { crop_name: 'Onion', quantity_kg: 3 }],
-      total_amount: 164,
-    },
-    delivery_location: {
-      full_name: 'Priya Sharma',
-      mobile: '9765432109',
-      full_address: '12 MG Road, Nashik',
-      district: 'Nashik',
-    },
-    status: 'assigned',
-    estimated_km: 8.2,
-    estimated_minutes: 30,
-  },
-];
+import { logger } from '../../lib/logger';
 
 const statusStyles = {
   assigned: 'bg-yellow-100 text-yellow-800',
@@ -47,17 +28,21 @@ const DriverDashboard = () => {
     try {
       const res = await driverService.getAssignments();
       const data = res?.data?.data || res?.data;
-      setAssignments(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : [];
+      logger.info('DRIVER', 'Assignments loaded', { count: list.length });
+      setAssignments(list);
       setError('');
     } catch (err) {
-      setAssignments(mockAssignments);
-      setError('Could not load live assignments. Showing demo data.');
+      logger.error('DRIVER', 'Failed to load assignments', err);
+      setAssignments([]);
+      setError('Could not load assignments.');
     } finally {
       setLoading(false);
     }
   };
 
   const startDelivery = async (id) => {
+    logger.info('DRIVER', 'Starting delivery', { assignmentId: id });
     try {
       await driverService.updateDeliveryStatus(id, 'in_transit');
       setAssignments((prev) =>
@@ -65,10 +50,12 @@ const DriverDashboard = () => {
       );
       toast.success('Delivery started');
     } catch (err) {
+      logger.error('DRIVER', 'Failed to start delivery', err);
       setAssignments((prev) =>
         prev.map((a) => (a.id === id ? { ...a, status: 'assigned' } : a))
       );
-      toast.error('Could not start delivery. Please try again.');
+      toast.error('Could not start delivery. Please try again.'
+);
     }
   };
 

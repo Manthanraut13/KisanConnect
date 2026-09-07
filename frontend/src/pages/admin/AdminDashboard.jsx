@@ -21,6 +21,7 @@ import {
 import AdminLayout from '../../components/admin/AdminLayout';
 import StatCard from '../../components/admin/StatCard';
 import { adminService } from '../../services/admin.service';
+import { logger } from '../../lib/logger';
 
 const mockStats = {
   totalUsers: 1247,
@@ -77,6 +78,7 @@ const AdminDashboard = () => {
         ]);
         const liveStats = statsRes?.data?.data || statsRes?.data;
         const liveGrievances = grievancesRes?.data?.data || grievancesRes?.data;
+        logger.info('ADMIN_DASHBOARD', 'Data loaded', { hasStats: !!liveStats, grievances: liveGrievances?.length });
         if (liveStats && typeof liveStats === 'object' && !Array.isArray(liveStats)) {
           setStats((current) => ({
             ...current,

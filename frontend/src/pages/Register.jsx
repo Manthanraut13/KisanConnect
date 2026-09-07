@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import api from '../services/api';
+import { logger } from '../lib/logger';
 
 const registerSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -14,8 +16,6 @@ const registerSchema = z.object({
   state: z.string().min(2, 'State is required'),
 });
 
-type RegisterForm = z.infer<typeof registerSchema>;
-
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,30 +25,21 @@ const Register = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterForm>({
+  } = useForm({
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: RegisterForm) => {
+  const onSubmit = async (data) => {
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Registration failed');
-      }
-
+      await api.post('/api/auth/register', data);
+      logger.form.submit('Register', { mobile: data.mobile, role: data.role });
       navigate('/login');
-    } catch (err: any) {
-      setError(err.message || 'Registration failed. Please try again.');
+    } catch (err) {
+      logger.auth.error('register', err);
+      setError(err.response?.data?.message || err.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

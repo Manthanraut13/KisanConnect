@@ -10,12 +10,20 @@ const verifySecret = (req) => {
 };
 
 const refreshForecasts = async (req, res, next) => {
-  const startTime = Date.now();
   try {
     if (!verifySecret(req)) {
       return res.status(401).json({ success: false, message: 'Invalid webhook secret' });
     }
+    const data = await runForecastRefresh();
+    return res.json({ success: true, message: 'Forecasts refreshed', data: data.response });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
 
+const runForecastRefresh = async () => {
+  const startTime = Date.now();
+  try {
     const aiUrl = process.env.AI_SERVICE_URL;
     if (!aiUrl) throw new Error('AI_SERVICE_URL not configured');
 
@@ -32,7 +40,7 @@ const refreshForecasts = async (req, res, next) => {
       payload: { result: response.data },
     });
 
-    return res.json({ success: true, message: 'Forecasts refreshed', data: response.data });
+    return { response: response.data };
   } catch (error) {
     await WorkflowLog.create({
       workflow_name: 'refresh-forecasts',
@@ -43,7 +51,7 @@ const refreshForecasts = async (req, res, next) => {
     }).catch((e) => logger.error('Failed to log workflow', e));
 
     logger.error('Forecast refresh failed:', error.message);
-    return res.status(500).json({ success: false, message: error.message });
+    throw error;
   }
 };
 
@@ -177,4 +185,4 @@ const logWebhook = async (req, res, next) => {
   }
 };
 
-module.exports = { refreshForecasts, orderPlaced, newGrievance, logWebhook };
+module.exports = { refreshForecasts, runForecastRefresh, orderPlaced, newGrievance, logWebhook };

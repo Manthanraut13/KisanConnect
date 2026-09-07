@@ -4,27 +4,7 @@ import { ArrowLeft, Phone, MapPin, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { driverService } from '../../services/driver.service';
-
-const mockAssignments = [
-  {
-    id: 'assign-1',
-    order: {
-      id: 'ORDER-A1',
-      items: [{ crop_name: 'Tomato', quantity_kg: 5 }, { crop_name: 'Onion', quantity_kg: 3 }],
-    },
-    delivery_location: {
-      full_name: 'Priya Sharma',
-      mobile: '9765432109',
-      full_address: '12 MG Road, Nashik',
-      district: 'Nashik',
-      state: 'Maharashtra',
-      pin_code: '422001',
-      latitude: 20.01,
-      longitude: 73.79,
-    },
-    status: 'in_transit',
-  },
-];
+import { logger } from '../../lib/logger';
 
 const ActiveDelivery = () => {
   const { id } = useParams();
@@ -44,9 +24,12 @@ const ActiveDelivery = () => {
       const res = await driverService.getAssignments();
       const data = res?.data?.data || res?.data;
       const list = Array.isArray(data) ? data : [];
-      setAssignment(list.find((a) => a.id === id) || null);
+      const found = list.find((a) => a.id === id) || null;
+      logger.info('DRIVER_DELIVERY', 'Delivery loaded', { id, found: !!found });
+      setAssignment(found);
     } catch (err) {
-      setAssignment(mockAssignments.find((a) => a.id === id) || null);
+      logger.error('DRIVER_DELIVERY', 'Failed to load delivery', err);
+      setAssignment(null);
     } finally {
       setLoading(false);
     }
@@ -62,9 +45,11 @@ const ActiveDelivery = () => {
       const formData = new FormData();
       formData.append('proof_image', proofFile);
       await driverService.confirmDelivery(id, formData);
+      logger.info('DRIVER_DELIVERY', 'Delivery confirmed', { deliveryId: id });
       toast.success('Delivery confirmed!');
       navigate('/driver');
     } catch (err) {
+      logger.error('DRIVER_DELIVERY', 'Failed to confirm delivery', err);
       toast.error('Could not confirm delivery. Please try again.');
     } finally {
       setUploading(false);

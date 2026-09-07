@@ -5,9 +5,11 @@ import { Toaster } from 'sonner';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import './index.css';
+import './i18n';
 import App from './App.jsx';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
 
 L.Marker.prototype.options.icon = L.icon({
   iconUrl: markerIcon,

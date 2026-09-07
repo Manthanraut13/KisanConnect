@@ -2,11 +2,18 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { ShoppingCart } from 'lucide-react';
 import { useCartStore } from '../stores/cartStore';
+import { useTranslation } from 'react-i18next';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuthStore();
   const totalItems = useCartStore((s) => s.totalItems);
+  const { t, i18n } = useTranslation();
+  const toggleLanguage = () => {
+    const next = i18n.language === 'hi' ? 'en' : 'hi';
+    i18n.changeLanguage(next);
+    localStorage.setItem('kc_language', next);
+  };
 
   const handleLogout = () => {
     logout();
@@ -22,8 +29,8 @@ const Navbar = () => {
           </Link>
 
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="hover:text-kisan-200">Home</Link>
-            <Link to="/marketplace" className="hover:text-kisan-200">Marketplace</Link>
+            <Link to="/" className="hover:text-kisan-200">{t('nav.home')}</Link>
+	    <Link to="/marketplace" className="hover:text-kisan-200">{t('nav.marketplace')}</Link>
             {isAuthenticated && user && user.role === 'admin' && (
               <Link to="/admin" className="hover:text-kisan-200">Admin</Link>
             )}
@@ -31,10 +38,10 @@ const Navbar = () => {
               <Link to="/driver" className="hover:text-kisan-200">Driver</Link>
             )}
             {isAuthenticated && user && ['farmer', 'fpo_admin'].includes(user.role) && (
-              <Link to="/farmer/dashboard" className="hover:text-kisan-200">Dashboard</Link>
+              <Link to="/farmer/dashboard" className="hover:text-kisan-200">{t('nav.dashboard')}</Link>
             )}
             {isAuthenticated && user && ['consumer', 'farmer', 'bulk_buyer'].includes(user.role) && (
-              <Link to="/orders" className="hover:text-kisan-200">Orders</Link>
+              <Link to="/orders" className="hover:text-kisan-200">{t('nav.orders')}</Link>
             )}
           </div>
 
@@ -53,23 +60,29 @@ const Navbar = () => {
               <div className="flex items-center gap-3">
                 <span className="text-sm text-kisan-200">{user.full_name}</span>
                 <button
-                  onClick={handleLogout}
-                  className="text-sm bg-kisan-700 px-4 py-2 rounded-lg hover:bg-kisan-600"
-                >
-                  Logout
-                </button>
+  onClick={handleLogout}
+  className="text-sm bg-kisan-700 px-4 py-2 rounded-lg hover:bg-kisan-600"
+>
+  {t('nav.logout')}
+</button>
               </div>
             ) : (
               <>
-                <Link to="/login" className="text-sm hover:text-kisan-200">Login</Link>
-                <Link
-                  to="/register"
-                  className="text-sm bg-kisan-700 px-4 py-2 rounded-lg hover:bg-kisan-600"
-                >
-                  Register
-                </Link>
+                <Link to="/login" className="text-sm hover:text-kisan-200">{t('nav.login')}</Link>
+		<Link
+  			to="/register"
+  			className="text-sm bg-kisan-700 px-4 py-2 rounded-lg hover:bg-kisan-600"
+			>
+  				{t('nav.register')}
+		</Link>
               </>
             )}
+	    <button
+  onClick={toggleLanguage}
+  className="text-sm bg-kisan-700 px-3 py-2 rounded-lg hover:bg-kisan-600"
+>
+  {i18n.language === 'hi' ? 'English' : 'हिंदी'}
+</button>
           </div>
         </div>
       </div>

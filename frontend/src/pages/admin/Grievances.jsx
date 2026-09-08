@@ -138,6 +138,7 @@ const Grievances = () => {
                 const overdue =
                   g.status !== 'resolved' &&
                   g.status !== 'closed' &&
+                  g.sla_deadline &&
                   new Date(g.sla_deadline) < new Date();
                 const resolved = g.status === 'resolved' || g.status === 'closed';
                 return (
@@ -173,7 +174,7 @@ const Grievances = () => {
                     </td>
                     <td className={`py-3 px-4 ${overdue ? 'text-red-600' : ''}`}>
                       <span className="flex items-center gap-1">
-                        {g.sla_deadline}
+                        {g.sla_deadline ? new Date(g.sla_deadline).toLocaleDateString('en-IN') : '—'}
                         {overdue && <AlertCircle className="h-4 w-4" />}
                       </span>
                     </td>

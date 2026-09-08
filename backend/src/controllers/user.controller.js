@@ -1,6 +1,7 @@
-const { User, Farmer, BulkBuyer, LogisticsPartner } = require('../models');
+const { User, Farmer, BulkBuyer, LogisticsPartner, Listing } = require('../models');
 const { cloudinary } = require('../config/cloudinary.config');
 const AppError = require('../utils/AppError');
+const orderService = require('../services/order.service');
 
 const getProfile = async (req, res, next) => {
   try {
@@ -115,4 +116,60 @@ const completeProfile = async (req, res, next) => {
   }
 };
 
-module.exports = { getProfile, updateProfile, uploadProfileImage, completeProfile };
+const getDashboardData = async (req, res, next) => {
+  try {
+    if (!['farmer', 'fpo_admin'].includes(req.user.role)) {
+      throw new AppError('Dashboard available only for farmers', 403);
+    }
+
+    const farmer = await Farmer.findOne({ where: { user_id: req.user.id } });
+    if (!farmer) throw new AppError('Farmer profile not found', 404);
+
+    const [orders, listings] = await Promise.all([
+      orderService.getOrders(req.user.id, req.user.role, {}),
+      Listing.findAll({ where: { farmer_id: farmer.id } }),
+    ]);
+
+    const summary = {
+      total_earnings: 0,
+      pending_earnings: 0,
+      total_sold_kg: 0,
+      total_orders: orders.length,
+      pending_orders: 0,
+      packed_orders: 0,
+      in_transit_orders: 0,
+      delivered_orders: 0,
+      active_listings: 0,
+      available_stock_kg: 0,
+    };
+
+    for (const order of orders) {
+      if (order.status === 'pending') summary.pending_orders += 1;
+      if (order.status === 'packed') summary.packed_orders += 1;
+      if (order.status === 'in_transit') summary.in_transit_orders += 1;
+      if (order.status === 'delivered') summary.delivered_orders += 1;
+
+      const settled = order.payment_status === 'paid' && !['cancelled', 'refunded'].includes(order.status);
+      for (const item of order.items || []) {
+        if (settled) {
+          summary.total_earnings += Number(item.farmer_payout || 0);
+          summary.total_sold_kg += Number(item.quantity_kg || 0);
+        } else if (order.status === 'pending' || order.status === 'confirmed') {
+          summary.pending_earnings += Number(item.farmer_payout || 0);
+        }
+      }
+    }
+
+    for (const listing of listings) {
+      const available = Number(listing.available_kg || 0);
+      if (listing.is_active && available > 0) summary.active_listings += 1;
+      summary.available_stock_kg += available;
+    }
+
+    return res.json({ success: true, message: 'Dashboard data fetched', data: { farmer, summary } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getProfile, updateProfile, uploadProfileImage, completeProfile, getDashboardData };

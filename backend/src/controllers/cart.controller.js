@@ -14,7 +14,7 @@ const addToCart = async (req, res, next) => {
 const getCart = async (req, res, next) => {
   try {
     const cart = await cartService.getCart(req.user.id);
-    return successResponse(res, 'Cart fetched successfully', cart);
+    return successResponse(res, 'Cart fetched successfully', { items: cart });
   } catch (err) {
     next(err);
   }

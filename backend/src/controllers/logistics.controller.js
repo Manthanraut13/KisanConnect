@@ -30,6 +30,33 @@ const getDriverAssignments = async (req, res, next) => {
   }
 };
 
+const getDriverDashboard = async (req, res, next) => {
+  try {
+    const data = await logisticsService.getDriverDashboard(req.user.id);
+    return successResponse(res, 'Dashboard fetched', data);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getAvailableOrders = async (req, res, next) => {
+  try {
+    const orders = await logisticsService.getAvailableOrders(req.user.id);
+    return successResponse(res, 'Available orders fetched', orders);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const acceptOrder = async (req, res, next) => {
+  try {
+    const assignment = await logisticsService.acceptOrder(req.params.orderId, req.user.id);
+    return successResponse(res, 'Order accepted for delivery', assignment);
+  } catch (err) {
+    next(err);
+  }
+};
+
 const startDelivery = async (req, res, next) => {
   try {
     const assignment = await logisticsService.startDelivery(req.params.id, req.user.id);
@@ -72,6 +99,9 @@ const updateStatus = async (req, res, next) => {
 module.exports = {
   assignDriver,
   getDriverAssignments,
+  getDriverDashboard,
+  getAvailableOrders,
+  acceptOrder,
   startDelivery,
   confirmDelivery,
   trackOrder,

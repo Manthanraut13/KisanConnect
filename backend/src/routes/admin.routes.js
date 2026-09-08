@@ -6,10 +6,14 @@ const { requireRole } = require('../middleware/role.middleware');
 router.use(authMiddleware, requireRole('admin'));
 
 router.get('/stats', adminController.getStats);
+router.get('/orders', adminController.getOrdersAdmin);
+router.put('/orders/:id/status', adminController.updateOrderAdminStatus);
 router.get('/users', adminController.getUsers);
+router.get('/users/:id', adminController.getUserDetail);
 router.put('/users/:id/status', adminController.updateUserStatus);
 router.get('/grievances', adminController.getGrievances);
 router.put('/grievances/:id', adminController.updateGrievance);
+router.get('/reports/analytics', adminController.getAnalytics);
 router.get('/reports/orders', adminController.getOrdersReport);
 router.get('/reports/farmers', adminController.getTopFarmers);
 router.post('/notifications/broadcast', adminController.broadcastNotification);

@@ -19,14 +19,14 @@ const placeOrder = async (userId, deliveryAddress, deliverySlot) => {
     // 2. Validate stock for each item (with row lock)
     const listingsMap = {};
     for (const item of cart) {
-      const listing = await Listing.findByPk(item.listingId, { transaction: t, lock: t.LOCK.UPDATE });
+      const listing = await Listing.findByPk(item.listing_id, { transaction: t, lock: t.LOCK.UPDATE });
       if (!listing || !listing.is_active) {
         throw new AppError(`${item.crop_name} is no longer available`, 400);
       }
       if (Number(listing.available_kg) < item.quantity_kg) {
         throw new AppError(`Only ${listing.available_kg}kg of ${item.crop_name} available`, 400);
       }
-      listingsMap[item.listingId] = listing;
+      listingsMap[item.listing_id] = listing;
     }
 
     // 3. Calculate totals
@@ -59,8 +59,8 @@ const placeOrder = async (userId, deliveryAddress, deliverySlot) => {
       await OrderItem.create(
         {
           order_id: order.id,
-          listing_id: item.listingId,
-          farmer_id: item.farmerId,
+          listing_id: item.listing_id,
+          farmer_id: item.farmer_id,
           crop_name: item.crop_name,
           quantity_kg: item.quantity_kg,
           price_per_kg: item.price_per_kg,
@@ -71,7 +71,7 @@ const placeOrder = async (userId, deliveryAddress, deliverySlot) => {
         { transaction: t }
       );
 
-      const listing = listingsMap[item.listingId];
+      const listing = listingsMap[item.listing_id];
       const newAvailable = Number(listing.available_kg) - item.quantity_kg;
 
       await listing.update(
@@ -97,11 +97,16 @@ const placeOrder = async (userId, deliveryAddress, deliverySlot) => {
 
 const getOrders = async (userId, role, filters = {}) => {
   const where = {};
+  const itemWhere = {};
 
   if (role === 'consumer' || role === 'bulk_buyer') {
     where.buyer_id = userId;
+  } else if (role === 'farmer' || role === 'fpo_admin') {
+    const farmer = await Farmer.findOne({ where: { user_id: userId } });
+    if (!farmer) return [];
+    where['$items.farmer_id$'] = farmer.id;
+    itemWhere.farmer_id = farmer.id;
   }
-  // farmer/admin filtering can be extended later via OrderItem join
 
   if (filters.status) where.status = filters.status;
 
@@ -109,7 +114,19 @@ const getOrders = async (userId, role, filters = {}) => {
     where,
     include: [
       { model: User, as: 'buyer', attributes: ['id', 'full_name', 'mobile'] },
-      { model: OrderItem, as: 'items' },
+      {
+        model: OrderItem,
+        as: 'items',
+        where: itemWhere,
+        required: false,
+        include: [
+          {
+            model: Listing,
+            as: 'listing',
+            attributes: ['id', 'crop_name', 'quantity_kg', 'available_kg', 'price_per_kg'],
+          },
+        ],
+      },
     ],
     order: [['created_at', 'DESC']],
   });
@@ -166,9 +183,24 @@ const cancelOrder = async (orderId, userId) => {
   }
 };
 
-const updateOrderStatus = async (orderId, newStatus) => {
+const updateOrderStatus = async (orderId, newStatus, userId, role) => {
   const order = await Order.findByPk(orderId);
   if (!order) throw new AppError('Order not found', 404);
+
+  const ALLOWED = ['pending', 'confirmed', 'packed', 'in_transit', 'delivered', 'cancelled', 'refunded'];
+  if (!ALLOWED.includes(newStatus)) throw new AppError('Invalid order status', 400);
+
+  // Farmer can only pack/unpack orders that contain their produce
+  if (role === 'farmer' || role === 'fpo_admin') {
+    const farmer = await Farmer.findOne({ where: { user_id: userId } });
+    if (!farmer) throw new AppError('Farmer profile not found', 404);
+    const itemCount = await OrderItem.count({ where: { order_id: orderId, farmer_id: farmer.id } });
+    if (!itemCount) throw new AppError('No items from this order belong to you', 403);
+
+    if (!['confirmed', 'packed', 'pending'].includes(order.status)) {
+      throw new AppError('Order cannot be packed/unpacked at this stage', 400);
+    }
+  }
 
   await order.update({ status: newStatus });
   return order;

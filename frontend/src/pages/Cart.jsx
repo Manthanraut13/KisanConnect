@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { logger } from '../lib/logger';
 
 const Cart = () => {
-  const { items, updateQuantity, removeFromCart, setCart, totalAmount, subtotal, deliveryCharge, gstAmount, totalItems } = useCartStore();
+  const { items, updateQuantity, removeFromCart, setCart, totalAmount, subtotal, deliveryCharge, totalItems } = useCartStore();
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -137,11 +137,7 @@ const Cart = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Delivery Charge</span>
-                  <span>{deliveryCharge === 0 ? 'Free' : `₹${deliveryCharge}`}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>GST (5%)</span>
-                  <span>₹{gstAmount.toFixed(2)}</span>
+                  <span>₹{deliveryCharge.toFixed(2)}</span>
                 </div>
               </div>
 

@@ -36,7 +36,19 @@ const UserManagement = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [userDetail, setUserDetail] = useState(null);
   const [error, setError] = useState('');
+
+  const openDetail = async (user) => {
+    setSelectedUser(user);
+    setUserDetail(null);
+    try {
+      const res = await adminService.getUserDetail(user.id);
+      setUserDetail(res?.data?.data || res?.data);
+    } catch (err) {
+      setUserDetail(null);
+    }
+  };
 
   const normRole = (r) =>
     ({ bulk_buyer: 'Bulk Buyer', farmer: 'Farmer', consumer: 'Consumer', logistics: 'Logistics', admin: 'Admin' }[r] || r);
@@ -179,7 +191,7 @@ const UserManagement = () => {
                   </td>
                   <td className="py-3 px-4">
                     <button
-                      onClick={() => setSelectedUser(u)}
+                      onClick={() => openDetail(u)}
                       className="px-3 py-1 border border-kisan-700 text-kisan-700 text-xs rounded hover:bg-kisan-50"
                     >
                       View
@@ -233,11 +245,17 @@ const UserManagement = () => {
                 </span>
               </div>
             </div>
-            <div className="space-y-2 text-sm text-gray-700">
+<div className="space-y-2 text-sm text-gray-700">
               <p><span className="text-gray-500">Mobile:</span> {selectedUser.mobile}</p>
               <p><span className="text-gray-500">Email:</span> {selectedUser.email || '—'}</p>
-              <p><span className="text-gray-500">District:</span> {selectedUser.district || '—'}</p>
+              <p><span className="text-gray-500">District:</span> {selectedUser.district || userDetail?.farmerProfile?.district || userDetail?.logisticsProfile?.district || userDetail?.bulkBuyerProfile?.district || '—'}</p>
               <p><span className="text-gray-500">Status:</span> {selectedUser.is_active ? 'Active' : 'Inactive'}</p>
+              {userDetail && (
+                <>
+                  <p><span className="text-gray-500">Joined:</span> {new Date(userDetail.created_at).toLocaleDateString('en-IN')}</p>
+                  <p><span className="text-gray-500">Orders:</span> {userDetail.orders_count} · <span className="text-gray-500">Listings:</span> {userDetail.listings_count} · <span className="text-gray-500">Grievances:</span> {userDetail.grievances_count}</p>
+                </>
+              )}
             </div>
             <button
               onClick={() => setSelectedUser(null)}

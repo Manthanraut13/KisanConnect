@@ -7,6 +7,12 @@ import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
+import NotFound from './pages/NotFound';
+import Marketplace from './pages/Marketplace';
+import ProductDetail from './pages/ProductDetail';
+import MyListings from './pages/farmer/MyListings';
+import FarmerDashboard from './pages/farmer/FarmerDashboard';
+import CreateListing from './pages/farmer/CreateListing';
 import ConsumerLayout from './components/ConsumerLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
@@ -17,16 +23,24 @@ import DriverDashboard from './pages/driver/DriverDashboard';
 import ActiveDelivery from './pages/driver/ActiveDelivery';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import ChatbotWidget from './components/chatbot/ChatbotWidget';
+import DemandAdvisory from './pages/farmer/DemandAdvisory';
 
 const App = () => {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Home />} />
+        {/* Auth pages — standalone, no navbar */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Consumer Routes with Navbar */}
+        {/* Public pages with Navbar */}
+        <Route element={<ConsumerLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/marketplace/:id" element={<ProductDetail />} />
+        </Route>
+
+        {/* Consumer shopping (requires consumer/farmer/bulk_buyer login) */}
         <Route element={<ConsumerLayout />}>
           <Route element={<ProtectedRoute roles={['consumer', 'farmer', 'bulk_buyer', 'logistics']} />}>
             <Route path="/cart" element={<Cart />} />
@@ -37,7 +51,17 @@ const App = () => {
           </Route>
         </Route>
 
-        {/* Admin Routes */}
+        {/* Farmer portal (requires farmer/fpo_admin login) */}
+        <Route element={<ConsumerLayout />}>
+          <Route element={<ProtectedRoute roles={['farmer', 'fpo_admin']} />}>
+            <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
+            <Route path="/farmer/listings" element={<MyListings />} />
+            <Route path="/farmer/listings/new" element={<CreateListing />} />
+            <Route path="/farmer/advisory" element={<DemandAdvisory />} />
+          </Route>
+        </Route>
+
+        {/* Admin dashboard (admin only) */}
         <Route element={<ProtectedRoute roles={['admin']} />}>
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<UserManagement />} />
@@ -46,10 +70,17 @@ const App = () => {
           <Route path="/admin/analytics" element={<Analytics />} />
         </Route>
 
-        {/* Driver Routes */}
-        <Route element={<ProtectedRoute roles={['logistics']} />}>
-          <Route path="/driver" element={<DriverDashboard />} />
-          <Route path="/driver/delivery/:id" element={<ActiveDelivery />} />
+        {/* Driver portal (logistics only) */}
+        <Route element={<ConsumerLayout />}>
+          <Route element={<ProtectedRoute roles={['logistics']} />}>
+            <Route path="/driver" element={<DriverDashboard />} />
+            <Route path="/driver/delivery/:id" element={<ActiveDelivery />} />
+          </Route>
+        </Route>
+
+        {/* 404 catch-all */}
+        <Route element={<ConsumerLayout />}>
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
       <ChatbotWidget />

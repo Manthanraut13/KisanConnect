@@ -17,13 +17,13 @@ import {
 import { logger } from '../../lib/logger';
 
 const STATUS_STYLES = {
-  pending: 'bg-amber-100 text-amber-700',
-  confirmed: 'bg-blue-100 text-blue-700',
-  packed: 'bg-violet-100 text-violet-700',
-  in_transit: 'bg-cyan-100 text-cyan-700',
-  delivered: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
-  refunded: 'bg-gray-200 text-gray-600',
+  pending: 'bg-amber text-evergreen',
+  confirmed: 'bg-wash-forest text-forest',
+  packed: 'bg-wash-muted text-evergreen',
+  in_transit: 'bg-wash-forest text-forest',
+  delivered: 'bg-wash-forest text-forest',
+  cancelled: 'bg-wash-terracotta text-terracotta',
+  refunded: 'bg-disabledbg text-mutedtext',
 };
 
 function itemQty(item) {
@@ -73,8 +73,8 @@ export default function FarmerOrders() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-green-800">Farm Orders</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="font-serif text-3xl font-bold text-evergreen">Farm Orders</h1>
+          <p className="text-sm text-mutedtext mt-1">
             Pack the confirmed orders and track your available stock in real time
           </p>
         </div>
@@ -94,11 +94,11 @@ export default function FarmerOrders() {
         </CardHeader>
         <CardContent className="p-0">
           {loading && orders.length === 0 ? (
-            <p className="text-gray-500 py-12 text-center">Loading orders...</p>
+            <p className="text-mutedtext py-12 text-center">Loading orders...</p>
           ) : orders.length === 0 ? (
             <div className="text-center py-12">
-              <Package className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No orders for your produce yet</p>
+              <Package className="h-10 w-10 text-mutedtext/60 mx-auto mb-3" />
+              <p className="text-mutedtext">No orders for your produce yet</p>
             </div>
           ) : (
             <Table>
@@ -116,36 +116,36 @@ export default function FarmerOrders() {
                   <TableRow key={order.id}>
                     <TableCell>
                       <div className="font-mono text-xs">{(order.id || '').slice(0, 8)}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-mutedtext">
                         {new Date(order.created_at || Date.now()).toLocaleDateString('en-IN')}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">{order.buyer?.full_name || '-'}</div>
-                      <div className="text-xs text-gray-500">{order.buyer?.mobile || ''} · {order.delivery_address?.district || ''}</div>
+                      <div className="text-xs text-mutedtext">{order.buyer?.mobile || ''} · {order.delivery_address?.district || ''}</div>
                     </TableCell>
                     <TableCell>
                       {(order.items || []).map((item) => (
-                        <div key={item.id} className="text-sm flex items-center justify-between gap-4 border-b border-gray-100 last:border-0 py-1">
+                        <div key={item.id} className="text-sm flex items-center justify-between gap-4 border-b border-linen last:border-0 py-1">
                           <span className="font-medium">{item.crop_name}</span>
-                          <span className="text-gray-600">
+                          <span className="text-mutedtext font-mono">
                             {itemQty(item)} kg · ₹{Number(item.price_per_kg ?? 0)}/kg
                           </span>
-                          <span className="text-xs text-gray-500 whitespace-nowrap">
+                          <span className="text-xs text-mutedtext whitespace-nowrap">
                             left: {Number(item.listing?.available_kg ?? '-')} kg
                           </span>
                         </div>
                       ))}
-                      <div className="text-xs text-gray-400 mt-1">Total pack qty: {totalPackedQty(order)} kg</div>
+                      <div className="text-xs text-mutedtext font-mono mt-1">Total pack qty: {totalPackedQty(order)} kg</div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={STATUS_STYLES[order.status] || 'bg-gray-200 text-gray-600'}>
+                      <Badge className={STATUS_STYLES[order.status] || 'bg-disabledbg text-mutedtext'}>
                         {order.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       {['confirmed', 'pending'].includes(order.status) && (
-                        <Button size="sm" onClick={() => updateStatus(order, 'packed')} className="bg-violet-600 hover:bg-violet-700">
+                        <Button size="sm" onClick={() => updateStatus(order, 'packed')}>
                           Mark Packed
                         </Button>
                       )}

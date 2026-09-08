@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { MessageCircle, X, Send, Mic, Volume2 } from 'lucide-react';
 import api from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
 import { logger } from '../../lib/logger';
@@ -14,51 +14,13 @@ const initialGreeting = {
 const greetings = {
   en: 'Hi! I am Kisan Mitra. How can I help you?',
   hi: 'नमस्ते! मैं किसान मित्र हूँ। मैं आपकी कैसे मदद कर सकता हूँ?',
+  mr: 'नमस्कार! मी किसान मित्र आहे. मी तुम्हाला कशी मदत करू शकतो?',
 };
 
-const fallbackEn =
-  'Sorry, I am having trouble right now. Please try again in a moment.';
-const fallbackHi =
-  'माफ कीजिए, अभी कोई तकनीकी समस्या है। थोड़ी देर बाद प्रयास करें।';
-
-// Offline / demo keyword replies so the widget stays interactive
-// even when Siddhesh's AI service is not reachable yet.
-const demoEn = {
-  order: 'You can track your order from the "My Orders" section in your account. Need the order ID?',
-  track: 'You can track your order from the "My Orders" section in your account. Need the order ID?',
-  list: 'To list a crop, go to your Farmer Dashboard → "List a crop", add photos, price, and available quantity.',
-  produce: 'Fresh produce is available in the Marketplace. Search for tomatoes, onions, potatoes, and more near you.',
-  support: 'For support, please raise a grievance from your profile page and our team will resolve it within 24 hours.',
-  price: 'Today’s prices trend well for tomatoes and onions. Check the Farmer Dashboard for AI-suggested prices.',
-  hello: 'Hi! I am Kisan Mitra. Ask me about orders, listings, prices, or support.',
-};
-
-const demoHi = {
-  order:
-    'आप अपने खाते में "My Orders" सेक्शन से अपना ऑर्डर ट्रैक कर सकते हैं। क्या आपके पास ऑर्डर आईडी है?',
-  track:
-    'आप अपने खाते में "My Orders" सेक्शन से अपना ऑर्डर ट्रैक कर सकते हैं। क्या आपके पास ऑर्डर आईडी है?',
-  list:
-    'फसल लिस्ट करने के लिए Farmer Dashboard → "List a crop" पर जाएं, फोटो, कीमत और उपलब्ध मात्रा जोड़ें।',
-  produce:
-    'ताज़ी उपज Marketplace में उपलब्ध है। टमाटर, प्याज़, आलू और अन्य चीज़ें अपने पास खोजें।',
-  support:
-    'सहायता के लिए अपने प्रोफ़ाइल से शिकायत दर्ज करें, हमारी टीम 24 घंटे में समाधान करेगी।',
-  price:
-    'आज टमाटर और प्याज़ की कीमतें अच्छी चल रही हैं। AI सुझाई गई कीमतों के लिए Farmer Dashboard देखें।',
-  hello:
-    'नमस्ते! मैं किसान मित्र हूँ। ऑर्डर, लिस्टिंग, कीमत या सहायता के बारे में पूछें।',
-};
-
-const getDemoReply = (text, lang) => {
-  const t = text.toLowerCase();
-  const dict = lang === 'hi' ? demoHi : demoEn;
-  if (/(order|track|deliver)/.test(t)) return dict.order;
-  if (/(list|sell|add)/.test(t)) return dict.list;
-  if (/(produce|buy|vegetable|tomato|onion|potato)/.test(t)) return dict.produce;
-  if (/(support|help|grievance|complaint)/.test(t)) return dict.support;
-  if (/(price|cost|rate|forecast)/.test(t)) return dict.price;
-  return dict.hello;
+const fallbackMsg = {
+  en: 'Sorry, I am having trouble right now. Please try again in a moment.',
+  hi: 'माफ कीजिए, अभी कोई तकनीकी समस्या है। थोड़ी देर बाद प्रयास करें।',
+  mr: 'माफ करा, सध्या तांत्रिक अडचण येत आहे. थोड्या वेळाने पुन्हा प्रयत्न करा.',
 };
 
 const ChatbotWidget = () => {
@@ -67,21 +29,26 @@ const ChatbotWidget = () => {
   const [messages, setMessages] = useState([initialGreeting]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   const messagesEndRef = useRef(null);
+  const audioRef = useRef(new Audio());
   const user = useAuthStore((s) => s.user);
   const userRole = user?.role || 'consumer';
 
   const localizedQuickReplies = language === 'hi'
     ? ['ऑर्डर ट्रैक करें', 'ताज़ी उपज खोजें', 'सहायता लें']
-    : userRole === 'farmer'
-      ? ['Track my order', 'List a crop', 'Talk to support']
-      : ['Track my order', 'Find fresh produce', 'Talk to support'];
+    : language === 'mr'
+      ? ['ऑर्डर ट्रॅक करा', 'ताजी पिके शोधा', 'मदत घ्या']
+      : userRole === 'farmer'
+        ? ['Track my order', 'List a crop', 'Talk to support']
+        : ['Track my order', 'Find fresh produce', 'Talk to support'];
 
   useEffect(() => {
     setMessages((current) => {
       if (current.length !== 1 || current[0].role !== 'assistant') return current;
-      return [{ ...current[0], content: greetings[language] }];
+      return [{ ...current[0], content: greetings[language] || greetings.en }];
     });
   }, [language]);
 
@@ -89,7 +56,30 @@ const ChatbotWidget = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping, isOpen]);
 
-  const sendMessage = async (messageText) => {
+  const playAudioResponse = (audioSrc, text) => {
+    if (audioSrc && audioSrc.startsWith('data:audio')) {
+      try {
+        audioRef.current.src = audioSrc;
+        audioRef.current.play();
+        setIsPlayingAudio(true);
+        audioRef.current.onended = () => setIsPlayingAudio(false);
+        return;
+      } catch (err) {
+        logger.error('CHATBOT', 'Audio element playback failed', err);
+      }
+    }
+    // Fallback to Web Speech API client synthesis
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US';
+      utterance.onstart = () => setIsPlayingAudio(true);
+      utterance.onend = () => setIsPlayingAudio(false);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const sendMessage = async (messageText, isVoice = false) => {
     const text = (messageText || '').trim();
     if (!text) return;
 
@@ -97,26 +87,22 @@ const ChatbotWidget = () => {
     setMessages((prev) => [...prev, userMsg]);
     setInputValue('');
     setIsTyping(true);
-    logger.info('CHATBOT', 'User message', { text, language });
+    logger.info('CHATBOT', 'User message', { text, language, isVoice });
 
     try {
-      const conversationHistory = messages
-        .slice(-5)
-        .map((m) => ({ role: m.role, content: m.content }));
+      const endpoint = isVoice ? '/ai/chatbot/voice' : '/ai/chatbot/query';
+      const payload = isVoice
+        ? { transcript: text, language, user_role: userRole }
+        : {
+            message: text,
+            language,
+            user_role: userRole,
+            conversation_history: messages.slice(-4).map((m) => ({ role: m.role, content: m.content })),
+          };
 
-      const response = await api.post('/ai/chatbot/query', {
-        message: text,
-        language,
-        user_role: userRole,
-        conversation_history: conversationHistory,
-      });
-
+      const response = await api.post(endpoint, payload);
       const data = response?.data?.data || response?.data;
-      const botReply =
-        (data && (data.response || data.message)) ||
-        (language === 'hi' ? fallbackHi : fallbackEn);
-
-      logger.info('CHATBOT', 'Bot replied', { usedFallback: data?.is_fallback || false });
+      const botReply = data?.response_text || data?.response || data?.message || fallbackMsg[language];
 
       setMessages((prev) => [
         ...prev,
@@ -127,10 +113,13 @@ const ChatbotWidget = () => {
           is_fallback: data?.is_fallback || false,
         },
       ]);
+
+      if (isVoice || data?.audio_base64) {
+        playAudioResponse(data?.audio_base64, botReply);
+      }
     } catch (err) {
-      logger.error('CHATBOT', 'AI service failed, using demo reply', err);
-      // AI service offline - return a helpful demo reply
-      const fallback = getDemoReply(text, language);
+      logger.error('CHATBOT', 'AI service failed', err);
+      const fallback = fallbackMsg[language] || fallbackMsg.en;
       setMessages((prev) => [
         ...prev,
         {
@@ -142,6 +131,47 @@ const ChatbotWidget = () => {
       ]);
     } finally {
       setIsTyping(false);
+    }
+  };
+
+  const startVoiceRecording = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Speech recognition is not supported in this browser. Please use Google Chrome or Edge.');
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setIsRecording(false);
+        if (transcript) {
+          sendMessage(transcript, true);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        logger.error('CHATBOT', 'Voice recognition error', event.error);
+        setIsRecording(false);
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognition.start();
+    } catch (e) {
+      logger.error('CHATBOT', 'Voice recording trigger failed', e);
+      setIsRecording(false);
     }
   };
 
@@ -162,27 +192,42 @@ const ChatbotWidget = () => {
         >
           <MessageCircle className="h-7 w-7 text-white" />
           <span className="absolute right-20 whitespace-nowrap bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-            Kisan Mitra
+            Kisan Mitra AI
           </span>
         </button>
       )}
 
       {isOpen && (
-        <div className="fixed z-50 bottom-0 right-0 sm:bottom-6 sm:right-6 sm:w-96 sm:h-[500px] w-full h-[85vh] sm:rounded-2xl rounded-t-2xl bg-white shadow-2xl flex flex-col overflow-hidden">
+        <div className="fixed z-50 bottom-0 right-0 sm:bottom-6 sm:right-6 sm:w-96 sm:h-[520px] w-full h-[85vh] sm:rounded-2xl rounded-t-2xl bg-white shadow-2xl flex flex-col overflow-hidden">
           <header className="bg-kisan-700 text-white p-4 sm:rounded-t-2xl flex items-center gap-3 shrink-0">
-            <div className="h-10 w-10 rounded-full bg-kisan-100 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-full bg-kisan-100 flex items-center justify-center relative">
               <span className="font-bold text-kisan-700">KM</span>
+              {isPlayingAudio && (
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+              )}
             </div>
             <div className="flex-1">
-              <p className="font-bold leading-tight">Kisan Mitra</p>
-              <p className="text-xs text-kisan-100">AI Assistant</p>
+              <p className="font-bold leading-tight flex items-center gap-2">
+                Kisan Mitra
+                {isPlayingAudio && <Volume2 className="h-4 w-4 animate-pulse text-green-300" />}
+              </p>
+              <p className="text-xs text-kisan-100">Hybrid RAG & Voice AI</p>
             </div>
-            <button
-              onClick={() => setLanguage((l) => (l === 'en' ? 'hi' : 'en'))}
-              className="px-2 py-1 text-xs bg-kisan-800 rounded hover:bg-kisan-900"
+
+            {/* Language Switcher */}
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-kisan-800 text-white text-xs px-2 py-1 rounded border-none focus:ring-0 cursor-pointer"
             >
-              {language === 'en' ? 'HI' : 'EN'}
-            </button>
+              <option value="en">English</option>
+              <option value="hi">हिंदी</option>
+              <option value="mr">मराठी</option>
+            </select>
+
             <button
               onClick={() => setIsOpen(false)}
               className="p-1 hover:bg-kisan-800 rounded"
@@ -260,15 +305,34 @@ const ChatbotWidget = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          <footer className="p-3 bg-white border-t ml-auto">
+          <footer className="p-3 bg-white border-t">
             <div className="flex items-center gap-2">
               <input
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={language === 'hi' ? 'संदेश लिखें...' : 'Type a message...'}
+                placeholder={
+                  isRecording
+                    ? (language === 'hi' ? 'सुन रहा हूँ...' : language === 'mr' ? 'ऐकत आहे...' : 'Listening...')
+                    : (language === 'hi' ? 'संदेश लिखें...' : language === 'mr' ? 'संदेश लिहा...' : 'Type a message...')
+                }
                 className="flex-1 rounded-full border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
               />
+
+              {/* Voice Record Button */}
+              <button
+                onClick={startVoiceRecording}
+                className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
+                  isRecording
+                    ? 'bg-red-600 text-white animate-pulse'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+                title="Voice Search / Speak"
+                aria-label="Voice Search"
+              >
+                <Mic className="h-4 w-4" />
+              </button>
+
               <button
                 onClick={() => sendMessage(inputValue)}
                 className="h-10 w-10 rounded-full bg-kisan-700 text-white flex items-center justify-center hover:bg-kisan-800"

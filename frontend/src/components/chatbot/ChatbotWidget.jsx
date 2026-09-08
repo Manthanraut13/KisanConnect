@@ -23,6 +23,79 @@ const fallbackMsg = {
   mr: 'माफ करा, सध्या तांत्रिक अडचण येत आहे. थोड्या वेळाने पुन्हा प्रयत्न करा.',
 };
 
+const sanitizeBotResponse = (text) => {
+  if (!text || typeof text !== 'string') return text;
+  let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  if (cleaned.includes('<think>')) {
+    cleaned = cleaned.split('<think>')[0];
+  }
+  if (cleaned.includes('</think>')) {
+    cleaned = cleaned.split('</think>').pop();
+  }
+  cleaned = cleaned.replace(/^(Here's a thinking process:|\*\*Thinking Process:\*\*).*?\n/gi, '');
+  return cleaned.trim();
+};
+
+const formatInlineText = (text) => {
+  if (!text) return '';
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return (
+        <strong key={i} className="font-semibold text-gray-900">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+};
+
+const FormattedMessage = ({ content }) => {
+  if (!content || typeof content !== 'string') return content;
+  const rawLines = content.split('\n');
+
+  return (
+    <div className="leading-relaxed text-sm text-gray-800 space-y-1">
+      {rawLines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <div key={idx} className="h-1" />;
+        }
+
+        const isChildBullet = line.startsWith('  - ') || line.startsWith('   - ') || line.startsWith('\t-');
+        const isTopBullet = !isChildBullet && (trimmed.startsWith('- ') || trimmed.startsWith('• ') || trimmed.startsWith('* '));
+
+        if (isChildBullet) {
+          const cleanLine = trimmed.replace(/^[-•*]\s*/, '');
+          return (
+            <div key={idx} className="pl-3 text-xs text-gray-600 flex items-start gap-1.5 my-0.5">
+              <span className="text-gray-400 select-none">•</span>
+              <span>{formatInlineText(cleanLine)}</span>
+            </div>
+          );
+        }
+
+        if (isTopBullet) {
+          const cleanLine = trimmed.replace(/^[-•*]\s*/, '');
+          return (
+            <div key={idx} className="mt-1.5 font-medium text-gray-900 flex items-start gap-1.5">
+              <span className="text-kisan-600 font-bold select-none">•</span>
+              <span>{formatInlineText(cleanLine)}</span>
+            </div>
+          );
+        }
+
+        return (
+          <p key={idx} className="my-0.5">
+            {formatInlineText(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
 const ChatbotWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [language, setLanguage] = useState('en');
@@ -102,7 +175,8 @@ const ChatbotWidget = () => {
 
       const response = await api.post(endpoint, payload);
       const data = response?.data?.data || response?.data;
-      const botReply = data?.response_text || data?.response || data?.message || fallbackMsg[language];
+      const rawReply = data?.response_text || data?.response || data?.message || fallbackMsg[language];
+      const botReply = sanitizeBotResponse(rawReply) || fallbackMsg[language];
 
       setMessages((prev) => [
         ...prev,
@@ -243,7 +317,7 @@ const ChatbotWidget = () => {
                 {msg.role === 'user' ? (
                   <div className="flex justify-end">
                     <div>
-                      <div className="bg-kisan-700 text-white rounded-2xl rounded-br-sm px-4 py-2 max-w-xs">
+                      <div className="bg-kisan-700 text-white rounded-2xl rounded-br-sm px-4 py-2 max-w-[85%] whitespace-pre-wrap">
                         {msg.content}
                       </div>
                       <p className="text-xs text-gray-400 mt-1 text-right">
@@ -260,8 +334,8 @@ const ChatbotWidget = () => {
                       <span className="text-xs font-bold text-kisan-700">KM</span>
                     </div>
                     <div>
-                      <div className="bg-white text-gray-800 rounded-2xl rounded-bl-sm px-4 py-2 max-w-xs shadow-sm border border-gray-100">
-                        {msg.content}
+                      <div className="bg-white text-gray-800 rounded-2xl rounded-bl-sm p-3.5 max-w-[88%] shadow-sm border border-gray-100">
+                        <FormattedMessage content={msg.content} />
                       </div>
                       <p className="text-xs text-gray-400 mt-1">
                         {new Date(msg.timestamp).toLocaleTimeString([], {

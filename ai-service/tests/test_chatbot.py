@@ -79,3 +79,20 @@ def test_chatbot_voice_endpoint_missing_transcript(client):
         "language": "mr"
     })
     assert res.status_code == 400
+
+def test_clean_thinking_tags():
+    from app.routes.chatbot import clean_thinking_tags
+    sample = "<think> 1. Analyze input. 2. Role context: AI assistant. </think> Hi! How can I help you today?"
+    cleaned = clean_thinking_tags(sample)
+    assert cleaned == "Hi! How can I help you today?"
+
+def test_generate_smart_rag_fallback():
+    from app.routes.chatbot import generate_smart_rag_fallback
+    features_ans = generate_smart_rag_fallback("i want to know about this platform features", "", "en")
+    assert "Kisan Connect" in features_ans
+    assert "Direct Farm-to-Consumer" in features_ans
+
+    track_ans = generate_smart_rag_fallback("Track my order", "", "en")
+    assert "My Orders" in track_ans
+
+

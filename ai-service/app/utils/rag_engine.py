@@ -95,34 +95,43 @@ class HybridRAGEngine:
         return chunks
 
     def build_index(self):
-        """Load documentation files & pricing data, chunk them, and initialize BM25 + TFIDF matrices."""
+        """Load user-facing documentation files & pricing data, chunk them, and initialize BM25 + TFIDF matrices."""
         logger.info("Initializing Hybrid RAG Knowledge Base...")
         raw_chunks = []
 
-        # 1. Load Markdown Docs from docs/ directory
+        # 1. Load User-Facing Platform Knowledge Base (user_platform_kb.md)
+        user_kb_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'user_platform_kb.md'))
+        if os.path.exists(user_kb_file):
+            try:
+                with open(user_kb_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    raw_chunks.extend(self._chunk_text(content, "user_platform_kb.md", chunk_size=250, overlap=30))
+            except Exception as e:
+                logger.warning(f"Failed to read user_platform_kb.md: {e}")
+
+        # 2. Load User-Facing Markdown Docs (filtering out developer-only internal git guides)
         if os.path.exists(self.docs_dir):
             for fname in os.listdir(self.docs_dir):
-                if fname.endswith('.md'):
+                if fname.endswith('.md') and 'GITHUB_GUIDE' not in fname:
                     fpath = os.path.join(self.docs_dir, fname)
                     try:
                         with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
                             content = f.read()
-                            raw_chunks.extend(self._chunk_text(content, f"docs/{fname}"))
+                            raw_chunks.extend(self._chunk_text(content, f"docs/{fname}", chunk_size=300, overlap=40))
                     except Exception as e:
                         logger.warning(f"Failed to read {fname}: {e}")
 
-        # 2. Load Root Documentation (DPR.md, README.md, GITHUB_GUIDE_TEAM.md)
-        for fname in ['DPR.md', 'README.md', 'GITHUB_GUIDE_TEAM.md']:
-            fpath = os.path.join(self.root_dir, fname)
-            if os.path.exists(fpath):
-                try:
-                    with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
-                        content = f.read()
-                        raw_chunks.extend(self._chunk_text(content, f"root/{fname}"))
-                except Exception as e:
-                    logger.warning(f"Failed to read {fname}: {e}")
+        # 3. Load DPR.md (User-facing feature sections)
+        dpr_file = os.path.join(self.root_dir, 'DPR.md')
+        if os.path.exists(dpr_file):
+            try:
+                with open(dpr_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    raw_chunks.extend(self._chunk_text(content, "DPR.md", chunk_size=350, overlap=50))
+            except Exception as e:
+                logger.warning(f"Failed to read DPR.md: {e}")
 
-        # 3. Load & Summary Index Agmarknet Crop Prices Dataset
+        # 4. Load & Summary Index Agmarknet Crop Prices Dataset
         if os.path.exists(self.data_file):
             try:
                 df = pd.read_csv(self.data_file)
@@ -130,10 +139,14 @@ class HybridRAGEngine:
                     summary = df.groupby(['commodity', 'district'])['modal_price'].agg(['min', 'max', 'mean']).reset_index()
                     pricing_texts = []
                     for _, row in summary.iterrows():
+                        mean_kg = row['mean'] / 100.0 if row['mean'] > 150 else row['mean']
+                        min_kg = row['min'] / 100.0 if row['min'] > 150 else row['min']
+                        max_kg = row['max'] / 100.0 if row['max'] > 150 else row['max']
                         p_str = (
-                            f"Kisan Connect Pricing Data: Crop {row['commodity']} in district {row['district']} "
-                            f"has average modal price Rs.{row['mean']:.2f}/kg, min price Rs.{row['min']:.2f}/kg, "
-                            f"max price Rs.{row['max']:.2f}/kg. Mandi price data benchmark."
+                            f"Kisan Connect Mandi Pricing Data: Crop {row['commodity']} in district {row['district']} "
+                            f"has average benchmark modal price Rs.{mean_kg:.2f}/kg (Rs.{row['mean']:.2f}/Quintal), "
+                            f"min price Rs.{min_kg:.2f}/kg (Rs.{row['min']:.2f}/Quintal), "
+                            f"max price Rs.{max_kg:.2f}/kg (Rs.{row['max']:.2f}/Quintal). Real-time Mandi price benchmark data."
                         )
                         pricing_texts.append((p_str, "agmarknet_prices"))
                     raw_chunks.extend(pricing_texts)
@@ -165,7 +178,7 @@ class HybridRAGEngine:
     def search(self, query, top_k=4):
         """
         Hybrid search using Reciprocal Rank Fusion (RRF).
-        RRF Score = 1 / (60 + BM25_Rank) + 1 / (60 + Vector_Rank)
+        RRF Score = 1 / (60 + BM25_Rank) + 1 / (60 + Vector_Rank) + User KB Source Boost
         """
         if not self.chunks or not query:
             return []
@@ -185,13 +198,34 @@ class HybridRAGEngine:
         except Exception:
             vector_ranks = {i: i + 1 for i in range(len(self.chunks))}
 
-        # 3. Reciprocal Rank Fusion (RRF)
+        # 3. Reciprocal Rank Fusion (RRF) with User KB Source Boosting
         rrf_scores = {}
         k_const = 60
+        q_lower = query.lower()
+
         for idx in range(len(self.chunks)):
             r_bm25 = bm25_ranks.get(idx, 9999)
             r_vec = vector_ranks.get(idx, 9999)
-            rrf_scores[idx] = (1.0 / (k_const + r_bm25)) + (1.0 / (k_const + r_vec))
+            score = (1.0 / (k_const + r_bm25)) + (1.0 / (k_const + r_vec))
+
+            source = self.chunk_metadata[idx]["source"]
+            chunk_lower = self.chunks[idx].lower()
+
+            # Primary boost for user-facing knowledge base over developer specs
+            if 'user_platform_kb.md' in source:
+                score += 0.5
+
+            # Extra boost for active produce listings queries
+            if any(k in q_lower for k in ['listing', 'listings', 'produce', 'available', 'buy', 'items', 'crops', 'product']):
+                if 'active farm produce' in chunk_lower or 'organic tomatoes' in chunk_lower or 'user_platform_kb.md' in source:
+                    score += 0.5
+
+            # Extra boost for crop pricing queries
+            if any(k in q_lower for k in ['price', 'pricing', 'rate', 'cost', 'bhav', 'dam', 'mandi', 'potato', 'onion', 'tomato', 'wheat', 'rice']):
+                if 'agmarknet_prices' in source or 'mandi pricing' in chunk_lower:
+                    score += 0.5
+
+            rrf_scores[idx] = score
 
         # Top-k fused indices
         fused_indices = sorted(rrf_scores.keys(), key=lambda i: rrf_scores[i], reverse=True)[:top_k]

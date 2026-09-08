@@ -1,18 +1,37 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { ShoppingCart, LogOut, Menu, X } from 'lucide-react';
 import { useCartStore } from '../stores/cartStore';
 import { useTranslation } from 'react-i18next';
+import cartService from '../services/cart.service';
 import { logger } from '../lib/logger';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuthStore();
   const totalItems = useCartStore((s) => s.totalItems);
+  const setCart = useCartStore((s) => s.setCart);
   const { t, i18n } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated || !['consumer', 'farmer', 'bulk_buyer'].includes(user?.role)) return;
+    let cancelled = false;
+    cartService
+      .getCart()
+      .then((res) => {
+        if (cancelled) return;
+        const data = res.data?.data ?? res.data;
+        const items = Array.isArray(data) ? data : data?.items ?? [];
+        setCart(items);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, user]);
 
   const toggleLanguage = () => {
     const next = i18n.language === 'hi' ? 'en' : 'hi';
@@ -52,8 +71,19 @@ const Navbar = () => {
             {isAuthenticated && ['farmer', 'fpo_admin'].includes(user?.role) && (
               <Link to="/farmer/dashboard" className="text-gray-700 hover:text-green-700 font-medium">{t('nav.dashboard')}</Link>
             )}
-            {isAuthenticated && ['consumer', 'farmer', 'bulk_buyer'].includes(user?.role) && (
+            {isAuthenticated && ['farmer', 'fpo_admin'].includes(user?.role) && (
+              <Link to="/farmer/orders" className="text-gray-700 hover:text-green-700 font-medium">{t('nav.orders')}</Link>
+            )}
+            {isAuthenticated && ['consumer', 'bulk_buyer'].includes(user?.role) && (
               <Link to="/orders" className="text-gray-700 hover:text-green-700 font-medium">{t('nav.orders')}</Link>
+            )}
+            {isAuthenticated && ['farmer', 'fpo_admin', 'consumer', 'bulk_buyer', 'logistics'].includes(user?.role) && (
+              <Link
+                to={user?.role === 'farmer' || user?.role === 'fpo_admin' ? '/farmer/support' : user?.role === 'logistics' ? '/driver/support' : '/support'}
+                className="text-gray-700 hover:text-green-700 font-medium"
+              >
+                {t('nav.support')}
+              </Link>
             )}
           </div>
 
@@ -98,6 +128,13 @@ const Navbar = () => {
                     >
                       {t('nav.orders')}
                     </Link>
+                    <Link
+                      to={user?.role === 'farmer' || user?.role === 'fpo_admin' ? '/farmer/support' : user?.role === 'logistics' ? '/driver/support' : '/support'}
+                      onClick={() => setDropdownOpen(false)}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      {t('nav.support')}
+                    </Link>
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
@@ -140,11 +177,23 @@ const Navbar = () => {
               Cart {totalItems > 0 && `(${totalItems})`}
             </Link>
           )}
-          {isAuthenticated && ['consumer', 'farmer', 'bulk_buyer'].includes(user?.role) && (
+          {isAuthenticated && ['consumer', 'bulk_buyer'].includes(user?.role) && (
             <Link to="/orders" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 hover:text-green-700">{t('nav.orders')}</Link>
           )}
           {isAuthenticated && ['farmer', 'fpo_admin'].includes(user?.role) && (
+            <Link to="/farmer/orders" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 hover:text-green-700">{t('nav.orders')}</Link>
+          )}
+          {isAuthenticated && ['farmer', 'fpo_admin'].includes(user?.role) && (
             <Link to="/farmer/dashboard" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 hover:text-green-700">{t('nav.dashboard')}</Link>
+          )}
+          {isAuthenticated && ['consumer', 'bulk_buyer', 'farmer', 'fpo_admin', 'logistics'].includes(user?.role) && (
+            <Link
+              to={user?.role === 'farmer' || user?.role === 'fpo_admin' ? '/farmer/support' : user?.role === 'logistics' ? '/driver/support' : '/support'}
+              onClick={() => setMobileOpen(false)}
+              className="block py-2 text-gray-700 hover:text-green-700"
+            >
+              {t('nav.support')}
+            </Link>
           )}
           {isAuthenticated && user?.role === 'admin' && (
             <Link to="/admin" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 hover:text-green-700">Admin</Link>

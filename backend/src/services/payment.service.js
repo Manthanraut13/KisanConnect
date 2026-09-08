@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const { razorpay } = require('../config/razorpay.config');
 const { cloudinary } = require('../config/cloudinary.config');
 const { Order, OrderItem, Payment, Farmer, User } = require('../models');
+const logisticsService = require('./logistics.service');
 const { generateInvoicePDF } = require('../utils/invoice.utils');
 const AppError = require('../utils/AppError');
 const axios = require('axios');
@@ -100,6 +101,16 @@ const verifyPayment = async ({ razorpay_order_id, razorpay_payment_id, razorpay_
     await triggerOrderNotification(order, items);
   } catch (err) {
     console.warn('Invoice/notification generation failed (non-critical):', err.message);
+  }
+
+  // Auto-assign nearest available driver (non-critical if no driver in district)
+  try {
+    const assignment = await logisticsService.assignDriver(order_id);
+    if (!assignment.assigned) {
+      console.warn('Driver assignment:', assignment.message);
+    }
+  } catch (err) {
+    console.warn('Driver assignment failed (non-critical):', err.message);
   }
 
   return { success: true, order_id };

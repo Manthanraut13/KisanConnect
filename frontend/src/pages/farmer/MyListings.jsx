@@ -122,7 +122,7 @@ export default function MyListings() {
                   </TableCell>
                   <TableCell className="font-medium">{listing.crop_name}</TableCell>
                   <TableCell>
-                    {listing.available_kg} / {listing.total_kg ?? listing.available_kg} kg
+                    {listing.available_kg} / {listing.quantity_kg} kg
                   </TableCell>
                   <TableCell>₹{listing.price_per_kg}/kg</TableCell>
                   <TableCell>
@@ -135,12 +135,12 @@ export default function MyListings() {
                   <TableCell>
                     <Badge
                       className={
-                        listing.status === 'active'
+                        listing.is_active
                           ? 'bg-green-100 text-green-700'
                           : 'bg-gray-200 text-gray-600'
                       }
                     >
-                      {listing.status === 'active' ? 'Active' : 'Inactive'}
+                      {listing.is_active ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">

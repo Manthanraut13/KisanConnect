@@ -13,6 +13,7 @@ import ProductDetail from './pages/ProductDetail';
 import MyListings from './pages/farmer/MyListings';
 import FarmerDashboard from './pages/farmer/FarmerDashboard';
 import CreateListing from './pages/farmer/CreateListing';
+import FarmerOrders from './pages/farmer/FarmerOrders';
 import ConsumerLayout from './components/ConsumerLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
@@ -24,6 +25,7 @@ import ActiveDelivery from './pages/driver/ActiveDelivery';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import ChatbotWidget from './components/chatbot/ChatbotWidget';
 import DemandAdvisory from './pages/farmer/DemandAdvisory';
+import Support from './pages/Support';
 
 const App = () => {
   return (
@@ -48,6 +50,7 @@ const App = () => {
             <Route path="/order-success/:id" element={<OrderSuccess />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/orders/:id" element={<OrderDetail />} />
+            <Route path="/support" element={<Support />} />
           </Route>
         </Route>
 
@@ -57,7 +60,10 @@ const App = () => {
             <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
             <Route path="/farmer/listings" element={<MyListings />} />
             <Route path="/farmer/listings/new" element={<CreateListing />} />
+            <Route path="/farmer/listings/:id/edit" element={<CreateListing />} />
+            <Route path="/farmer/orders" element={<FarmerOrders />} />
             <Route path="/farmer/advisory" element={<DemandAdvisory />} />
+            <Route path="/farmer/support" element={<Support />} />
           </Route>
         </Route>
 
@@ -75,6 +81,7 @@ const App = () => {
           <Route element={<ProtectedRoute roles={['logistics']} />}>
             <Route path="/driver" element={<DriverDashboard />} />
             <Route path="/driver/delivery/:id" element={<ActiveDelivery />} />
+            <Route path="/driver/support" element={<Support />} />
           </Route>
         </Route>
 

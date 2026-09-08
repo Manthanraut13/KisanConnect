@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Package, ArrowRight } from 'lucide-react';
 import {
@@ -59,61 +59,41 @@ function ForecastTooltip({ active, payload, label }) {
 
 export default function FarmerDashboard() {
   const navigate = useNavigate();
-  const [farmerData, setFarmerData] = useState({
-  full_name: "Ramesh Patil",
-  farmerProfile: {
-    total_earnings: 48500,
-    district: "Nashik",
-  },
-});
+  const [farmerData, setFarmerData] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [forecastData, setForecastData] = useState(null);
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [myListings, setMyListings] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-const [forecastData, setForecastData] = useState({
-  forecast: [
-    { date: "2026-09-01", predicted_price: 22.5, lower_bound: 18.0, upper_bound: 27.0 },
-    { date: "2026-09-02", predicted_price: 23.1, lower_bound: 18.5, upper_bound: 27.8 },
-    { date: "2026-09-03", predicted_price: 21.8, lower_bound: 17.2, upper_bound: 26.4 },
-    { date: "2026-09-04", predicted_price: 24.0, lower_bound: 19.1, upper_bound: 28.9 },
-    { date: "2026-09-05", predicted_price: 25.2, lower_bound: 20.0, upper_bound: 30.4 },
-    { date: "2026-09-06", predicted_price: 23.8, lower_bound: 18.9, upper_bound: 28.7 },
-    { date: "2026-09-07", predicted_price: 22.1, lower_bound: 17.6, upper_bound: 26.6 },
-  ],
-  advisory: "Tomato prices expected to rise 12% this week in Nashik. Good time to sell.",
-});
+  const load = useCallback(async (full) => {
+    try {
+      const [meRes, dashboardRes, listingsRes, ordersRes] = await Promise.all([
+        api.get('/api/users/me'),
+        api.get('/api/users/me/dashboard'),
+        api.get('/api/listings/farmer/mine?limit=50'),
+        api.get('/api/orders?limit=5'),
+      ]);
 
-const [recentOrders, setRecentOrders] = useState([]);
+      const me = meRes.data ?? meRes;
+      setFarmerData(me);
 
-const [loading, setLoading] = useState(false);
-const [activeListings, setActiveListings] = useState(0);
+      const dash = dashboardRes.data ?? dashboardRes;
+      const sum = dash.summary ?? dash.data?.summary ?? null;
+      setSummary(sum);
 
-  useEffect(() => {
-    let cancelled = false;
+      const listingsData = listingsRes.data ?? listingsRes;
+      const listingsArr =
+        listingsData.listings ?? listingsData.items ?? listingsData.results ?? listingsData.data ?? [];
+      setMyListings(listingsArr);
 
-    const load = async () => {
-      try {
-        const meRes = await api.get('/api/users/me');
-        if (cancelled) return;
-        const me = meRes.data ?? meRes;
-        const profile = me.farmerProfile || {};
-        setFarmerData(me);
+      const ordersData = ordersRes.data ?? ordersRes;
+      const recentOrdersData = ordersData.orders ?? ordersData.items ?? ordersData.results ?? ordersData.data ?? [];
+      setRecentOrders(recentOrdersData.slice(0, 5));
 
-        const [listingsRes, ordersRes] = await Promise.all([
-          api.get('/api/listings/farmer/mine?limit=1'),
-          api.get('/api/orders?limit=3'),
-        ]);
-        if (cancelled) return;
-
-        const listingsData = listingsRes.data ?? listingsRes;
-        const listingsArr =
-          listingsData.listings ?? listingsData.items ?? listingsData.results ?? listingsData.data ?? [];
-        setActiveListings(
-          (listingsData.total ?? listingsData.totalCount ?? listingsArr.length) || 0
-        );
+      if (full) {
         const primaryCrop = listingsArr[0]?.crop_name;
-
-        const ordersData = ordersRes.data ?? ordersRes;
-        const recentOrdersData = ordersData.orders ?? ordersData.items ?? ordersData.results ?? ordersData.data ?? [];
-        setRecentOrders(recentOrdersData);
-
+        const profile = me.farmerProfile || {};
         if (primaryCrop) {
           try {
             const forecastRes = await api.post('/ai/forecast/demand', {
@@ -121,32 +101,33 @@ const [activeListings, setActiveListings] = useState(0);
               district: profile.district,
               forecast_days: 7,
             });
-            if (!cancelled) setForecastData(forecastRes.data ?? forecastRes);
+            setForecastData(forecastRes.data ?? forecastRes);
           } catch {
-            if (!cancelled) setForecastData(null);
+            setForecastData(null);
           }
         }
-        logger.info('FARMER_DASHBOARD', 'Dashboard loaded', {
-          farmerName: me.full_name,
-          activeListings: listingsArr.length,
-          recentOrders: recentOrdersData.length,
-          primaryCrop,
-        });
-      } catch (err) {
-        if (!cancelled) {
-          logger.error('FARMER_DASHBOARD', 'Failed to load dashboard', err);
-          toast.error('Could not load dashboard');
-        }
       }
-    };
 
-    load();
-    return () => {
-      cancelled = true;
-    };
+      logger.info('FARMER_DASHBOARD', 'Dashboard loaded', {
+        farmerName: me.full_name,
+        summary: sum,
+        recentOrders: recentOrdersData.length,
+      });
+    } catch (err) {
+      logger.error('FARMER_DASHBOARD', 'Failed to load dashboard', err);
+      toast.error('Could not load dashboard');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const profile = farmerData?.farmerProfile || {};
+  useEffect(() => {
+    setLoading(true);
+    load(true);
+    const timer = setInterval(() => load(false), 45000);
+    return () => clearInterval(timer);
+  }, [load]);
+
   const fullName = farmerData?.full_name || farmerData?.name || 'Farmer';
   const forecast = Array.isArray(forecastData?.forecast) ? forecastData.forecast : [];
 
@@ -160,17 +141,20 @@ const [activeListings, setActiveListings] = useState(0);
         <StatCard
           hindi="कुल कमाई"
           title="Total Earnings"
-          value={`₹${profile.total_earnings ?? 0}`}
+          value={loading && !summary ? '...' : `₹${Number(summary?.total_earnings ?? 0).toLocaleString('en-IN')}`}
+          sub={summary ? `${summary.total_sold_kg ?? 0} kg sold · ${summary.delivered_orders ?? 0} delivered` : undefined}
         />
         <StatCard
           hindi="सक्रिय सूचियाँ"
           title="Active Listings"
-          value={activeListings}
+          value={loading && !summary ? '...' : summary?.active_listings ?? 0}
+          sub={summary ? `${summary.available_stock_kg ?? 0} kg available now` : undefined}
         />
         <StatCard
           hindi="लंबित ऑर्डर"
           title="Pending Orders"
-          value={recentOrders.filter((o) => o.status === 'pending').length}
+          value={loading && !summary ? '...' : (summary?.pending_orders ?? 0) + (summary?.packed_orders ?? 0)}
+          sub={summary ? `₹${Number(summary?.pending_earnings ?? 0).toLocaleString('en-IN')} yet to settle` : undefined}
         />
       </div>
 
@@ -210,14 +194,93 @@ const [activeListings, setActiveListings] = useState(0);
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Button onClick={() => navigate('/farmer/listings/new')}>
           <Plus /> Add New Listing
+        </Button>
+        <Button variant="outline" onClick={() => navigate('/farmer/listings')}>
+          <Package /> View All Listings
         </Button>
         <Button variant="outline" onClick={() => navigate('/farmer/orders')}>
           <Package /> View All Orders
         </Button>
       </div>
+
+      <Card>
+        <CardHeader className="flex-row items-center justify-between">
+          <CardTitle>My Listings</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/farmer/listings')}
+            className="text-green-700 hover:bg-green-50"
+          >
+            <ArrowRight className="h-4 w-4" /> View All
+          </Button>
+        </CardHeader>
+        <CardContent className="p-0">
+          {myListings.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">You have no listings yet</p>
+              <Button onClick={() => navigate('/farmer/listings/new')}>
+                <Plus /> Create Your First Listing
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Crop</TableHead>
+                  <TableHead>Price/kg</TableHead>
+                  <TableHead>Available</TableHead>
+                  <TableHead>Grade</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {myListings.map((listing) => (
+                  <TableRow key={listing.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        {listing.images?.[0] ? (
+                          <img
+                            src={listing.images[0]}
+                            alt={listing.crop_name}
+                            className="h-10 w-10 rounded object-cover"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded bg-green-100 flex items-center justify-center text-green-700">
+                            <Package className="h-5 w-5" />
+                          </div>
+                        )}
+                        <span className="font-medium">{listing.crop_name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>₹{listing.price_per_kg}/kg</TableCell>
+                    <TableCell>{listing.available_kg} kg</TableCell>
+                    <TableCell>
+                      {listing.quality_grade && (
+                        <Badge variant="outline">{listing.quality_grade}</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          listing.is_active
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-gray-200 text-gray-600'
+                        }
+                      >
+                        {listing.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="flex-row items-center justify-between">
@@ -243,7 +306,7 @@ const [activeListings, setActiveListings] = useState(0);
                     <TableCell className="font-mono text-xs">
                       {(order.id || '').slice(0, 8)}
                     </TableCell>
-                    <TableCell>{order.crop_name || order.crop || '-'}</TableCell>
+                    <TableCell>{order.items?.[0]?.crop_name || order.crop_name || '-'}</TableCell>
                     <TableCell>{order.buyer_name || order.buyer?.full_name || '-'}</TableCell>
                     <TableCell>₹{order.amount ?? order.total ?? 0}</TableCell>
                     <TableCell>

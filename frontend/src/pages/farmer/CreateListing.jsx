@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,6 +17,7 @@ import {
 } from '../../components/ui/select';
 import api from '../../services/api';
 import { logger } from '../../lib/logger';
+import { useAuthStore } from '../../stores/authStore';
 
 const COMMON_CROPS = [
   'Tomato',
@@ -116,7 +117,58 @@ export default function CreateListing() {
   const [photoFiles, setPhotoFiles] = useState([]);
   const [priceRecommendation, setPriceRecommendation] = useState(null);
   const [loadingPrice, setLoadingPrice] = useState(false);
+  const [farmerProfile, setFarmerProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEdit = !!id;
+  const user = useAuthStore((s) => s.user);
+
+  useEffect(() => {
+    const loadFarmerProfile = async () => {
+      try {
+        const response = await api.get('/api/users/me');
+        const userData = response.data?.data ?? response.data;
+        if (userData.farmerProfile) {
+          setFarmerProfile(userData.farmerProfile);
+        }
+      } catch (error) {
+        logger.error('CREATE_LISTING', 'Failed to load farmer profile', error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    loadFarmerProfile();
+  }, []);
+
+  useEffect(() => {
+    if (!id) return;
+    const loadListing = async () => {
+      try {
+        const res = await api.get(`/api/listings/${id}`);
+        const listing = res.data?.data ?? res.data;
+        reset({
+          crop_name: listing.crop_name || '',
+          crop_category: listing.crop_category || '',
+          variety: listing.variety || '',
+          quality_grade: listing.quality_grade || '',
+          is_organic: listing.is_organic,
+          quantity_kg: listing.quantity_kg,
+          min_order_kg: listing.min_order_kg,
+          price_per_kg: listing.price_per_kg,
+          harvest_date: listing.harvest_date || '',
+          description: listing.description || '',
+          expiry_date: listing.expiry_date || '',
+        });
+        logger.info('CREATE_LISTING', 'Edit mode: listing loaded', { id });
+      } catch (error) {
+        logger.error('CREATE_LISTING', 'Failed to load listing for edit', error);
+        toast.error('Could not load listing');
+        navigate('/farmer/listings');
+      }
+    };
+    loadListing();
+  }, [id]);
 
   const {
     register,
@@ -124,6 +176,7 @@ export default function CreateListing() {
     handleSubmit,
     trigger,
     watch,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(step1Schema),
@@ -178,6 +231,30 @@ const fetchPriceRecommendation = () => {
   };
 
 const onSubmit = async (data) => {
+    if (isEdit) {
+      try {
+        const payload = {
+          quantity_kg: data.quantity_kg,
+          price_per_kg: data.price_per_kg,
+          min_order_kg: data.min_order_kg,
+          quality_grade: data.quality_grade,
+          expiry_date: data.expiry_date || undefined,
+          description: data.description || undefined,
+        };
+        await api.put(`/api/listings/${id}`, payload);
+        logger.form.submit('EditListing', { id, crop_name: data.crop_name, price_per_kg: data.price_per_kg });
+        toast.success('Listing updated successfully');
+        navigate('/farmer/listings');
+      } catch (error) {
+        logger.form.error('EditListing', error);
+        toast.error(error.response?.data?.message || 'Failed to update listing');
+      }
+      return;
+    }
+    if (loadingProfile || !farmerProfile) {
+      toast.error('Farmer profile not loaded yet. Please wait.');
+      return;
+    }
     try {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
@@ -185,6 +262,9 @@ const onSubmit = async (data) => {
           formData.append(key, value);
         }
       });
+      // Add district and state from farmer profile
+      formData.append('district', farmerProfile.district);
+      formData.append('state', farmerProfile.state);
       photoFiles.forEach((file) => formData.append('images', file));
       await api.post('/api/listings', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -205,7 +285,7 @@ const onSubmit = async (data) => {
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 bg-white rounded-xl border border-gray-100 shadow-sm">
         <div className="p-6 space-y-6">
           <h1 className="text-2xl font-bold text-green-800">
-            {STEPS[step - 1]}
+            {isEdit ? 'Edit Listing' : STEPS[step - 1]}
           </h1>
 
           {step === 1 && (
@@ -408,8 +488,8 @@ const onSubmit = async (data) => {
               Next Step
             </Button>
           ) : (
-            <Button type="submit" className="bg-green-700 hover:bg-green-800">
-              Publish Listing
+            <Button type="submit" className="bg-green-700 hover:bg-green-800" disabled={loadingProfile}>
+              {loadingProfile ? 'Loading Profile...' : isEdit ? 'Save Changes' : 'Publish Listing'}
             </Button>
           )}
         </div>

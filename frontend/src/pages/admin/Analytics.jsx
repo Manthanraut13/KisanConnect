@@ -14,54 +14,46 @@ import { IndianRupee, CalendarDays, MapPin } from 'lucide-react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { adminService, getResponseData } from '../../services/admin.service';
 
-const mockTopCrops = [
-  { crop: 'Tomato', orders: 145 },
-  { crop: 'Onion', orders: 120 },
-  { crop: 'Potato', orders: 98 },
-  { crop: 'Rice', orders: 87 },
-  { crop: 'Banana', orders: 76 },
-];
-
-const mockDailyOrders = Array.from({ length: 14 }, (_, i) => {
-  const d = new Date(2026, 7, 13 + i);
-  return {
-    date: `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}`,
-    orders: 8 + ((i * 7) % 22) + (i % 4),
-  };
-});
+const emptyAnalytics = {
+  avgOrderValue: 0,
+  ordersThisMonth: 0,
+  activeDistricts: 0,
+  topCrops: [],
+  dailyOrders: [],
+};
 
 const Analytics = () => {
-  const [analytics, setAnalytics] = useState({
-    avgOrderValue: 214,
-    ordersThisMonth: 876,
-    activeDistricts: 28,
-    topCrops: mockTopCrops,
-    dailyOrders: mockDailyOrders,
-  });
+  const [analytics, setAnalytics] = useState(emptyAnalytics);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let cancelled = false;
     const load = async () => {
       try {
         const response = await adminService.getAnalytics();
         const data = getResponseData(response) || {};
-        setAnalytics((current) => ({
-          ...current,
-          ...data,
-          avgOrderValue: data.avgOrderValue ?? data.avg_order_value ?? current.avgOrderValue,
-          ordersThisMonth: data.ordersThisMonth ?? data.orders_this_month ?? current.ordersThisMonth,
-          activeDistricts: data.activeDistricts ?? data.active_districts ?? current.activeDistricts,
-          topCrops: data.topCrops || data.top_crops || current.topCrops,
-          dailyOrders: data.dailyOrders || data.daily_orders || current.dailyOrders,
-        }));
+        if (!cancelled) {
+          setAnalytics({
+            avgOrderValue: data.avgOrderValue ?? data.avg_order_value ?? 0,
+            ordersThisMonth: data.ordersThisMonth ?? data.orders_this_month ?? 0,
+            activeDistricts: data.activeDistricts ?? data.active_districts ?? 0,
+            topCrops: data.topCrops || data.top_crops || [],
+            dailyOrders: data.dailyOrders || data.daily_orders || [],
+          });
+        }
       } catch (err) {
-        setError('Could not load live analytics. Showing demo data.');
+        if (!cancelled) setError('Could not load analytics.');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     load();
+    const interval = setInterval(load, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, []);
 
   return (

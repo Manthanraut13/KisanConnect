@@ -4,14 +4,16 @@ const AppError = require('../utils/AppError');
 
 const createGrievance = async (req, res, next) => {
   try {
-    const { order_id, category, description } = req.body;
+    const { order_id, category, description, severity } = req.body;
     if (!description) throw new AppError('Description is required', 400);
 
     const grievance = await Grievance.create({
       user_id: req.user.id,
       order_id: order_id || null,
       category: category || 'other',
+      severity: severity || 'medium',
       description,
+      sla_deadline: new Date(Date.now() + 48 * 60 * 60 * 1000),
     });
 
     const fullGrievance = await Grievance.findByPk(grievance.id, {
@@ -34,6 +36,9 @@ const getMyGrievances = async (req, res, next) => {
   try {
     const grievances = await Grievance.findAll({
       where: { user_id: req.user.id },
+      include: [
+        { model: Order, as: 'order', attributes: ['id', 'total_amount', 'status'] },
+      ],
       order: [['created_at', 'DESC']],
     });
     return res.json({ success: true, message: 'Grievances fetched', data: grievances });

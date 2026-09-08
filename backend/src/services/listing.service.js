@@ -68,7 +68,9 @@ const getListings = async (filters = {}, limit = 10, offset = 0) => {
   if (filters.district) where.district = filters.district;
   if (filters.state) where.state = filters.state;
   if (filters.quality_grade) where.quality_grade = filters.quality_grade;
-  if (filters.is_organic) where.is_organic = filters.is_organic;
+  if (filters.is_organic === 'true' || filters.is_organic === true) {
+    where.is_organic = true;
+  }
   if (filters.min_price && filters.max_price) {
     where.price_per_kg = {
       [sequelize.Sequelize.Op.between]: [filters.min_price, filters.max_price],
@@ -118,6 +120,11 @@ const updateListing = async (listingId, farmerId, updateData) => {
   const farmer = await Farmer.findOne({ where: { user_id: farmerId } });
   if (!farmer || listing.farmer_id !== farmer.id) {
     throw new AppError('Unauthorized: You can only edit your own listings', 403);
+  }
+
+  if (updateData.quantity_kg !== undefined) {
+    const sold = Number(listing.quantity_kg) - Number(listing.available_kg);
+    updateData.available_kg = Math.max(0, Number(updateData.quantity_kg) - sold);
   }
 
   await listing.update(updateData);

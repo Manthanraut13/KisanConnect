@@ -1,21 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { adminService } from '../../services/admin.service';
 
-const mockOrders = [
-  { id: 'order-uuid-0001', buyer: { full_name: 'Priya Sharma' }, total_amount: 220, status: 'delivered', payment_status: 'paid', createdAt: '2026-08-26', items: [{ crop_name: 'Tomato', quantity_kg: 5, price_per_kg: 22 }] },
-  { id: 'order-uuid-0002', buyer: { full_name: 'Rajesh Kumar' }, total_amount: 94, status: 'in_transit', payment_status: 'paid', createdAt: '2026-08-27', items: [{ crop_name: 'Onion', quantity_kg: 5, price_per_kg: 18 }] },
-  { id: 'order-uuid-0003', buyer: { full_name: 'Anita Singh' }, total_amount: 310, status: 'pending', payment_status: 'pending', createdAt: '2026-08-28', items: [{ crop_name: 'Potato', quantity_kg: 10, price_per_kg: 25 }, { crop_name: 'Tomato', quantity_kg: 3, price_per_kg: 20 }] },
-];
-
 const statusStyles = {
   pending: 'bg-yellow-100 text-yellow-800',
   confirmed: 'bg-blue-100 text-blue-800',
+  packed: 'bg-purple-100 text-purple-800',
   in_transit: 'bg-indigo-100 text-indigo-800',
   delivered: 'bg-green-100 text-green-800',
   cancelled: 'bg-red-100 text-red-800',
+  refunded: 'bg-gray-100 text-gray-700',
 };
 
 const paymentStyles = {
@@ -25,40 +21,46 @@ const paymentStyles = {
 };
 
 const AdminOrders = () => {
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [selected, setSelected] = useState(null);
   const [error, setError] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
     const load = async () => {
+      setLoading(true);
       try {
-        const res = await adminService.getOrders();
+        const params = {
+          page,
+          limit: 15,
+          search: search.trim() || undefined,
+          status: statusFilter || undefined,
+        };
+        const res = await adminService.getOrders(params);
+        if (cancelled) return;
         const data = res?.data?.data || res?.data;
         if (Array.isArray(data)) setOrders(data);
+        const total = res?.data?.pagination?.total;
+        if (typeof total === 'number') setTotalPages(Math.max(1, Math.ceil(total / params.limit)));
       } catch (err) {
-        setError('Could not load live orders. Showing demo data.');
+        if (!cancelled) setError('Could not load orders.');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     load();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [page, search, statusFilter]);
 
-  const filtered = useMemo(
-    () =>
-      orders.filter(
-        (o) =>
-          !search ||
-          String(o.id || '').toLowerCase().includes(search.toLowerCase()) ||
-          (o.buyer?.full_name || o.buyer?.name || o.buyer_name || 'Unknown buyer').toLowerCase().includes(search.toLowerCase())
-      ),
-    [orders, search]
-  );
-
-  const shortId = (id) => String(id || 'unknown').replace('order-uuid-', '').slice(0, 8);
+  const shortId = (id) => String(id || 'unknown').slice(0, 8);
   const buyerName = (order) => order.buyer?.full_name || order.buyer?.name || order.buyer_name || 'Unknown buyer';
   const orderDate = (order) => (order.createdAt || order.created_at || '').slice(0, 10) || '—';
   const orderStatus = (order) => order.status || 'pending';
@@ -86,17 +88,36 @@ const AdminOrders = () => {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         <input
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by order ID or buyer"
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          placeholder="Search by buyer name or mobile"
           className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
         />
+      </div>
+      <div className="relative mb-4 max-w-sm">
+        <select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setPage(1);
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
+        >
+          <option value="">All statuses</option>
+          {Object.keys(statusStyles).map((s) => (
+            <option key={s} value={s}>{s.replace('_', ' ')}</option>
+          ))}
+        </select>
       </div>
       {error && <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{error}</p>}
 
       {loading ? (
         <p className="text-gray-500">Loading...</p>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+        <>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-gray-500 border-b border-gray-100">
@@ -110,9 +131,9 @@ const AdminOrders = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {orders.length === 0 ? (
                 <tr><td colSpan="7" className="py-8 text-center text-gray-500">No orders found.</td></tr>
-              ) : filtered.map((o) => (
+              ) : orders.map((o) => (
                 <tr key={o.id} className="border-b border-gray-50">
                   <td className="py-3 px-4 font-mono text-xs">#{shortId(o.id)}</td>
                   <td className="py-3 px-4">{buyerName(o)}</td>
@@ -148,7 +169,25 @@ const AdminOrders = () => {
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+          <div className="flex items-center justify-between mt-4 text-sm">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1 border border-gray-300 rounded disabled:opacity-40"
+            >
+              Previous
+            </button>
+            <span>Page {page} of {totalPages}</span>
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page >= totalPages}
+              className="px-3 py-1 border border-gray-300 rounded disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
+        </>
       )}
 
       {selected && (
@@ -180,6 +219,15 @@ const AdminOrders = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="mt-4 space-y-1 text-sm text-gray-700">
+              <p><span className="text-gray-500">Buyer:</span> {buyerName(selected)} <span className="text-gray-400">({selected.buyer?.mobile || '—'})</span></p>
+              <p><span className="text-gray-500">Payment:</span> {selected.payment_status} {selected.payment_method ? `· ${selected.payment_method}` : ''}</p>
+              <p><span className="text-gray-500">Status:</span> {orderStatus(selected).replace('_', ' ')} {selected.logisticsAssignment?.status ? `· Delivery: ${selected.logisticsAssignment.status.replace('_', ' ')}` : ''}</p>
+              {selected.delivery_address?.district && (
+                <p><span className="text-gray-500">Deliver to:</span> {selected.delivery_address.district}{selected.delivery_address.city ? `, ${selected.delivery_address.city}` : ''}</p>
+              )}
+              <p><span className="text-gray-500">Date:</span> {orderDate(selected)}</p>
             </div>
             <button
               onClick={() => setSelected(null)}

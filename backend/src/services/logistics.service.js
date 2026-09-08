@@ -1,4 +1,5 @@
 const { LogisticsPartner, LogisticsAssignment, Order, OrderItem, Farmer, User } = require('../models');
+const { Op } = require('sequelize');
 const AppError = require('../utils/AppError');
 const axios = require('axios');
 const { cloudinary } = require('../config/cloudinary.config');
@@ -75,9 +76,91 @@ const getDriverAssignments = async (userId) => {
 
   return LogisticsAssignment.findAll({
     where: { driver_id: driver.id },
-    include: [{ model: Order, as: 'order' }],
+    include: [{ model: Order, as: 'order', include: [{ model: OrderItem, as: 'items' }] }],
     order: [['created_at', 'DESC']],
   });
+};
+
+const getDriverDashboard = async (userId) => {
+  const driver = await LogisticsPartner.findOne({ where: { user_id: userId } });
+  if (!driver) throw new AppError('Logistics partner profile not found', 404);
+
+  const assignments = await LogisticsAssignment.findAll({
+    where: { driver_id: driver.id },
+    include: [{ model: Order, as: 'order', include: [{ model: OrderItem, as: 'items' }] }],
+    order: [['created_at', 'DESC']],
+  });
+
+  const active = assignments.filter((a) => ['assigned', 'picked_up', 'in_transit'].includes(a.status));
+  const completed = assignments.filter((a) => a.status === 'delivered');
+  const today = completed.filter((a) => {
+    const d = new Date(a.actual_delivery_at || a.created_at);
+    return d.toDateString() === new Date().toDateString();
+  });
+
+  const summary = {
+    total_earnings: Number(driver.total_earnings || 0),
+    completed_orders: completed.length,
+    today_orders: today.length,
+    active_orders: active.length,
+    rating: Number(driver.rating || 0),
+    status: driver.status,
+    district: driver.district,
+  };
+
+  return { driver, summary, active, completed };
+};
+
+const getAvailableOrders = async (userId) => {
+  const driver = await LogisticsPartner.findOne({ where: { user_id: userId } });
+  if (!driver) throw new AppError('Logistics partner profile not found', 404);
+  if (!driver.district) return [];
+
+  const assignedOrderIds = (await LogisticsAssignment.findAll({ attributes: ['order_id'] })).map((a) => a.order_id);
+
+  const orders = await Order.findAll({
+    where: { payment_status: 'paid', status: { [Op.in]: ['packed', 'confirmed'] } },
+    include: [{ model: OrderItem, as: 'items' }],
+    order: [['created_at', 'DESC']],
+  });
+
+  const driverDistrict = driver.district.toLowerCase();
+  return orders.filter(
+    (o) =>
+      !assignedOrderIds.includes(o.id) &&
+      o.delivery_address?.district?.toLowerCase() === driverDistrict
+  );
+};
+
+const acceptOrder = async (orderId, userId) => {
+  const driver = await LogisticsPartner.findOne({ where: { user_id: userId } });
+  if (!driver) throw new AppError('Logistics partner profile not found', 404);
+  if (driver.status === 'busy') throw new AppError('You already have an active delivery', 400);
+
+  const order = await Order.findByPk(orderId);
+  if (!order) throw new AppError('Order not found', 404);
+  if (order.payment_status !== 'paid') throw new AppError('Order is not paid yet', 400);
+  if (!['packed', 'confirmed'].includes(order.status)) throw new AppError('Order not available for pickup', 400);
+  if (order.delivery_address?.district?.toLowerCase() !== driver.district?.toLowerCase()) {
+    throw new AppError('This order is outside your service area', 403);
+  }
+
+  const existing = await LogisticsAssignment.count({ where: { order_id: orderId } });
+  if (existing) throw new AppError('Order already assigned to a driver', 409);
+
+  const assignment = await LogisticsAssignment.create({
+    order_id: orderId,
+    driver_id: driver.id,
+    delivery_location: order.delivery_address,
+    estimated_km: 10,
+    estimated_minutes: 40,
+    driver_earnings: Number(order.delivery_charge) * DRIVER_COMMISSION_RATE,
+  });
+
+  await driver.update({ status: 'busy' });
+  await order.update({ status: 'in_transit' });
+
+  return assignment;
 };
 
 const startDelivery = async (assignmentId, userId) => {
@@ -87,7 +170,7 @@ const startDelivery = async (assignmentId, userId) => {
   if (!assignment) throw new AppError('Assignment not found', 404);
   if (!driver || assignment.driver_id !== driver.id) throw new AppError('Unauthorized', 403);
 
-  await assignment.update({ status: 'picked_up' });
+  await assignment.update({ status: 'in_transit' });
   return assignment;
 };
 
@@ -138,6 +221,9 @@ const updateDriverStatus = async (userId, status, lat, lng) => {
 module.exports = {
   assignDriver,
   getDriverAssignments,
+  getDriverDashboard,
+  getAvailableOrders,
+  acceptOrder,
   startDelivery,
   confirmDelivery,
   trackOrder,

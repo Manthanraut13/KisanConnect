@@ -12,3 +12,5 @@ venv/
 .venv/
 coverage/
 .nyc_output/
+*.sqlite
+

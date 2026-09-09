@@ -72,7 +72,7 @@ export default function ProductDetail() {
     try {
       await api.post('/api/cart/add', {
         listingId: listing.id ?? id,
-        quantityKg: Number(selectedQty),
+        quantity_kg: Number(selectedQty),
       });
       logger.info('CART', 'Item added from product detail', { listingId: listing.id, qty: selectedQty });
       toast.success('Added to cart');

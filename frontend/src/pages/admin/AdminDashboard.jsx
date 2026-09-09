@@ -23,21 +23,16 @@ import StatCard from '../../components/admin/StatCard';
 import { adminService } from '../../services/admin.service';
 import { logger } from '../../lib/logger';
 
-const mockStats = {
-  totalUsers: 1247,
-  totalFarmers: 342,
-  totalOrders: 876,
-  totalListings: 519,
-  gmv: 2847500,
+const emptyStats = {
+  totalUsers: 0,
+  totalFarmers: 0,
+  totalOrders: 0,
+  totalListings: 0,
+  gmv: 0,
+  todayOrders: 0,
+  openGrievances: 0,
+  pendingOrders: 0,
 };
-
-const mockGrievances = [
-  { id: 'grievance-uuid-0001', user: { full_name: 'Priya Sharma' }, category: 'payment', severity: 'high', description: 'Payment was deducted but order not confirmed.', status: 'open', sla_deadline: '2026-09-03' },
-  { id: 'grievance-uuid-0002', user: { full_name: 'Ramesh Patil' }, category: 'logistics', severity: 'medium', description: 'Driver did not arrive for pickup.', status: 'in_progress', sla_deadline: '2026-09-05' },
-  { id: 'grievance-uuid-0003', user: { full_name: 'Anita Singh' }, category: 'quality', severity: 'low', description: 'Tomatoes were slightly damaged on delivery.', status: 'resolved', sla_deadline: '2026-09-04' },
-];
-
-const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const severityStyles = {
   critical: 'bg-red-100 text-red-800',
@@ -54,51 +49,49 @@ const statusStyles = {
 };
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState(mockStats);
-  const [recentGrievances, setRecentGrievances] = useState(mockGrievances);
+  const [stats, setStats] = useState(emptyStats);
+  const [recentGrievances, setRecentGrievances] = useState([]);
+  const [analytics, setAnalytics] = useState({ dailyOrders: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const userName = (grievance) => grievance.user?.full_name || grievance.user?.name || grievance.user_name || 'Unknown user';
 
-  const ordersChartData = days.map((day, i) => ({
-    day,
-    orders: 8 + ((i * 5) % 20) + (i % 3),
-  }));
-  const gmvChartData = days.map((day, i) => ({
-    day,
-    gmv: 6000 + ((i * 3200) % 14000) + (i % 4) * 500,
-  }));
-
   useEffect(() => {
+    let cancelled = false;
     const load = async () => {
       try {
-        const [statsRes, grievancesRes] = await Promise.all([
+        const [statsRes, grievancesRes, analyticsRes] = await Promise.all([
           adminService.getStats(),
           adminService.getGrievances({ limit: 5 }),
+          adminService.getAnalytics(),
         ]);
+        if (cancelled) return;
         const liveStats = statsRes?.data?.data || statsRes?.data;
         const liveGrievances = grievancesRes?.data?.data || grievancesRes?.data;
-        logger.info('ADMIN_DASHBOARD', 'Data loaded', { hasStats: !!liveStats, grievances: liveGrievances?.length });
+        const liveAnalytics = analyticsRes?.data?.data || analyticsRes?.data;
+        logger.info('ADMIN_DASHBOARD', 'Data loaded', { hasStats: !!liveStats, grievances: liveGrievances?.length, analytics: !!liveAnalytics });
         if (liveStats && typeof liveStats === 'object' && !Array.isArray(liveStats)) {
-          setStats((current) => ({
-            ...current,
-            ...liveStats,
-            totalUsers: liveStats.totalUsers ?? liveStats.total_users ?? current.totalUsers,
-            totalListings: liveStats.totalListings ?? liveStats.total_listings ?? current.totalListings,
-            totalOrders: liveStats.totalOrders ?? liveStats.total_orders ?? current.totalOrders,
-            gmv: liveStats.gmv ?? liveStats.total_gmv ?? current.gmv,
-          }));
+          setStats(liveStats);
         }
         if (Array.isArray(liveGrievances)) setRecentGrievances(liveGrievances);
+        if (liveAnalytics) setAnalytics(liveAnalytics);
+        setError('');
       } catch (err) {
-        setError('Could not load live dashboard data. Showing demo data.');
+        if (!cancelled) setError('Could not load live dashboard data.');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     load();
+    const interval = setInterval(load, 45000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, []);
 
+  const ordersChartData = analytics.dailyOrders.slice(-7);
+  const gmvChartData = analytics.dailyOrders.slice(-7).map((d) => ({ ...d, gmv: d.gmv }));
   const gmvValue = `₹${(stats.gmv || 0).toLocaleString('en-IN')}`;
 
   return (
@@ -108,20 +101,22 @@ const AdminDashboard = () => {
         <p className="text-gray-500">Loading...</p>
       ) : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
             <StatCard title="Total Users" value={stats.totalUsers} icon={Users} color="bg-blue-100" />
             <StatCard title="Active Listings" value={stats.totalListings} icon={Package} color="bg-green-100" />
             <StatCard title="Total Orders" value={stats.totalOrders} icon={ShoppingBag} color="bg-purple-100" />
             <StatCard title="Platform GMV" value={gmvValue} icon={TrendingUp} color="bg-amber-100" />
+            <StatCard title="Orders Today" value={stats.todayOrders} icon={ShoppingBag} color="bg-teal-100" />
+            <StatCard title="Open Grievances" value={stats.openGrievances} icon={AlertCircle} color="bg-rose-100" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-              <h3 className="text-lg font-semibold mb-4">Orders This Week</h3>
+              <h3 className="text-lg font-semibold mb-4">Orders (Last 7 Days)</h3>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={ordersChartData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="day" />
+                  <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
                   <Bar dataKey="orders" fill="#2D7A2D" radius={[4, 4, 0, 0]} />
@@ -129,11 +124,11 @@ const AdminDashboard = () => {
               </ResponsiveContainer>
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-              <h3 className="text-lg font-semibold mb-4">Revenue This Week (₹)</h3>
+              <h3 className="text-lg font-semibold mb-4">Revenue (Last 7 Days, ₹)</h3>
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={gmvChartData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="day" />
+                  <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
                   <Line type="monotone" dataKey="gmv" stroke="#2D7A2D" strokeWidth={2} dot={{ r: 3 }} />
@@ -166,6 +161,7 @@ const AdminDashboard = () => {
                     const overdue =
                       g.status !== 'resolved' &&
                       g.status !== 'closed' &&
+                      g.sla_deadline &&
                       new Date(g.sla_deadline) < new Date();
                     return (
                       <tr key={g.id} className="border-b border-gray-50">
@@ -182,7 +178,7 @@ const AdminDashboard = () => {
                           </span>
                         </td>
                         <td className={`py-3 ${overdue ? 'text-red-600 flex items-center gap-1' : ''}`}>
-                          {g.sla_deadline}
+                          {g.sla_deadline ? new Date(g.sla_deadline).toLocaleDateString('en-IN') : '—'}
                           {overdue && <AlertCircle className="h-4 w-4" />}
                         </td>
                         <td className="py-3">

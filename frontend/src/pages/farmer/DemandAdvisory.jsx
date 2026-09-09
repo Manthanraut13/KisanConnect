@@ -69,12 +69,12 @@ function ChartTooltip({ active, payload, label }) {
   if (!active || !payload || !payload.length) return null;
   const point = payload[0]?.payload;
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm px-3 py-2 text-sm">
+    <div className="bg-white ring-1 ring-linen rounded-xl shadow-card px-3 py-2 text-sm">
       <p className="font-medium">{label}</p>
       {point && (
         <>
           <p>Price: ₹{point.predicted_price}/kg</p>
-          <p className="text-gray-600">Range: ₹{point.lower_bound}–{point.upper_bound}</p>
+          <p className="text-mutedtext">Range: ₹{point.lower_bound}–{point.upper_bound}</p>
         </>
       )}
     </div>
@@ -153,13 +153,13 @@ export default function DemandAdvisory() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-green-800">Demand &amp; Price Advisory</h1>
+      <h1 className="font-serif text-3xl font-bold text-evergreen">Demand &amp; Price Advisory</h1>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
         <select
           value={selectedCrop}
           onChange={(e) => setSelectedCrop(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+          className="px-3 py-2 border border-linen rounded-xl bg-white text-sm text-evergreen focus:border-evergreen focus:outline-none focus:ring-2 focus:ring-evergreen/10"
         >
           {CROPS.map((crop) => (
             <option key={crop} value={crop}>
@@ -168,7 +168,7 @@ export default function DemandAdvisory() {
           ))}
         </select>
 
-        <div className="inline-flex rounded-lg overflow-hidden border border-gray-300">
+        <div className="inline-flex rounded-xl overflow-hidden border border-linen">
           {[7, 30].map((days) => (
             <button
               key={days}
@@ -176,8 +176,8 @@ export default function DemandAdvisory() {
               onClick={() => setForecastDays(days)}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 forecastDays === days
-                  ? 'bg-green-700 text-white'
-                  : 'bg-white text-gray-700 hover:bg-green-50'
+                  ? 'bg-evergreen text-canvas'
+                  : 'bg-white text-evergreen hover:bg-wash-muted'
               }`}
             >
               {days} Day
@@ -186,25 +186,25 @@ export default function DemandAdvisory() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+      <div className="bg-white rounded-2xl ring-1 ring-linen shadow-card p-4">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="font-semibold text-gray-800">
+          <h2 className="font-serif text-lg font-semibold text-evergreen">
             {selectedCrop} — {forecastDays}-Day Price Forecast
           </h2>
-          {forecastLoading && <Loader2 className="h-4 w-4 animate-spin text-green-700" />}
+          {forecastLoading && <Loader2 className="h-4 w-4 animate-spin text-amber" />}
         </div>
         {forecast.length > 0 ? (
           <ResponsiveContainer width="100%" height={350}>
             <AreaChart data={forecast} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
               <defs>
                 <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2D7A2D" stopOpacity={0.2} />
-                  <stop offset="100%" stopColor="#2D7A2D" stopOpacity={0.05} />
+                  <stop offset="0%" stopColor="#E8A838" stopOpacity={0.25} />
+                  <stop offset="100%" stopColor="#E8A838" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis dataKey="predicted_price" tickFormatter={(v) => `₹${v}`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#EDE6D6" />
+              <XAxis dataKey="date" tick={{ fill: '#8A8275', fontSize: 12 }} />
+              <YAxis dataKey="predicted_price" tickFormatter={(v) => `₹${v}`} tick={{ fill: '#8A8275', fontSize: 12 }} />
               <Tooltip content={<ChartTooltip />} />
               <Area
                 type="monotone"
@@ -221,50 +221,50 @@ export default function DemandAdvisory() {
               <Area
                 type="monotone"
                 dataKey="predicted_price"
-                stroke="#2D7A2D"
+                stroke="#E8A838"
                 strokeWidth={2}
                 fill="url(#band)"
               />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-[350px] flex items-center justify-center text-gray-400">
+          <div className="h-[350px] flex items-center justify-center text-mutedtext">
             Loading forecast...
           </div>
         )}
       </div>
 
       {forecastData?.advisory && (
-        <div className="border border-green-300 bg-green-50 text-green-900 rounded-xl px-4 py-4">
+        <div className="border border-amber bg-wash-amber text-evergreen rounded-xl px-4 py-4 animate-amber-glow">
           <p className="font-semibold mb-1">Advisory</p>
           {forecastData.advisory}
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <div className="flex items-center gap-2 text-gray-800 font-semibold mb-3">
-          <Cloud className="h-5 w-5 text-green-700" />
+      <div className="bg-white rounded-2xl ring-1 ring-linen shadow-card p-5">
+        <div className="flex items-center gap-2 text-evergreen font-semibold mb-3">
+          <Cloud className="h-5 w-5 text-forest" />
           Weather in {weatherData?.district || 'your district'}
         </div>
         {weatherLoading ? (
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
+          <div className="flex items-center gap-2 text-mutedtext text-sm">
             <Loader2 className="h-4 w-4 animate-spin" /> Fetching weather...
           </div>
         ) : weatherData ? (
           <div className="flex gap-6 text-sm">
             <div className="flex items-center gap-2">
-              <span className="text-3xl font-bold text-green-700">
+              <span className="font-mono text-3xl font-medium text-evergreen">
                 {Math.round(weatherData.temperature)}°
               </span>
-              <span className="text-gray-600">C</span>
+              <span className="text-mutedtext">C</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-700">
-              <Droplets className="h-5 w-5 text-blue-600" />
+            <div className="flex items-center gap-2 text-evergreen">
+              <Droplets className="h-5 w-5 text-forest" />
               Rain chance: {weatherData.rainChance ?? 0}%
             </div>
           </div>
         ) : (
-          <p className="text-sm text-gray-400">Weather data unavailable</p>
+          <p className="text-sm text-mutedtext">Weather data unavailable</p>
         )}
       </div>
     </div>

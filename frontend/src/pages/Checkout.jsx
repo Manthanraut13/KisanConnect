@@ -9,21 +9,105 @@ import paymentService from '../services/payment.service';
 import authService from '../services/auth.service';
 import { logger } from '../lib/logger';
 
-const DISTRICT_STATE_MAP = {
-  'Nashik': 'Maharashtra',
-  'Pune': 'Maharashtra',
-  'Amritsar': 'Punjab',
-  'Ludhiana': 'Punjab',
-  'Coimbatore': 'Tamil Nadu',
-  'Mysuru': 'Karnataka',
-  'Guntur': 'Andhra Pradesh',
-  'Jaipur': 'Rajasthan',
-  'Indore': 'Madhya Pradesh',
-  'Varanasi': 'Uttar Pradesh',
+const INDIA_DISTRICTS = {
+  'Ahmednagar': 'Maharashtra', 'Akola': 'Maharashtra', 'Amravati': 'Maharashtra', 'Aurangabad': 'Maharashtra',
+  'Beed': 'Maharashtra', 'Bhandara': 'Maharashtra', 'Buldhana': 'Maharashtra', 'Chandrapur': 'Maharashtra',
+  'Dhule': 'Maharashtra', 'Gadchiroli': 'Maharashtra', 'Gondia': 'Maharashtra', 'Hingoli': 'Maharashtra',
+  'Jalgaon': 'Maharashtra', 'Jalna': 'Maharashtra', 'Kolhapur': 'Maharashtra', 'Latur': 'Maharashtra',
+  'Mumbai City': 'Maharashtra', 'Mumbai Suburban': 'Maharashtra', 'Nagpur': 'Maharashtra', 'Nanded': 'Maharashtra',
+  'Nandurbar': 'Maharashtra', 'Nashik': 'Maharashtra', 'Osmanabad': 'Maharashtra', 'Palghar': 'Maharashtra',
+  'Parbhani': 'Maharashtra', 'Pune': 'Maharashtra', 'Raigad': 'Maharashtra', 'Ratnagiri': 'Maharashtra',
+  'Sangli': 'Maharashtra', 'Satara': 'Maharashtra', 'Sindhudurg': 'Maharashtra', 'Solapur': 'Maharashtra',
+  'Thane': 'Maharashtra', 'Wardha': 'Maharashtra', 'Washim': 'Maharashtra', 'Yavatmal': 'Maharashtra',
+  'Adilabad': 'Telangana', 'Hyderabad': 'Telangana', 'Karimnagar': 'Telangana', 'Khammam': 'Telangana',
+  'Mahabubnagar': 'Telangana', 'Medak': 'Telangana', 'Nalgonda': 'Telangana', 'Nizamabad': 'Telangana',
+  'Rangareddy': 'Telangana', 'Warangal': 'Telangana', 'Anantapur': 'Andhra Pradesh', 'Chittoor': 'Andhra Pradesh',
+  'East Godavari': 'Andhra Pradesh', 'Guntur': 'Andhra Pradesh', 'Kadapa': 'Andhra Pradesh',
+  'Krishna': 'Andhra Pradesh', 'Kurnool': 'Andhra Pradesh', 'Nellore': 'Andhra Pradesh',
+  'Prakasam': 'Andhra Pradesh', 'Srikakulam': 'Andhra Pradesh', 'Visakhapatnam': 'Andhra Pradesh',
+  'Vizianagaram': 'Andhra Pradesh', 'West Godavari': 'Andhra Pradesh', 'Agra': 'Uttar Pradesh',
+  'Aligarh': 'Uttar Pradesh', 'Allahabad': 'Uttar Pradesh', 'Ambedkar Nagar': 'Uttar Pradesh', 'Amethi': 'Uttar Pradesh',
+  'Bareilly': 'Uttar Pradesh', 'Basti': 'Uttar Pradesh', 'Bijnor': 'Uttar Pradesh', 'Budan': 'Uttar Pradesh',
+  'Bulandshahr': 'Uttar Pradesh', 'Etawah': 'Uttar Pradesh', 'Faizabad': 'Uttar Pradesh', 'Firozabad': 'Uttar Pradesh',
+  'Gautam Buddha Nagar': 'Uttar Pradesh', 'Ghaziabad': 'Uttar Pradesh', 'Gorakhpur': 'Uttar Pradesh',
+  'Hapur': 'Uttar Pradesh', 'Hardoi': 'Uttar Pradesh', 'Jhansi': 'Uttar Pradesh', 'Kanpur': 'Uttar Pradesh',
+  'Kushinagar': 'Uttar Pradesh', 'Lakhimpur Kheri': 'Uttar Pradesh', 'Lucknow': 'Uttar Pradesh',
+  'Mathura': 'Uttar Pradesh', 'Meerut': 'Uttar Pradesh', 'Mirzapur': 'Uttar Pradesh', 'Moradabad': 'Uttar Pradesh',
+  'Muzaffarnagar': 'Uttar Pradesh', 'Prayagraj': 'Uttar Pradesh', 'Rae Bareli': 'Uttar Pradesh',
+  'Saharanpur': 'Uttar Pradesh', 'Shahjahanpur': 'Uttar Pradesh', 'Sitapur': 'Uttar Pradesh',
+  'Sonbhadra': 'Uttar Pradesh', 'Sultanpur': 'Uttar Pradesh', 'Unnao': 'Uttar Pradesh',
+  'Varanasi': 'Uttar Pradesh', 'Ambala': 'Haryana', 'Bhiwani': 'Haryana', 'Faridabad': 'Haryana',
+  'Gurugram': 'Haryana', 'Hisar': 'Haryana', 'Jind': 'Haryana', 'Kaithal': 'Haryana', 'Karnal': 'Haryana',
+  'Kurukshetra': 'Haryana', 'Mahendragarh': 'Haryana', 'Panipat': 'Haryana', 'Rohtak': 'Haryana',
+  'Sirsa': 'Haryana', 'Sonipat': 'Haryana', 'Yamunanagar': 'Haryana', 'Amritsar': 'Punjab',
+  'Bathinda': 'Punjab', 'Firozpur': 'Punjab', 'Gurdaspur': 'Punjab', 'Hoshiarpur': 'Punjab', 'Jalandhar': 'Punjab',
+  'Kapurthala': 'Punjab', 'Ludhiana': 'Punjab', 'Moga': 'Punjab', 'Patiala': 'Punjab', 'Rupnagar': 'Punjab',
+  'Sangrur': 'Punjab', 'Amritsar Sahib': 'Punjab', 'Alwar': 'Rajasthan', 'Barmer': 'Rajasthan',
+  'Bharatpur': 'Rajasthan', 'Bikaner': 'Rajasthan', 'Chittorgarh': 'Rajasthan', 'Churu': 'Rajasthan',
+  'Dausa': 'Rajasthan', 'Ganganagar': 'Rajasthan', 'Hanumangarh': 'Rajasthan', 'Jaipur': 'Rajasthan',
+  'Jaisalmer': 'Rajasthan', 'Jalore': 'Rajasthan', 'Jhunjhunu': 'Rajasthan', 'Jodhpur': 'Rajasthan',
+  'Kota': 'Rajasthan', 'Nagaur': 'Rajasthan', 'Pali': 'Rajasthan', 'Sikar': 'Rajasthan', 'Sirohi': 'Rajasthan',
+  'Tonk': 'Rajasthan', 'Udaipur': 'Rajasthan', 'Ajmer': 'Rajasthan', 'Bhilwara': 'Rajasthan',
+  'Banswara': 'Rajasthan', 'Ahmedabad': 'Gujarat', 'Amreli': 'Gujarat', 'Anand': 'Gujarat', 'Banaskantha': 'Gujarat',
+  'Bharuch': 'Gujarat', 'Bhavnagar': 'Gujarat', 'Dahod': 'Gujarat', 'Gandhinagar': 'Gujarat', 'Jamnagar': 'Gujarat',
+  'Junagadh': 'Gujarat', 'Kheda': 'Gujarat', 'Kutch': 'Gujarat', 'Mehsana': 'Gujarat', 'Narmada': 'Gujarat',
+  'Navsari': 'Gujarat', 'Panchmahal': 'Gujarat', 'Patan': 'Gujarat', 'Porbandar': 'Gujarat', 'Rajkot': 'Gujarat',
+  'Sabarkantha': 'Gujarat', 'Surat': 'Gujarat', 'Surendranagar': 'Gujarat', 'Tapi': 'Gujarat', 'Vadodara': 'Gujarat',
+  'Valsad': 'Gujarat', 'Bengaluru Rural': 'Karnataka', 'Bengaluru Urban': 'Karnataka', 'Belgaum': 'Karnataka',
+  'Bellary': 'Karnataka', 'Bidar': 'Karnataka', 'Chikmagalur': 'Karnataka', 'Chitradurga': 'Karnataka',
+  'Dakshina Kannada': 'Karnataka', 'Davanagere': 'Karnataka', 'Dharwad': 'Karnataka', 'Gadag': 'Karnataka',
+  'Gulbarga': 'Karnataka', 'Hassan': 'Karnataka', 'Haveri': 'Karnataka', 'Kodagu': 'Karnataka', 'Kolar': 'Karnataka',
+  'Koppal': 'Karnataka', 'Mysuru': 'Karnataka', 'Raichur': 'Karnataka', 'Ramanagara': 'Karnataka',
+  'Shimoga': 'Karnataka', 'Tumkur': 'Karnataka', 'Udupi': 'Karnataka', 'Uttara Kannada': 'Karnataka',
+  'Vijayapura': 'Karnataka', 'Alappuzha': 'Kerala', 'Ernakulam': 'Kerala', 'Idukki': 'Kerala',
+  'Kannur': 'Kerala', 'Kasaragod': 'Kerala', 'Kollam': 'Kerala', 'Kottayam': 'Kerala', 'Kozhikode': 'Kerala',
+  'Malappuram': 'Kerala', 'Palakkad': 'Kerala', 'Pathanamthitta': 'Kerala', 'Thrissur': 'Kerala',
+  'Thiruvananthapuram': 'Kerala', 'Wayanad': 'Kerala', 'Chennai': 'Tamil Nadu', 'Coimbatore': 'Tamil Nadu',
+  'Cuddalore': 'Tamil Nadu', 'Dharmapuri': 'Tamil Nadu', 'Dindigul': 'Tamil Nadu', 'Erode': 'Tamil Nadu',
+  'Kancheepuram': 'Tamil Nadu', 'Kanyakumari': 'Tamil Nadu', 'Madurai': 'Tamil Nadu', 'Nagapattinam': 'Tamil Nadu',
+  'Namakkal': 'Tamil Nadu', 'Nilgiris': 'Tamil Nadu', 'Perambalur': 'Tamil Nadu', 'Pudukkottai': 'Tamil Nadu',
+  'Ramanathapuram': 'Tamil Nadu', 'Salem': 'Tamil Nadu', 'Sivaganga': 'Tamil Nadu', 'Thanjavur': 'Tamil Nadu',
+  'Theni': 'Tamil Nadu', 'Thoothukudi': 'Tamil Nadu', 'Tiruchirappalli': 'Tamil Nadu', 'Tirunelveli': 'Tamil Nadu',
+  'Tiruppur': 'Tamil Nadu', 'Vellore': 'Tamil Nadu', 'Viluppuram': 'Tamil Nadu', 'Virudhunagar': 'Tamil Nadu',
+  'Ariyalur': 'Tamil Nadu', 'Tiruvallur': 'Tamil Nadu', 'Patna': 'Bihar', 'Gaya': 'Bihar', 'Bhagalpur': 'Bihar',
+  'Muzaffarpur': 'Bihar', 'Darbhanga': 'Bihar', 'Purnia': 'Bihar', 'Begusarai': 'Bihar', 'Aurangabad Bihar': 'Bihar',
+  'Bhojpur': 'Bihar', 'Buxar': 'Bihar', 'Champaran East': 'Bihar', 'Champaran West': 'Bihar', 'Gopalganj': 'Bihar',
+  'Jehanabad': 'Bihar', 'Kaimur': 'Bihar', 'Katihar': 'Bihar', 'Khagaria': 'Bihar', 'Kishanganj': 'Bihar',
+  'Lakhisarai': 'Bihar', 'Madhepura': 'Bihar', 'Madhubani': 'Bihar', 'Munger': 'Bihar', 'Nalanda': 'Bihar',
+  'Nawada': 'Bihar', 'Rohtas': 'Bihar', 'Saharsa': 'Bihar', 'Samastipur': 'Bihar', 'Saran': 'Bihar',
+  'Sheikhpura': 'Bihar', 'Sheohar': 'Bihar', 'Sitamarhi': 'Bihar', 'Siwan': 'Bihar', 'Supaul': 'Bihar',
+  'Vaishali': 'Bihar', 'Baleswar': 'Odisha', 'Bargarh': 'Odisha', 'Bhadrak': 'Odisha', 'Balangir': 'Odisha',
+  'Cuttack': 'Odisha', 'Ganjam': 'Odisha', 'Jagatsinghpur': 'Odisha', 'Jajpur': 'Odisha', 'Jharsuguda': 'Odisha',
+  'Kalahandi': 'Odisha', 'Kendrapara': 'Odisha', 'Keonjhar': 'Odisha', 'Khordha': 'Odisha', 'Koraput': 'Odisha',
+  'Malkangiri': 'Odisha', 'Mayurbhanj': 'Odisha', 'Nabarangpur': 'Odisha', 'Nayagarh': 'Odisha', 'Nuaapada': 'Odisha',
+  'Puri': 'Odisha', 'Rayagada': 'Odisha', 'Sambalpur': 'Odisha', 'Sonepur': 'Odisha', 'Sundergarh': 'Odisha',
+  'Bhopal': 'Madhya Pradesh', 'Indore': 'Madhya Pradesh', 'Gwalior': 'Madhya Pradesh', 'Jabalpur': 'Madhya Pradesh',
+  'Ujjain': 'Madhya Pradesh', 'Sagar': 'Madhya Pradesh', 'Dewas': 'Madhya Pradesh', 'Satna': 'Madhya Pradesh',
+  'Ratlam': 'Madhya Pradesh', 'Rewa': 'Madhya Pradesh', 'Chhindwara': 'Madhya Pradesh', 'Betul': 'Madhya Pradesh',
+  'Hoshangabad': 'Madhya Pradesh', 'Katni': 'Madhya Pradesh', 'Khargone': 'Madhya Pradesh', 'Mandsaur': 'Madhya Pradesh',
+  'Morena': 'Madhya Pradesh', 'Narsinghpur': 'Madhya Pradesh', 'Neemuch': 'Madhya Pradesh', 'Panna': 'Madhya Pradesh',
+  'Raipur': 'Chhattisgarh', 'Bilaspur': 'Chhattisgarh', 'Durg': 'Chhattisgarh', 'Rajnandgaon': 'Chhattisgarh',
+  'Korba': 'Chhattisgarh', 'Jagdalpur': 'Chhattisgarh', 'Ambikapur': 'Chhattisgarh', 'Bhatapara': 'Chhattisgarh',
+  'Dehradun': 'Uttarakhand', 'Haridwar': 'Uttarakhand', 'Nainital': 'Uttarakhand', 'Almora': 'Uttarakhand',
+  'Pauri Garhwal': 'Uttarakhand', 'Tehri Garhwal': 'Uttarakhand', 'Udham Singh Nagar': 'Uttarakhand',
+  'Shimla': 'Himachal Pradesh', 'Kangra': 'Himachal Pradesh', 'Kullu': 'Himachal Pradesh', 'Mandi': 'Himachal Pradesh',
+  'Solan': 'Himachal Pradesh', 'Una': 'Himachal Pradesh', 'Hamirpur': 'Himachal Pradesh',
+  'Jammu': 'Jammu and Kashmir', 'Srinagar': 'Jammu and Kashmir', 'Anantnag': 'Jammu and Kashmir',
+  'Baramulla': 'Jammu and Kashmir', 'Pulwama': 'Jammu and Kashmir', 'Kathua': 'Jammu and Kashmir',
+  'Udhampur': 'Jammu and Kashmir', 'Kupwara': 'Jammu and Kashmir', 'Shopian': 'Jammu and Kashmir',
+  'Darjeeling': 'West Bengal', 'Kolkata': 'West Bengal', 'Howrah': 'West Bengal', 'Hooghly': 'West Bengal',
+  'North 24 Parganas': 'West Bengal', 'South 24 Parganas': 'West Bengal', 'Bardhaman': 'West Bengal',
+  'Maldah': 'West Bengal', 'Murshidabad': 'West Bengal', 'Nadia': 'West Bengal', 'Birbhum': 'West Bengal',
+  'Bankura': 'West Bengal', 'Purulia': 'West Bengal', 'Cooch Behar': 'West Bengal', 'Jalpaiguri': 'West Bengal',
+  'Guwahati': 'Assam', 'Nagaon': 'Assam', 'Dibrugarh': 'Assam', 'Silchar': 'Assam', 'Jorhat': 'Assam',
+  'Tezpur': 'Assam', 'Kokrajhar': 'Assam', 'Bongaigaon': 'Assam', 'Dispur': 'Assam',
+  'Thiruvananthapuram Taluk': 'Kerala',
 };
 
+const stateOptions = [...new Set(Object.values(INDIA_DISTRICTS))].sort();
+
 const Checkout = () => {
-  const { items, totalAmount, clearCart, subtotal, deliveryCharge, gstAmount } = useCartStore();
+  const { items, totalAmount, clearCart, subtotal, deliveryCharge } = useCartStore();
   const user = useAuthStore((s) => s.user);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
@@ -64,8 +148,8 @@ const Checkout = () => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const next = { ...prev, [name]: value };
-      if (name === 'district' && DISTRICT_STATE_MAP[value]) {
-        next.state = DISTRICT_STATE_MAP[value];
+      if (name === 'district' && INDIA_DISTRICTS[value]) {
+        next.state = INDIA_DISTRICTS[value];
       }
       return next;
     });
@@ -89,7 +173,7 @@ const Checkout = () => {
       return;
     }
 
-    if (!formData.full_name || !formData.full_address || !formData.district || !formData.pin_code) {
+    if (!formData.full_name || !formData.full_address || !formData.district || !formData.state || !formData.pin_code) {
       toast.error('Please fill all required delivery fields');
       return;
     }
@@ -108,7 +192,7 @@ const Checkout = () => {
           state: formData.state,
           pin_code: formData.pin_code,
         },
-        formData.delivery_slot
+        formData.delivery_slot || null
       );
 
       const orderId = orderRes.data?.data?.order_id || orderRes.data?.data?.id;
@@ -202,16 +286,21 @@ const Checkout = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-gray-700 mb-1">District *</label>
-                    <select name="district" value={formData.district} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600">
-                      <option value="">Select District</option>
-                      {Object.keys(DISTRICT_STATE_MAP).map((d) => (
-                        <option key={d} value={d}>{d}</option>
+                    <input list="india-districts" type="text" name="district" value={formData.district} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" placeholder="Start typing your district" />
+                    <datalist id="india-districts">
+                      {Object.keys(INDIA_DISTRICTS).map((d) => (
+                        <option key={d} value={d} />
                       ))}
-                    </select>
+                    </datalist>
                   </div>
                   <div>
-                    <label className="block text-gray-700 mb-1">State</label>
-                    <input type="text" name="state" value={formData.state} readOnly className="w-full px-3 py-2 border rounded-md bg-gray-50" />
+                    <label className="block text-gray-700 mb-1">State *</label>
+                    <input list="india-states" type="text" name="state" value={formData.state} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" placeholder="Auto-filled or type" />
+                    <datalist id="india-states">
+                      {stateOptions.map((s) => (
+                        <option key={s} value={s} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -220,8 +309,9 @@ const Checkout = () => {
                     <input type="text" name="pin_code" value={formData.pin_code} onChange={handleChange} required maxLength={6} pattern="\d{6}" className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" />
                   </div>
                   <div>
-                    <label className="block text-gray-700 mb-1">Delivery Date *</label>
-                    <input type="date" name="delivery_slot" value={formData.delivery_slot} onChange={handleChange} min={minDate} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" />
+                    <label className="block text-gray-700 mb-1">Delivery Date</label>
+                    <input type="date" name="delivery_slot" value={formData.delivery_slot} onChange={handleChange} min={minDate} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" />
+                    <p className="text-xs text-gray-400 mt-1">Optional — leave blank for ASAP delivery</p>
                   </div>
                 </div>
                 <div>
@@ -258,11 +348,7 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Delivery</span>
-                  <span>{deliveryCharge === 0 ? 'Free' : `₹${deliveryCharge}`}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">GST (5%)</span>
-                  <span>₹{gstAmount.toFixed(2)}</span>
+                  <span>₹{deliveryCharge.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg pt-2">
                   <span>Total</span>

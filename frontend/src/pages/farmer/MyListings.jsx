@@ -80,24 +80,24 @@ export default function MyListings() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">My Listings</h1>
+        <h1 className="font-serif text-3xl font-bold text-evergreen">My Listings</h1>
         <Button onClick={() => navigate('/farmer/listings/new')}>
           <Plus /> Add New Listing
         </Button>
       </div>
 
       {loading ? (
-        <div className="text-gray-500">Loading...</div>
+        <div className="text-mutedtext">Loading...</div>
       ) : listings.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-gray-100">
-          <Sprout className="h-16 w-16 text-green-600 mb-4" />
-          <p className="text-gray-600 mb-6">You have no listings yet</p>
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl ring-1 ring-linen shadow-card">
+          <Sprout className="h-16 w-16 text-forest mb-4" />
+          <p className="text-mutedtext mb-6">You have no listings yet</p>
           <Button onClick={() => navigate('/farmer/listings/new')}>
             <Plus /> Add New Listing
           </Button>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-2xl ring-1 ring-linen shadow-card overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -121,10 +121,10 @@ export default function MyListings() {
                     />
                   </TableCell>
                   <TableCell className="font-medium">{listing.crop_name}</TableCell>
-                  <TableCell>
-                    {listing.available_kg} / {listing.total_kg ?? listing.available_kg} kg
+                  <TableCell className="font-mono">
+                    {listing.available_kg} / {listing.quantity_kg} kg
                   </TableCell>
-                  <TableCell>₹{listing.price_per_kg}/kg</TableCell>
+                  <TableCell className="font-mono">₹{listing.price_per_kg}/kg</TableCell>
                   <TableCell>
                     {listing.quality_grade ? (
                       <Badge variant="outline">{listing.quality_grade}</Badge>
@@ -135,12 +135,12 @@ export default function MyListings() {
                   <TableCell>
                     <Badge
                       className={
-                        listing.status === 'active'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-200 text-gray-600'
+                        listing.is_active
+                          ? 'bg-wash-forest text-forest'
+                          : 'bg-disabledbg text-mutedtext'
                       }
                     >
-                      {listing.status === 'active' ? 'Active' : 'Inactive'}
+                      {listing.is_active ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">

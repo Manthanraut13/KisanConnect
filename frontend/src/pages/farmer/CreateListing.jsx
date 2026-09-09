@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,6 +17,7 @@ import {
 } from '../../components/ui/select';
 import api from '../../services/api';
 import { logger } from '../../lib/logger';
+import { useAuthStore } from '../../stores/authStore';
 
 const COMMON_CROPS = [
   'Tomato',
@@ -65,7 +66,7 @@ const STEPS = ['Crop Details', 'Quality & Pricing', 'Review & Publish'];
 
 function FieldError({ message }) {
   if (!message) return null;
-  return <p className="text-xs text-red-600 mt-1">{message}</p>;
+  return <p className="text-xs text-terracotta mt-1">{message}</p>;
 }
 
 function StepIndicator({ current }) {
@@ -81,17 +82,17 @@ function StepIndicator({ current }) {
               <div
                 className={`flex h-10 w-10 items-center justify-center rounded-full border-2 font-semibold transition-colors ${
                   isDone
-                    ? 'bg-green-700 border-green-700 text-white'
+                    ? 'bg-evergreen border-evergreen text-canvas'
                     : isCurrent
-                    ? 'border-green-700 text-green-700'
-                    : 'border-gray-300 text-gray-400'
+                    ? 'border-forest text-forest'
+                    : 'border-linen text-mutedtext'
                 }`}
               >
                 {isDone ? <Check className="h-5 w-5" /> : stepNo}
               </div>
               <span
                 className={`mt-1 text-xs ${
-                  isCurrent ? 'text-green-700 font-medium' : 'text-gray-500'
+                  isCurrent ? 'text-forest font-medium' : 'text-mutedtext'
                 }`}
               >
                 {label}
@@ -100,7 +101,7 @@ function StepIndicator({ current }) {
             {stepNo < STEPS.length && (
               <div
                 className={`h-0.5 w-10 mb-5 ${
-                  stepNo < current ? 'bg-green-700' : 'bg-gray-200'
+                  stepNo < current ? 'bg-evergreen' : 'bg-linen'
                 }`}
               />
             )}
@@ -116,7 +117,58 @@ export default function CreateListing() {
   const [photoFiles, setPhotoFiles] = useState([]);
   const [priceRecommendation, setPriceRecommendation] = useState(null);
   const [loadingPrice, setLoadingPrice] = useState(false);
+  const [farmerProfile, setFarmerProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEdit = !!id;
+  const user = useAuthStore((s) => s.user);
+
+  useEffect(() => {
+    const loadFarmerProfile = async () => {
+      try {
+        const response = await api.get('/api/users/me');
+        const userData = response.data?.data ?? response.data;
+        if (userData.farmerProfile) {
+          setFarmerProfile(userData.farmerProfile);
+        }
+      } catch (error) {
+        logger.error('CREATE_LISTING', 'Failed to load farmer profile', error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    loadFarmerProfile();
+  }, []);
+
+  useEffect(() => {
+    if (!id) return;
+    const loadListing = async () => {
+      try {
+        const res = await api.get(`/api/listings/${id}`);
+        const listing = res.data?.data ?? res.data;
+        reset({
+          crop_name: listing.crop_name || '',
+          crop_category: listing.crop_category || '',
+          variety: listing.variety || '',
+          quality_grade: listing.quality_grade || '',
+          is_organic: listing.is_organic,
+          quantity_kg: listing.quantity_kg,
+          min_order_kg: listing.min_order_kg,
+          price_per_kg: listing.price_per_kg,
+          harvest_date: listing.harvest_date || '',
+          description: listing.description || '',
+          expiry_date: listing.expiry_date || '',
+        });
+        logger.info('CREATE_LISTING', 'Edit mode: listing loaded', { id });
+      } catch (error) {
+        logger.error('CREATE_LISTING', 'Failed to load listing for edit', error);
+        toast.error('Could not load listing');
+        navigate('/farmer/listings');
+      }
+    };
+    loadListing();
+  }, [id]);
 
   const {
     register,
@@ -124,6 +176,7 @@ export default function CreateListing() {
     handleSubmit,
     trigger,
     watch,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(step1Schema),
@@ -178,6 +231,30 @@ const fetchPriceRecommendation = () => {
   };
 
 const onSubmit = async (data) => {
+    if (isEdit) {
+      try {
+        const payload = {
+          quantity_kg: data.quantity_kg,
+          price_per_kg: data.price_per_kg,
+          min_order_kg: data.min_order_kg,
+          quality_grade: data.quality_grade,
+          expiry_date: data.expiry_date || undefined,
+          description: data.description || undefined,
+        };
+        await api.put(`/api/listings/${id}`, payload);
+        logger.form.submit('EditListing', { id, crop_name: data.crop_name, price_per_kg: data.price_per_kg });
+        toast.success('Listing updated successfully');
+        navigate('/farmer/listings');
+      } catch (error) {
+        logger.form.error('EditListing', error);
+        toast.error(error.response?.data?.message || 'Failed to update listing');
+      }
+      return;
+    }
+    if (loadingProfile || !farmerProfile) {
+      toast.error('Farmer profile not loaded yet. Please wait.');
+      return;
+    }
     try {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
@@ -185,6 +262,9 @@ const onSubmit = async (data) => {
           formData.append(key, value);
         }
       });
+      // Add district and state from farmer profile
+      formData.append('district', farmerProfile.district);
+      formData.append('state', farmerProfile.state);
       photoFiles.forEach((file) => formData.append('images', file));
       await api.post('/api/listings', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -202,16 +282,16 @@ const onSubmit = async (data) => {
     <div className="p-6 max-w-3xl mx-auto">
       <StepIndicator current={step} />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 bg-white rounded-xl border border-gray-100 shadow-sm">
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 bg-white rounded-2xl ring-1 ring-linen shadow-card">
         <div className="p-6 space-y-6">
-          <h1 className="text-2xl font-bold text-green-800">
-            {STEPS[step - 1]}
+          <h1 className="font-serif text-3xl font-bold text-evergreen">
+            {isEdit ? 'Edit Listing' : STEPS[step - 1]}
           </h1>
 
           {step === 1 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">Crop Name *</label>
+                <label className="text-sm font-medium text-evergreen">Crop Name *</label>
                 <Input
                   list="common-crops"
                   placeholder="e.g. Tomato"
@@ -227,7 +307,7 @@ const onSubmit = async (data) => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Category *</label>
+                <label className="text-sm font-medium text-evergreen">Category *</label>
                 <Controller
                   control={control}
                   name="crop_category"
@@ -250,12 +330,12 @@ const onSubmit = async (data) => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Variety (optional)</label>
+                <label className="text-sm font-medium text-evergreen">Variety (optional)</label>
                 <Input placeholder="e.g. Hybrid, Desi" {...register('variety')} />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Quantity (kg) *</label>
+                <label className="text-sm font-medium text-evergreen">Quantity (kg) *</label>
                 <Input
                   type="number"
                   min="0"
@@ -268,7 +348,7 @@ const onSubmit = async (data) => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Harvest Date *</label>
+                <label className="text-sm font-medium text-evergreen">Harvest Date *</label>
                 <Input
                   type="date"
                   {...register('harvest_date')}
@@ -278,13 +358,13 @@ const onSubmit = async (data) => {
               </div>
 
               <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-evergreen">
                   Description (optional)
                 </label>
                 <textarea
                   rows={3}
                   placeholder="Describe your produce..."
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                  className="w-full rounded-xl border border-linen bg-white px-3 py-2 text-sm text-evergreen placeholder:text-mutedtext focus:border-evergreen focus:outline-none focus:ring-2 focus:ring-evergreen/10"
                   {...register('description')}
                 />
               </div>
@@ -294,17 +374,17 @@ const onSubmit = async (data) => {
           {step === 2 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">Quality Grade *</label>
+                <label className="text-sm font-medium text-evergreen">Quality Grade *</label>
                 <div className="flex gap-3">
                   {QUALITY_GRADES.map((grade) => (
                     <label
                       key={grade}
-                      className="flex items-center gap-2 cursor-pointer text-sm text-gray-700"
+                      className="flex items-center gap-2 cursor-pointer text-sm text-evergreen"
                     >
                       <input
                         type="radio"
                         value={grade}
-                        className="accent-green-700"
+                        className="accent-forest"
                         {...register('quality_grade')}
                       />
                       {grade}
@@ -318,16 +398,16 @@ const onSubmit = async (data) => {
                 <input
                   type="checkbox"
                   id="is_organic"
-                  className="h-4 w-4 rounded border-gray-300 text-green-700"
+                  className="h-4 w-4 rounded accent-forest"
                   {...register('is_organic')}
                 />
-                <label htmlFor="is_organic" className="text-sm font-medium text-gray-700">
+                <label htmlFor="is_organic" className="text-sm font-medium text-evergreen">
                   Organic produce
                 </label>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Price (₹/kg) *</label>
+                <label className="text-sm font-medium text-evergreen">Price (₹/kg) *</label>
                 <Input
                   type="number"
                   min="0"
@@ -340,7 +420,7 @@ const onSubmit = async (data) => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Min Order (kg)</label>
+                <label className="text-sm font-medium text-evergreen">Min Order (kg)</label>
                 <Input
                   type="number"
                   min="0"
@@ -352,12 +432,12 @@ const onSubmit = async (data) => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Expiry Date</label>
+                <label className="text-sm font-medium text-evergreen">Expiry Date</label>
                 <Input type="date" {...register('expiry_date')} />
               </div>
 
               <div className="md:col-span-2">
-  		<label className="text-sm font-medium text-gray-700">Photos</label>
+  		<label className="text-sm font-medium text-evergreen">Photos</label>
   		<PhotoUpload files={photoFiles} onFilesChange={setPhotoFiles} />
 	      </div>
             </div>
@@ -365,9 +445,9 @@ const onSubmit = async (data) => {
 
           {step === 3 && (
   <div className="space-y-4 text-sm">
-    <h2 className="font-semibold text-gray-800">Review your listing</h2>
+    <h2 className="font-semibold text-evergreen">Review your listing</h2>
 
-    <div className="rounded-lg border border-gray-200 p-4 space-y-1 text-gray-700">
+    <div className="rounded-xl ring-1 ring-linen bg-canvas p-4 space-y-1 text-evergreen">
       <p><strong>Crop:</strong> {watchedValues.crop_name} ({watchedValues.crop_category})</p>
       <p><strong>Quantity:</strong> {watchedValues.quantity_kg} kg</p>
       <p><strong>Grade:</strong> {watchedValues.quality_grade} {watchedValues.is_organic ? '• Organic' : ''}</p>
@@ -375,15 +455,15 @@ const onSubmit = async (data) => {
       <p><strong>Photos:</strong> {photoFiles.length} attached</p>
     </div>
 
-    <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+    <div className="rounded-xl border border-amber bg-wash-amber p-4 animate-amber-glow">
       {loadingPrice ? (
-        <p className="text-green-800">Getting AI price suggestion...</p>
+        <p className="text-evergreen">Getting AI price suggestion...</p>
       ) : priceRecommendation ? (
         <>
-          <p className="text-green-800 font-medium">
+          <p className="text-evergreen font-medium">
             💡 AI Suggests: ₹{priceRecommendation.min}–₹{priceRecommendation.max}/kg | Best price: ₹{priceRecommendation.recommended}/kg
           </p>
-          <p className="text-xs text-green-700 mt-1">
+          <p className="text-xs text-mutedtext mt-1">
             Based on current {watchedValues.district || 'local'} mandi prices for Grade {watchedValues.quality_grade} {watchedValues.crop_name}
           </p>
         </>
@@ -393,7 +473,7 @@ const onSubmit = async (data) => {
 )}
         </div>
 
-        <div className="flex justify-between items-center px-6 py-4 border-t">
+        <div className="flex justify-between items-center px-6 py-4 border-t border-linen">
           <Button
             type="button"
             variant="outline"
@@ -404,12 +484,12 @@ const onSubmit = async (data) => {
           </Button>
 
           {step < 3 ? (
-            <Button type="button" className="bg-green-700 hover:bg-green-800" onClick={nextStep}>
+            <Button type="button" onClick={nextStep}>
               Next Step
             </Button>
           ) : (
-            <Button type="submit" className="bg-green-700 hover:bg-green-800">
-              Publish Listing
+            <Button type="submit" disabled={loadingProfile}>
+              {loadingProfile ? 'Loading Profile...' : isEdit ? 'Save Changes' : 'Publish Listing'}
             </Button>
           )}
         </div>

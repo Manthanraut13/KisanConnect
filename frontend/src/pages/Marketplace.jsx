@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { listingService } from '../services/listing.service';
 import FilterSidebar from '../components/marketplace/FilterSidebar';
 import ProductGrid from '../components/marketplace/ProductGrid';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
 import { logger } from '../lib/logger';
 
 const DEFAULT_FILTERS = {
@@ -74,25 +76,25 @@ export default function Marketplace() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+    <div className="min-h-screen bg-canvas">
+      <div className="bg-canvas border-b border-linen sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <input
+          <Input
             type="text"
             value={searchInput}
             onChange={handleSearchChange}
             placeholder="Search crops or farmers..."
-            className="flex-1 px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+            className="flex-1"
           />
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setShowFilters((s) => !s)}
-              className="md:hidden px-4 py-2.5 text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg"
+              className="md:hidden px-4 py-2.5 text-sm font-medium text-evergreen bg-white border border-linen rounded-xl hover:bg-wash-muted"
             >
               {showFilters ? 'Hide' : 'Filter'}
             </button>
-            <span className="text-sm text-gray-500 whitespace-nowrap">
+            <span className="text-sm text-mutedtext whitespace-nowrap">
               {loading ? 'Loading...' : `${listings.length} result(s)`}
             </span>
           </div>
@@ -112,25 +114,25 @@ export default function Marketplace() {
 
             {!loading && listings.length > 0 && (
               <div className="flex items-center justify-center gap-4 mt-8">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="px-4 py-2 text-sm font-medium text-green-700 bg-white border border-green-300 rounded-lg hover:bg-green-50 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Previous
-                </button>
-                <span className="text-sm text-gray-600">
+                </Button>
+                <span className="text-sm text-mutedtext">
                   Page {page} of {totalPages}
                 </span>
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="px-4 py-2 text-sm font-medium text-green-700 bg-white border border-green-300 rounded-lg hover:bg-green-50 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             )}
           </div>

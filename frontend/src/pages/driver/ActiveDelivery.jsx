@@ -43,7 +43,7 @@ const ActiveDelivery = () => {
     setUploading(true);
     try {
       const formData = new FormData();
-      formData.append('proof_image', proofFile);
+      formData.append('proof', proofFile);
       await driverService.confirmDelivery(id, formData);
       logger.info('DRIVER_DELIVERY', 'Delivery confirmed', { deliveryId: id });
       toast.success('Delivery confirmed!');

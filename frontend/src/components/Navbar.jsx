@@ -1,18 +1,37 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { ShoppingCart, LogOut, Menu, X } from 'lucide-react';
 import { useCartStore } from '../stores/cartStore';
 import { useTranslation } from 'react-i18next';
+import cartService from '../services/cart.service';
 import { logger } from '../lib/logger';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuthStore();
   const totalItems = useCartStore((s) => s.totalItems);
+  const setCart = useCartStore((s) => s.setCart);
   const { t, i18n } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated || !['consumer', 'farmer', 'bulk_buyer'].includes(user?.role)) return;
+    let cancelled = false;
+    cartService
+      .getCart()
+      .then((res) => {
+        if (cancelled) return;
+        const data = res.data?.data ?? res.data;
+        const items = Array.isArray(data) ? data : data?.items ?? [];
+        setCart(items);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, user]);
 
   const toggleLanguage = () => {
     const next = i18n.language === 'hi' ? 'en' : 'hi';
@@ -32,28 +51,39 @@ const Navbar = () => {
     : '';
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <nav className="bg-evergreen text-canvas sticky top-0 z-50 shadow-card">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-green-700">Kisan Connect</span>
+            <span className="font-serif text-2xl font-bold text-canvas">Kisan Connect</span>
           </Link>
 
           {/* Desktop center nav */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-gray-700 hover:text-green-700 font-medium">{t('nav.home')}</Link>
-            <Link to="/marketplace" className="text-gray-700 hover:text-green-700 font-medium">{t('nav.marketplace')}</Link>
+            <Link to="/" className="text-canvas/80 hover:text-canvas font-medium">{t('nav.home')}</Link>
+            <Link to="/marketplace" className="text-canvas/80 hover:text-canvas font-medium">{t('nav.marketplace')}</Link>
             {isAuthenticated && user?.role === 'admin' && (
-              <Link to="/admin" className="text-gray-700 hover:text-green-700 font-medium">Admin</Link>
+              <Link to="/admin" className="text-canvas/80 hover:text-canvas font-medium">Admin</Link>
             )}
             {isAuthenticated && user?.role === 'logistics' && (
-              <Link to="/driver" className="text-gray-700 hover:text-green-700 font-medium">Driver</Link>
+              <Link to="/driver" className="text-canvas/80 hover:text-canvas font-medium">Driver</Link>
             )}
             {isAuthenticated && ['farmer', 'fpo_admin'].includes(user?.role) && (
-              <Link to="/farmer/dashboard" className="text-gray-700 hover:text-green-700 font-medium">{t('nav.dashboard')}</Link>
+              <Link to="/farmer/dashboard" className="text-canvas/80 hover:text-canvas font-medium">{t('nav.dashboard')}</Link>
             )}
-            {isAuthenticated && ['consumer', 'farmer', 'bulk_buyer'].includes(user?.role) && (
-              <Link to="/orders" className="text-gray-700 hover:text-green-700 font-medium">{t('nav.orders')}</Link>
+            {isAuthenticated && ['farmer', 'fpo_admin'].includes(user?.role) && (
+              <Link to="/farmer/orders" className="text-canvas/80 hover:text-canvas font-medium">{t('nav.orders')}</Link>
+            )}
+            {isAuthenticated && ['consumer', 'bulk_buyer'].includes(user?.role) && (
+              <Link to="/orders" className="text-canvas/80 hover:text-canvas font-medium">{t('nav.orders')}</Link>
+            )}
+            {isAuthenticated && ['farmer', 'fpo_admin', 'consumer', 'bulk_buyer', 'logistics'].includes(user?.role) && (
+              <Link
+                to={user?.role === 'farmer' || user?.role === 'fpo_admin' ? '/farmer/support' : user?.role === 'logistics' ? '/driver/support' : '/support'}
+                className="text-canvas/80 hover:text-canvas font-medium"
+              >
+                {t('nav.support')}
+              </Link>
             )}
           </div>
 
@@ -61,16 +91,16 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-4">
             <button
               onClick={toggleLanguage}
-              className="px-2 py-1 text-xs font-bold bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+              className="px-3 py-1.5 text-xs font-bold bg-canvas/10 text-canvas rounded-xl hover:bg-canvas/20 transition-colors"
             >
               {i18n.language === 'hi' ? 'English' : 'हिंदी'}
             </button>
 
             {isAuthenticated && ['consumer', 'farmer', 'bulk_buyer'].includes(user?.role) && (
-              <Link to="/cart" className="relative p-2 text-gray-600 hover:text-green-700">
+              <Link to="/cart" className="relative p-2 text-canvas/80 hover:text-canvas">
                 <ShoppingCart className="h-5 w-5" />
                 {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-terracotta text-canvas text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {totalItems}
                   </span>
                 )}
@@ -81,26 +111,33 @@ const Navbar = () => {
               <div className="relative">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="w-9 h-9 rounded-full bg-green-700 text-white flex items-center justify-center text-sm font-bold hover:bg-green-800"
+                  className="w-9 h-9 rounded-full bg-forest text-canvas flex items-center justify-center text-sm font-bold hover:bg-forest/90 transition-colors"
                 >
                   {initials}
                 </button>
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
-                      <p className="text-xs text-gray-500">{user.role}</p>
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-linen rounded-2xl shadow-modal py-1 z-50">
+                    <div className="px-4 py-2 border-b border-linen">
+                      <p className="text-sm font-medium text-evergreen">{user.full_name}</p>
+                      <p className="text-xs text-mutedtext">{user.role}</p>
                     </div>
                     <Link
                       to="/orders"
                       onClick={() => setDropdownOpen(false)}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      className="block px-4 py-2 text-sm text-evergreen hover:bg-wash-muted"
                     >
                       {t('nav.orders')}
                     </Link>
+                    <Link
+                      to={user?.role === 'farmer' || user?.role === 'fpo_admin' ? '/farmer/support' : user?.role === 'logistics' ? '/driver/support' : '/support'}
+                      onClick={() => setDropdownOpen(false)}
+                      className="block px-4 py-2 text-sm text-evergreen hover:bg-wash-muted"
+                    >
+                      {t('nav.support')}
+                    </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                      className="w-full text-left px-4 py-2 text-sm text-terracotta hover:bg-wash-terracotta flex items-center gap-2"
                     >
                       <LogOut className="h-4 w-4" /> {t('nav.logout')}
                     </button>
@@ -109,10 +146,10 @@ const Navbar = () => {
               </div>
             ) : (
               <>
-                <Link to="/login" className="text-sm text-gray-700 hover:text-green-700 font-medium">{t('nav.login')}</Link>
+                <Link to="/login" className="text-sm text-canvas/80 hover:text-canvas font-medium">{t('nav.login')}</Link>
                 <Link
                   to="/register"
-                  className="text-sm bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 font-medium"
+                  className="text-sm bg-terracotta text-canvas px-4 py-2 rounded-xl hover:bg-terracotta-dark font-medium"
                 >
                   {t('nav.register')}
                 </Link>
@@ -122,7 +159,7 @@ const Navbar = () => {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 text-gray-600"
+            className="md:hidden p-2 text-canvas"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -132,35 +169,47 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white py-4 px-4 space-y-3">
-          <Link to="/" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 hover:text-green-700">{t('nav.home')}</Link>
-          <Link to="/marketplace" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 hover:text-green-700">{t('nav.marketplace')}</Link>
+        <div className="md:hidden border-t border-linen bg-canvas py-4 px-4 space-y-3">
+          <Link to="/" onClick={() => setMobileOpen(false)} className="block py-2 text-evergreen hover:text-terracotta">{t('nav.home')}</Link>
+          <Link to="/marketplace" onClick={() => setMobileOpen(false)} className="block py-2 text-evergreen hover:text-terracotta">{t('nav.marketplace')}</Link>
           {isAuthenticated && ['consumer', 'farmer', 'bulk_buyer'].includes(user?.role) && (
-            <Link to="/cart" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 hover:text-green-700">
+            <Link to="/cart" onClick={() => setMobileOpen(false)} className="block py-2 text-evergreen hover:text-terracotta">
               Cart {totalItems > 0 && `(${totalItems})`}
             </Link>
           )}
-          {isAuthenticated && ['consumer', 'farmer', 'bulk_buyer'].includes(user?.role) && (
-            <Link to="/orders" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 hover:text-green-700">{t('nav.orders')}</Link>
+          {isAuthenticated && ['consumer', 'bulk_buyer'].includes(user?.role) && (
+            <Link to="/orders" onClick={() => setMobileOpen(false)} className="block py-2 text-evergreen hover:text-terracotta">{t('nav.orders')}</Link>
           )}
           {isAuthenticated && ['farmer', 'fpo_admin'].includes(user?.role) && (
-            <Link to="/farmer/dashboard" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 hover:text-green-700">{t('nav.dashboard')}</Link>
+            <Link to="/farmer/orders" onClick={() => setMobileOpen(false)} className="block py-2 text-evergreen hover:text-terracotta">{t('nav.orders')}</Link>
+          )}
+          {isAuthenticated && ['farmer', 'fpo_admin'].includes(user?.role) && (
+            <Link to="/farmer/dashboard" onClick={() => setMobileOpen(false)} className="block py-2 text-evergreen hover:text-terracotta">{t('nav.dashboard')}</Link>
+          )}
+          {isAuthenticated && ['consumer', 'bulk_buyer', 'farmer', 'fpo_admin', 'logistics'].includes(user?.role) && (
+            <Link
+              to={user?.role === 'farmer' || user?.role === 'fpo_admin' ? '/farmer/support' : user?.role === 'logistics' ? '/driver/support' : '/support'}
+              onClick={() => setMobileOpen(false)}
+              className="block py-2 text-evergreen hover:text-terracotta"
+            >
+              {t('nav.support')}
+            </Link>
           )}
           {isAuthenticated && user?.role === 'admin' && (
-            <Link to="/admin" onClick={() => setMobileOpen(false)} className="block py-2 text-gray-700 hover:text-green-700">Admin</Link>
+            <Link to="/admin" onClick={() => setMobileOpen(false)} className="block py-2 text-evergreen hover:text-terracotta">Admin</Link>
           )}
           <button
             onClick={toggleLanguage}
-            className="block w-full text-left py-2 text-gray-700 hover:text-green-700"
+            className="block w-full text-left py-2 text-evergreen hover:text-terracotta"
           >
             {i18n.language === 'hi' ? 'English' : 'हिंदी'}
           </button>
           {isAuthenticated ? (
-            <button onClick={handleLogout} className="block w-full text-left py-2 text-red-600 hover:bg-red-50 rounded">{t('nav.logout')}</button>
+            <button onClick={handleLogout} className="block w-full text-left py-2 text-terracotta hover:bg-wash-terracotta rounded-xl">{t('nav.logout')}</button>
           ) : (
             <div className="flex gap-3 pt-2">
-              <Link to="/login" onClick={() => setMobileOpen(false)} className="px-4 py-2 border border-green-700 text-green-700 rounded-lg hover:bg-green-50 text-sm font-medium">{t('nav.login')}</Link>
-              <Link to="/register" onClick={() => setMobileOpen(false)} className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 text-sm font-medium">{t('nav.register')}</Link>
+              <Link to="/login" onClick={() => setMobileOpen(false)} className="px-4 py-2 border border-terracotta text-terracotta rounded-xl hover:bg-wash-terracotta text-sm font-medium">{t('nav.login')}</Link>
+              <Link to="/register" onClick={() => setMobileOpen(false)} className="px-4 py-2 bg-terracotta text-canvas rounded-xl hover:bg-terracotta-dark text-sm font-medium">{t('nav.register')}</Link>
             </div>
           )}
         </div>

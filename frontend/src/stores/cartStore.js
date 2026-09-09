@@ -59,8 +59,8 @@ export const useCartStore = create((set, get) => ({
   calculateTotals: () => {
     const { items } = get();
     const subtotal = items.reduce((sum, item) => sum + (item.total_price || item.price_per_kg * item.quantity_kg), 0);
-    const deliveryCharge = subtotal > 500 ? 0 : 50;
-    const gstAmount = subtotal * 0.05;
+    const deliveryCharge = 30;
+    const gstAmount = 0;
     const totalAmount = subtotal + deliveryCharge + gstAmount;
 
     set({

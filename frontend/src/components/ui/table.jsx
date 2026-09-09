@@ -28,7 +28,7 @@ function TableHeader({
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b", className)}
+      className={cn("[&_tr]:border-b [&_tr]:border-linen", className)}
       {...props}
     />
   )
@@ -55,7 +55,7 @@ function TableFooter({
     <tfoot
       data-slot="table-footer"
       className={cn(
-        "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
+        "border-t border-linen bg-wash-muted/70 font-medium [&>tr]:last:border-b-0",
         className
       )}
       {...props}
@@ -71,7 +71,7 @@ function TableRow({
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted",
+        "border-b border-linen transition-colors hover:bg-wash-muted/60 has-aria-expanded:bg-wash-muted data-[state=selected]:bg-wash-muted",
         className
       )}
       {...props}
@@ -87,7 +87,7 @@ function TableHead({
     <th
       data-slot="table-head"
       className={cn(
-        "h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
+        "h-10 px-2 text-left align-middle font-semibold whitespace-nowrap text-[11px] uppercase tracking-[0.03em] text-evergreen [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}
@@ -118,7 +118,7 @@ function TableCaption({
   return (
     <caption
       data-slot="table-caption"
-      className={cn("mt-4 text-sm text-muted-foreground", className)}
+      className={cn("mt-4 text-sm text-mutedtext", className)}
       {...props}
     />
   )

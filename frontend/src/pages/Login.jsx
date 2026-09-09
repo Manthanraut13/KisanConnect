@@ -33,10 +33,10 @@ const ROLE_CONFIGS = {
     ctaBg: 'bg-secondary',
     ctaHover: 'hover:bg-on-secondary-container',
     ctaText: 'Sign in as Consumer',
-    inputLabel: 'Phone Number or Buyer ID',
-    inputHint: 'E.164 Format or BID',
-    inputIcon: 'contact_phone',
-    inputPlaceholder: '+1 (555) 019-2831',
+    inputLabel: 'Buyer ID',
+    inputHint: 'Optional',
+    inputIcon: 'badge',
+    inputPlaceholder: 'BID-XXXX-XXXX',
     registerText: 'Register as Consumer',
     linkColor: 'text-secondary',
     tabActiveClasses: 'bg-surface-container-lowest text-secondary shadow-sm',
@@ -108,10 +108,9 @@ const Login = () => {
     setCtaLabel('Verifying Credentials...');
 
     try {
-      const isMobile = /^[6-9]\d{9}$/.test(email.replace(/[\s-]/g, ''));
-      const payload = isMobile ? { mobile: email.replace(/[\s-]/g, ''), password } : { email, password };
+      const payload = { email, password };
       const result = await api.post('/api/auth/login', payload);
-      logger.form.submit('Login', { role, isMobile });
+      logger.form.submit('Login', { role });
 
       setCtaLabel('Authorized - Redirecting...');
       setUser(result.data.data.user, result.data.data.access_token);
@@ -159,14 +158,15 @@ const Login = () => {
           </div>
           {/* Form Elements */}
           <form className="space-y-4" onSubmit={handleSubmit}>
-            {/* Identity Field (email or mobile) */}
+            {/* Identity Field (email only) */}
             <div>
-              <label className="block font-label-md text-label-md text-on-surface-variant mb-1.5">Enterprise Email</label>
+              <label className="block font-label-md text-label-md text-on-surface-variant mb-1.5">Email Address</label>
               <div className="relative">
                 <span className="material-symbols absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg">mail</span>
                 <input
                   className="w-full h-11 pl-10 pr-4 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:bg-surface-bright focus:shadow-md transition-all"
-                  placeholder="name@agri-coop.org"
+                  placeholder="name@example.com"
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

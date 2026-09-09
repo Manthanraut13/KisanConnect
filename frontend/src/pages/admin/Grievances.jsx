@@ -16,21 +16,21 @@ const categoryStyles = {
   logistics: 'bg-orange-100 text-orange-800',
   quality: 'bg-green-100 text-green-800',
   fraud: 'bg-red-100 text-red-800',
-  other: 'bg-gray-100 text-gray-700',
+  other: 'bg-surface-container text-on-surface',
 };
 
 const severityStyles = {
   critical: 'bg-red-100 text-red-800 font-bold',
   high: 'bg-orange-100 text-orange-800',
   medium: 'bg-yellow-100 text-yellow-800',
-  low: 'bg-gray-100 text-gray-700',
+  low: 'bg-surface-container text-on-surface',
 };
 
 const statusStyles = {
   open: 'bg-yellow-100 text-yellow-800',
   in_progress: 'bg-blue-100 text-blue-800',
   resolved: 'bg-green-100 text-green-800',
-  closed: 'bg-gray-100 text-gray-700',
+  closed: 'bg-surface-container text-on-surface',
 };
 
 const Grievances = () => {
@@ -92,7 +92,7 @@ const Grievances = () => {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          className="px-3 py-2 border border-outline rounded-xl text-sm"
         >
           <option value="all">All Status</option>
           <option value="open">Open</option>
@@ -103,7 +103,7 @@ const Grievances = () => {
         <select
           value={severityFilter}
           onChange={(e) => setSeverityFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          className="px-3 py-2 border border-outline rounded-xl text-sm"
         >
           <option value="all">All Severity</option>
           <option value="critical">Critical</option>
@@ -112,15 +112,15 @@ const Grievances = () => {
           <option value="low">Low</option>
         </select>
       </div>
-      {error && <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{error}</p>}
+      {error && <p className="mb-4 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">{error}</p>}
 
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-on-surface-variant">Loading...</p>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-outline-variant/60 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b border-gray-100">
+              <tr className="text-left text-on-surface-variant border-b border-outline-variant/60">
                 <th className="py-3 px-4">Ticket #</th>
                 <th className="py-3 px-4">User Name</th>
                 <th className="py-3 px-4">Category</th>
@@ -133,7 +133,7 @@ const Grievances = () => {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan="8" className="py-8 text-center text-gray-500">No grievances found.</td></tr>
+                <tr><td colSpan="8" className="py-8 text-center text-on-surface-variant">No grievances found.</td></tr>
               ) : filtered.map((g) => {
                 const overdue =
                   g.status !== 'resolved' &&
@@ -204,29 +204,29 @@ const Grievances = () => {
             <h3 className="font-semibold text-lg mb-4">
               Resolve Grievance #{String(selected.id || 'unknown').replace('grievance-uuid-', '').slice(0, 8)}
             </h3>
-            <div className="text-sm text-gray-700 space-y-1 mb-4">
-              <p><span className="text-gray-500">User:</span> {userName(selected)}</p>
-              <p><span className="text-gray-500">Category:</span> {selected.category}</p>
-              <p><span className="text-gray-500">Severity:</span> {selected.severity}</p>
-              <p><span className="text-gray-500">Description:</span> {selected.description || 'No description'}</p>
+            <div className="text-sm text-on-surface space-y-1 mb-4">
+              <p><span className="text-on-surface-variant">User:</span> {userName(selected)}</p>
+              <p><span className="text-on-surface-variant">Category:</span> {selected.category}</p>
+              <p><span className="text-on-surface-variant">Severity:</span> {selected.severity}</p>
+              <p><span className="text-on-surface-variant">Description:</span> {selected.description || 'No description'}</p>
             </div>
             <textarea
               value={resolveNote}
               onChange={(e) => setResolveNote(e.target.value)}
               placeholder="Resolution note..."
               rows={3}
-              className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
+              className="w-full border border-outline rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
             />
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => setSelected(null)}
-                className="flex-1 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200"
+                className="flex-1 py-2 bg-surface-container rounded-xl text-sm hover:bg-surface-high"
               >
                 Cancel
               </button>
               <button
                 onClick={handleResolve}
-                className="flex-1 py-2 bg-kisan-700 text-white rounded-lg text-sm hover:bg-kisan-800"
+                className="flex-1 py-2 bg-kisan-700 text-white rounded-xl text-sm hover:bg-kisan-800"
               >
                 Mark Resolved
               </button>

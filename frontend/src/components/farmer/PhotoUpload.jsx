@@ -58,10 +58,10 @@ export default function PhotoUpload({ files, onFilesChange }) {
         >
           <input {...getInputProps()} />
           <ImagePlus className="h-8 w-8 text-green-600" />
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-on-surface">
             Drag &amp; drop images here, or click to select
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-on-surface-variant/70">
             JPEG, PNG or WebP • max {MAX_SIZE_MB}MB each
           </p>
         </div>
@@ -74,7 +74,7 @@ export default function PhotoUpload({ files, onFilesChange }) {
               <img
                 src={previews[i]}
                 alt={file.name || `preview-${i}`}
-                className="h-full w-full rounded-lg object-cover border border-gray-200"
+                className="h-full w-full rounded-lg object-cover border border-outline-variant/80"
               />
               <button
                 type="button"

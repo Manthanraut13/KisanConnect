@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-container-lowest": "#ffffff", "on-primary-fixed-variant": "#005048", "secondary-container": "#fe9251", "surface-variant": "#d4e4f8", "on-background": "#0d1d2b", "on-surface-variant": "#3d4947", "surface-bright": "#f7f9ff", "tertiary-container": "#387ba4", "primary": "#00685d", "primary-fixed-dim": "#6fd8c8", "on-tertiary-fixed-variant": "#004c6e", "surface-container": "#e3efff", "on-error-container": "#93000a", "tertiary": "#166289", "on-primary-container": "#f4fffb", "on-secondary": "#ffffff", "outline": "#6d7a77", "tertiary-fixed": "#c8e6ff", "secondary-fixed": "#ffdbca", "background": "#f7f9ff", "on-tertiary": "#ffffff", "error-container": "#ffdad6", "inverse-primary": "#6fd8c8", "surface-tint": "#006a60", "inverse-surface": "#233241", "tertiary-fixed-dim": "#8fcdfa", "on-tertiary-container": "#fcfcff", "primary-container": "#008376", "on-tertiary-fixed": "#001e2f", "primary-fixed": "#8cf5e4", "surface-container-high": "#daeafe", "on-surface": "#0d1d2b", "surface": "#f7f9ff", "surface-container-highest": "#d4e4f8", "on-secondary-fixed": "#331200", "on-primary-fixed": "#00201c", "secondary-fixed-dim": "#ffb68e", "inverse-on-surface": "#e8f1ff", "on-error": "#ffffff", "on-secondary-container": "#6e2f00", "secondary": "#9b4504", "surface-container-low": "#edf4ff", "outline-variant": "#bcc9c6", "on-primary": "#ffffff", "error": "#ba1a1a", "surface-dim": "#ccdcf0", "on-secondary-fixed-variant": "#773300" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xs": "0.5rem", "space-2xl": "3rem", "gutter-tablet": "1.5rem", "gutter-desktop": "1.5rem", "gutter-mobile": "1rem", "margin-tablet": "2rem", "space-2xs": "0.25rem", "space-lg": "1.5rem", "margin-mobile": "1rem", "space-xl": "2rem", "space-sm": "0.75rem", "margin-desktop": "2.5rem", "space-md": "1rem" }, fontFamily: { "display-lg-mobile": ["Google Sans"], "body-md": ["Google Sans"], "label-lg": ["Google Sans"], "label-md": ["Google Sans"], "display-lg": ["Google Sans"], "headline-sm": ["Google Sans"], "headline-lg": ["Google Sans"], "headline-md": ["Google Sans"], "data-metric": ["Google Sans"], "body-sm": ["Google Sans"], "caption-light": ["Google Sans"], "body-lg": ["Google Sans"], "label-sm": ["Google Sans"] }, fontSize: { "display-lg-mobile": ["32px", { lineHeight: "40px", letterSpacing: "-0.015em", fontWeight: "700" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "600" }], "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "500" }], "display-lg": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "800" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "headline-lg": ["28px", { lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "700" }], "headline-md": ["22px", { lineHeight: "28px", letterSpacing: "-0.005em", fontWeight: "600" }], "data-metric": ["32px", { lineHeight: "36px", letterSpacing: "-0.02em", fontWeight: "700" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "caption-light": ["12px", { lineHeight: "16px", fontWeight: "300" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.04em", fontWeight: "600" }] } } } };</script></head><body class="bg-background font-body-md text-on-surface min-h-screen flex items-center justify-center"><main class="w-full"><div class="flex flex-col w-full">
+<div class="w-full max-w-[1600px] mx-auto min-h-[920px] grid grid-cols-1 lg:grid-cols-12 overflow-hidden shadow-xl rounded-xl">
+<!-- LEFT PANEL: Ecosystem Presentation (55% / 7 cols) -->
+<div class="lg:col-span-7 bg-surface-container-low p-8 lg:p-14 flex flex-col justify-between relative overflow-hidden">
+<!-- Decorative ambient gradient circles -->
+<div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-surface-container blur-3xl opacity-70 pointer-events-none"></div>
+<div class="absolute bottom-10 right-4 w-80 h-80 rounded-full bg-secondary-fixed blur-3xl opacity-30 pointer-events-none"></div>
+<!-- Top Header / Meta Information -->
+<div class="relative z-10">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-on-primary shadow-sm">
+<span class="material-symbols-outlined text-2xl">agriculture</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-lg text-headline-lg text-on-background tracking-tight">AgriTrade</span>
+<span class="font-label-sm text-label-sm text-outline tracking-wider uppercase">Unified Commerce & Telematics</span>
+</div>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl leading-relaxed">
+          The unified agricultural supply chain and commerce operating system connecting growers, consumers, fleet operators, and governors.
+        </p>
+<!-- Value Prop Chips -->
+<div class="flex flex-wrap gap-2.5 mt-6">
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-lowest text-primary shadow-sm">
+<span class="material-symbols-outlined text-base">verified</span>
+<span class="font-label-md text-label-md">Traceable Field-to-Fork</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-lowest text-secondary shadow-sm">
+<span class="material-symbols-outlined text-base">shield_with_heart</span>
+<span class="font-label-md text-label-md">Smart Escrow Contracts</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-lowest text-tertiary shadow-sm">
+<span class="material-symbols-outlined text-base">local_shipping</span>
+<span class="font-label-md text-label-md">Real-Time Fleet Telematics</span>
+</div>
+</div>
+</div>
+<!-- Isometric Supply Chain Diagram (Inline SVG) -->
+<div class="relative z-10 my-8 flex items-center justify-center">
+<svg class="w-full max-w-2xl h-auto drop-shadow-sm select-none" fill="none" viewbox="0 0 760 420" xmlns="http://www.w3.org/2000/svg">
+<!-- Background Grid Plane -->
+<g opacity="0.35">
+<path d="M70 210L380 40L690 210L380 380L70 210Z" fill="#E3EFFF" stroke="#BCC9C6" stroke-dasharray="4 4" stroke-width="1.5"></path>
+<path d="M148 210L380 82L612 210L380 338L148 210Z" fill="#F7F9FF" stroke="#D4E4F8" stroke-width="1.2"></path>
+<path d="M225 210L380 125L535 210L380 295L225 210Z" fill="#FFFFFF" fill-opacity="0.7"></path>
+</g>
+<!-- Interconnection Flow Lines (Animated Dash Effect) -->
+<path d="M210 240 L380 320 L550 240" stroke="#00685D" stroke-dasharray="6 6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+<path d="M210 240 L380 140 L550 240" stroke="#166289" stroke-dasharray="4 4" stroke-linecap="round" stroke-width="2"></path>
+<!-- NODE 1: Precision Cultivation & Granary (Left) -->
+<g transform="translate(130, 160)">
+<!-- Isometric Base -->
+<path d="M80 0 L155 42 L80 84 L5 42 Z" fill="#E3EFFF"></path>
+<path d="M5 42 L80 84 L80 102 L5 60 Z" fill="#D4E4F8"></path>
+<path d="M80 84 L155 42 L155 60 L80 102 Z" fill="#CCDCE0"></path>
+<!-- Silo 1 -->
+<path d="M50 20 C50 14 74 14 74 20 L74 65 C74 71 50 71 50 65 Z" fill="#00685D"></path>
+<ellipse cx="62" cy="20" fill="#6FD8C8" rx="12" ry="5"></ellipse>
+<!-- Silo 2 -->
+<path d="M72 10 C72 4 96 4 96 10 L96 55 C96 61 72 61 72 55 Z" fill="#008376"></path>
+<ellipse cx="84" cy="10" fill="#8CF5E4" rx="12" ry="5"></ellipse>
+<!-- Terraced Crop Rows -->
+<path d="M98 48 Q115 57 132 48" stroke="#52B788" stroke-linecap="round" stroke-width="3.5"></path>
+<path d="M90 56 Q107 65 124 56" stroke="#52B788" stroke-linecap="round" stroke-width="3.5"></path>
+<path d="M82 64 Q99 73 116 64" stroke="#52B788" stroke-linecap="round" stroke-width="3.5"></path>
+<!-- Sensor Node -->
+<circle cx="130" cy="35" fill="#E07A3B" r="4"></circle>
+<path d="M130 39 L130 52" stroke="#E07A3B" stroke-width="1.5"></path>
+<!-- Badge -->
+<rect class="shadow-sm" fill="#FFFFFF" height="24" rx="12" width="110" x="25" y="-22"></rect>
+<text fill="#0D1D2B" font-family="Google Sans" font-size="11" font-weight="600" text-anchor="middle" x="80" y="-7">FARMLAND IOT</text>
+</g>
+<!-- NODE 2: Connected Fleet Telematics (Bottom Center) -->
+<g transform="translate(305, 245)">
+<!-- Isometric Base Plate -->
+<path d="M75 0 L150 40 L75 80 L0 40 Z" fill="#DAEAFE"></path>
+<path d="M0 40 L75 80 L75 90 L0 50 Z" fill="#CCDCE0"></path>
+<path d="M75 80 L150 40 L150 50 L75 90 Z" fill="#BCC9C6"></path>
+<!-- Freight Hauler Truck -->
+<!-- Trailer -->
+<path d="M45 28 L100 0 L125 14 L70 42 Z" fill="#166289"></path>
+<path d="M45 28 L70 42 L70 58 L45 44 Z" fill="#004C6E"></path>
+<path d="M70 42 L125 14 L125 30 L70 58 Z" fill="#387BA4"></path>
+<!-- Cab -->
+<path d="M30 42 L46 34 L56 39 L40 47 Z" fill="#9B4504"></path>
+<path d="M30 42 L40 47 L40 55 L30 50 Z" fill="#6E2F00"></path>
+<!-- Wheels -->
+<ellipse cx="50" cy="53" fill="#0D1D2B" rx="4" ry="5"></ellipse>
+<ellipse cx="64" cy="61" fill="#0D1D2B" rx="4" ry="5"></ellipse>
+<ellipse cx="112" cy="34" fill="#0D1D2B" rx="4" ry="5"></ellipse>
+<!-- GPS / Route Wave Beacon -->
+<circle cx="85" cy="18" fill="#387BA4" fill-opacity="0.2" r="14"></circle>
+<circle cx="85" cy="18" fill="#166289" r="7"></circle>
+<circle cx="85" cy="18" fill="#FFFFFF" r="3"></circle>
+<rect class="shadow-sm" fill="#FFFFFF" height="24" rx="12" width="110" x="20" y="80"></rect>
+<text fill="#0D1D2B" font-family="Google Sans" font-size="11" font-weight="600" text-anchor="middle" x="75" y="95">FLEET TRANSIT</text>
+</g>
+<!-- NODE 3: Fresh Produce Terminal / Wholesale Market (Right) -->
+<g transform="translate(480, 160)">
+<!-- Isometric Ground -->
+<path d="M75 0 L150 42 L75 84 L0 42 Z" fill="#EDF4FF"></path>
+<path d="M0 42 L75 84 L75 96 L0 54 Z" fill="#D4E4F8"></path>
+<path d="M75 84 L150 42 L150 54 L75 96 Z" fill="#CCDCE0"></path>
+<!-- Modern Warehouse / Hub Structure -->
+<path d="M40 32 L85 8 L125 30 L80 54 Z" fill="#FFFFFF"></path>
+<path d="M40 32 L80 54 L80 78 L40 56 Z" fill="#FE9251"></path>
+<path d="M80 54 L125 30 L125 54 L80 78 Z" fill="#9B4504"></path>
+<!-- Sloped Roof Panels -->
+<path d="M40 32 L85 8 L85 10 L40 34 Z" fill="#6E2F00"></path>
+<path d="M85 8 L125 30 L123 32 L85 10 Z" fill="#FFB68E"></path>
+<!-- Loading Dock Slits -->
+<rect fill="#331200" height="14" width="8" x="52" y="52"></rect>
+<rect fill="#331200" height="14" width="8" x="65" y="58"></rect>
+<!-- Quality Stamp Pin -->
+<circle cx="115" cy="20" fill="#52B788" r="8"></circle>
+<path d="M112 20 L114 22 L118 18" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+<rect class="shadow-sm" fill="#FFFFFF" height="24" rx="12" width="110" x="25" y="-22"></rect>
+<text fill="#0D1D2B" font-family="Google Sans" font-size="11" font-weight="600" text-anchor="middle" x="80" y="-7">TERMINAL & HUB</text>
+</g>
+<!-- NODE 4: Cloud Telemetry & Governance Layer (Top Center) -->
+<g transform="translate(305, 45)">
+<!-- Isometric Dashboard Floating Glass Card -->
+<path d="M75 0 L145 38 L75 76 L5 38 Z" fill="#FFFFFF" fill-opacity="0.95"></path>
+<path d="M5 38 L75 76 L75 80 L5 42 Z" fill="#D4E4F8"></path>
+<path d="M75 76 L145 38 L145 42 L75 80 Z" fill="#BCC9C6"></path>
+<!-- Mini Chart / Ledger Graphic inside Cloud Screen -->
+<path d="M30 40 L50 30 L70 38 L95 24 L120 32" stroke="#00685D" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+<circle cx="50" cy="30" fill="#008376" r="3"></circle>
+<circle cx="95" cy="24" fill="#E07A3B" r="3"></circle>
+<circle cx="120" cy="32" fill="#52B788" r="3"></circle>
+<rect class="shadow-sm" fill="#FFFFFF" height="24" rx="12" width="110" x="20" y="-20"></rect>
+<text fill="#0D1D2B" font-family="Google Sans" font-size="11" font-weight="600" text-anchor="middle" x="75" y="-5">CLOUD LEDGER</text>
+</g>
+</svg>
+</div>
+<!-- Footer Micro-Stats Row -->
+<div class="relative z-10 pt-6 border-t-0 flex flex-wrap items-center justify-between gap-4 text-on-surface-variant">
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></div>
+<span class="font-label-md text-label-md text-on-surface">Network Status: <strong class="text-primary font-semibold">Operational (99.98%)</strong></span>
+</div>
+<div class="flex items-center gap-6 font-caption-light text-caption-light">
+<span>Escrow Volume: <strong>$142.8M</strong></span>
+<span>Active Freight: <strong>2,419 T/Hr</strong></span>
+<span>Verified Acres: <strong>1.84M</strong></span>
+</div>
+</div>
+</div>
+<!-- RIGHT PANEL: Role-Aware Login & Portal Access (45% / 5 cols) -->
+<div class="lg:col-span-5 bg-surface flex items-center justify-center p-6 sm:p-10 lg:p-12">
+<div class="w-full max-w-md bg-surface-container-lowest rounded-2xl shadow-xl p-8 sm:p-9 transition-all duration-200">
+<!-- Header & Live Role Indicator -->
+<div class="flex items-center justify-between mb-6">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Access Authentication</span>
+<h1 class="font-headline-lg text-headline-lg text-on-background mt-0.5" id="portal-title">AgriTrade Portal</h1>
+</div>
+<div class="px-3 py-1 rounded-full text-label-sm font-label-sm bg-surface-container text-primary flex items-center gap-1.5 transition-colors duration-150" id="role-badge">
+<span class="material-symbols-outlined text-sm" id="role-badge-icon">yard</span>
+<span id="role-badge-text">Farmer Node</span>
+</div>
+</div>
+<!-- Segmented Role Selection Tabs (4 clickable pills) -->
+<div class="bg-surface-container-low p-1 rounded-xl mb-6 flex items-center gap-1">
+<button class="role-tab flex-1 py-2 rounded-lg text-center font-label-md text-label-md transition-all duration-150 bg-surface-container-lowest text-primary shadow-sm" id="tab-farmer" onclick="setRole('farmer')" type="button">
+            Farmer
+          </button>
+<button class="role-tab flex-1 py-2 rounded-lg text-center font-label-md text-label-md transition-all duration-150 text-on-surface-variant hover:text-on-surface" id="tab-consumer" onclick="setRole('consumer')" type="button">
+            Consumer
+          </button>
+<button class="role-tab flex-1 py-2 rounded-lg text-center font-label-md text-label-md transition-all duration-150 text-on-surface-variant hover:text-on-surface" id="tab-logistics" onclick="setRole('logistics')" type="button">
+            Logistics
+          </button>
+<button class="role-tab flex-1 py-2 rounded-lg text-center font-label-md text-label-md transition-all duration-150 text-on-surface-variant hover:text-on-surface" id="tab-admin" onclick="setRole('admin')" type="button">
+            Admin
+          </button>
+</div>
+<!-- Form Elements -->
+<form class="space-y-4" onsubmit="event.preventDefault(); handleLoginSubmit();">
+<!-- Standard Email Input -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1.5" for="input-email">
+              Enterprise Email
+            </label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg">mail</span>
+<input class="w-full h-11 pl-10 pr-4 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:bg-surface-bright focus:shadow-md transition-all" id="input-email" placeholder="name@agri-coop.org" required="" type="email"/>
+</div>
+</div>
+<!-- Role-Specific Identifier Field (Dynamic) -->
+<div>
+<div class="flex items-center justify-between mb-1.5">
+<label class="font-label-md text-label-md text-on-surface-variant" for="input-role-id" id="role-input-label">
+                Farm Registration ID
+              </label>
+<span class="font-caption-light text-caption-light text-outline" id="role-input-hint">USDA/FSA Standard</span>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg" id="role-field-icon">badge</span>
+<input class="w-full h-11 pl-10 pr-4 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:bg-surface-bright focus:shadow-md transition-all" id="input-role-id" placeholder="e.g. FSA-8829-01TX" required="" type="text"/>
+</div>
+</div>
+<!-- Password Field with Show/Hide Toggle -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1.5" for="input-password">
+              Password
+            </label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg">lock</span>
+<input class="w-full h-11 pl-10 pr-12 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:bg-surface-bright focus:shadow-md transition-all" id="input-password" placeholder="••••••••••••" required="" type="password"/>
+<button aria-label="Toggle password visibility" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface p-1 flex items-center justify-center" id="toggle-pwd-btn" onclick="togglePasswordVisibility()" type="button">
+<span class="material-symbols-outlined text-lg" id="toggle-pwd-icon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Aux Row: Remember Me & Forgot Password -->
+<div class="flex items-center justify-between pt-1">
+<label class="flex items-center gap-2 cursor-pointer select-none">
+<input class="w-4 h-4 rounded text-primary accent-primary focus:ring-0 cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Remember device</span>
+</label>
+<a class="font-label-md text-label-md text-primary hover:underline" href="#">Forgot password?</a>
+</div>
+<!-- Dynamic Role CTA Submit Button -->
+<div class="pt-2">
+<button class="w-full h-12 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-headline-sm text-headline-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.99]" id="cta-submit-button" type="submit">
+<span id="cta-button-text">Sign in as Farmer</span>
+<span class="material-symbols-outlined text-xl">arrow_forward</span>
+</button>
+</div>
+<!-- Divider -->
+<div class="flex items-center my-4">
+<div class="flex-grow h-px bg-surface-container-highest"></div>
+<span class="px-3 font-label-sm text-label-sm text-outline uppercase tracking-wider">or authenticate with</span>
+<div class="flex-grow h-px bg-surface-container-highest"></div>
+</div>
+<!-- Google OAuth Secondary Button -->
+<button class="w-full h-11 rounded-lg bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-3 shadow-sm hover:shadow transition-all duration-150" type="button">
+<!-- Google G Logo SVG -->
+<svg class="w-4 h-4" viewbox="0 0 24 24">
+<path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" fill="#4285F4"></path>
+<path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.35 24 12 24z" fill="#34A853"></path>
+<path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z" fill="#FBBC05"></path>
+<path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" fill="#EA4335"></path>
+</svg>
+<span>Continue with Google</span>
+</button>
+</form>
+<!-- Footer Link (Dynamic based on selected role) -->
+<div class="mt-7 text-center">
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Don't have an account? 
+            <a class="font-label-lg text-label-lg text-primary hover:underline ml-1" href="#" id="footer-register-link">Register as Farmer</a>
+</p>
+</div>
+<!-- Regulatory Notice Stamp -->
+<div class="mt-6 pt-4 border-t-0 bg-surface-container-low rounded-lg p-2.5 flex items-center gap-2 text-outline">
+<span class="material-symbols-outlined text-base text-primary">verified_user</span>
+<span class="font-label-sm text-label-sm">FSA & CFTC Encrypted Compliance Gateway • v4.9.2</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive Role State Engine -->
+<script>
+  const roleConfigs = {
+    farmer: {
+      name: "Farmer",
+      badgeText: "Farmer Node",
+      badgeIcon: "yard",
+      badgeBg: "bg-surface-container",
+      badgeTextColor: "text-primary",
+      ctaBg: "bg-primary",
+      ctaHover: "hover:bg-primary-container",
+      ctaText: "Sign in as Farmer",
+      inputLabel: "Farm Registration ID",
+      inputHint: "USDA/FSA Standard",
+      inputIcon: "badge",
+      inputPlaceholder: "e.g. FSA-8829-01TX",
+      registerText: "Register as Farmer",
+      linkColor: "text-primary",
+      tabActiveClasses: ["bg-surface-container-lowest", "text-primary", "shadow-sm"]
+    },
+    consumer: {
+      name: "Consumer",
+      badgeText: "Buyer / Retail Node",
+      badgeIcon: "shopping_basket",
+      badgeBg: "bg-secondary-fixed",
+      badgeTextColor: "text-secondary",
+      ctaBg: "bg-secondary",
+      ctaHover: "hover:bg-on-secondary-container",
+      ctaText: "Sign in as Consumer",
+      inputLabel: "Phone Number or Buyer ID",
+      inputHint: "E.164 Format or BID",
+      inputIcon: "contact_phone",
+      inputPlaceholder: "+1 (555) 019-2831",
+      registerText: "Register as Consumer",
+      linkColor: "text-secondary",
+      tabActiveClasses: ["bg-surface-container-lowest", "text-secondary", "shadow-sm"]
+    },
+    logistics: {
+      name: "Logistics",
+      badgeText: "Fleet / Carrier Node",
+      badgeIcon: "local_shipping",
+      badgeBg: "bg-tertiary-fixed",
+      badgeTextColor: "text-tertiary",
+      ctaBg: "bg-tertiary",
+      ctaHover: "hover:bg-tertiary-container",
+      ctaText: "Sign in as Logistics Operator",
+      inputLabel: "Carrier DOT / Operator License No",
+      inputHint: "USDOT or MC/FF Num",
+      inputIcon: "commute",
+      inputPlaceholder: "DOT #3928102-X",
+      registerText: "Register as Carrier Fleet",
+      linkColor: "text-tertiary",
+      tabActiveClasses: ["bg-surface-container-lowest", "text-tertiary", "shadow-sm"]
+    },
+    admin: {
+      name: "Admin",
+      badgeText: "Authority & Auditor",
+      badgeIcon: "shield_person",
+      badgeBg: "bg-surface-container-highest",
+      badgeTextColor: "text-on-surface",
+      ctaBg: "bg-inverse-surface",
+      ctaHover: "hover:bg-on-surface",
+      ctaText: "Sign in as Admin",
+      inputLabel: "Hardware MFA / Admin Access Token",
+      inputHint: "FIPS 140-2 Key",
+      inputIcon: "key",
+      inputPlaceholder: "SEC-KEY-9941-XXXX",
+      registerText: "Request System Credentials",
+      linkColor: "text-on-surface",
+      tabActiveClasses: ["bg-surface-container-lowest", "text-on-surface", "shadow-sm"]
+    }
+  };
+
+  let currentRole = 'farmer';
+
+  function setRole(roleKey) {
+    if (!roleConfigs[roleKey]) return;
+    currentRole = roleKey;
+    const config = roleConfigs[roleKey];
+
+    // 1. Reset all tab styles
+    ['farmer', 'consumer', 'logistics', 'admin'].forEach(tab => {
+      const tabEl = document.getElementById('tab-' + tab);
+      if (tabEl) {
+        tabEl.className = "role-tab flex-1 py-2 rounded-lg text-center font-label-md text-label-md transition-all duration-150 text-on-surface-variant hover:text-on-surface";
+      }
+    });
+
+    // 2. Set active tab style
+    const activeTab = document.getElementById('tab-' + roleKey);
+    if (activeTab) {
+      activeTab.className = "role-tab flex-1 py-2 rounded-lg text-center font-label-md text-label-md transition-all duration-150 " + config.tabActiveClasses.join(' ');
+    }
+
+    // 3. Update Badge
+    const badge = document.getElementById('role-badge');
+    const badgeText = document.getElementById('role-badge-text');
+    const badgeIcon = document.getElementById('role-badge-icon');
+    if (badge && badgeText && badgeIcon) {
+      badge.className = "px-3 py-1 rounded-full text-label-sm font-label-sm flex items-center gap-1.5 transition-colors duration-150 " + config.badgeBg + " " + config.badgeTextColor;
+      badgeText.textContent = config.badgeText;
+      badgeIcon.textContent = config.badgeIcon;
+    }
+
+    // 4. Update Dynamic Role Input
+    const roleLabel = document.getElementById('role-input-label');
+    const roleHint = document.getElementById('role-input-hint');
+    const roleFieldIcon = document.getElementById('role-field-icon');
+    const roleInput = document.getElementById('input-role-id');
+
+    if (roleLabel) roleLabel.textContent = config.inputLabel;
+    if (roleHint) roleHint.textContent = config.inputHint;
+    if (roleFieldIcon) roleFieldIcon.textContent = config.inputIcon;
+    if (roleInput) roleInput.placeholder = config.inputPlaceholder;
+
+    // 5. Update CTA Submit Button
+    const ctaBtn = document.getElementById('cta-submit-button');
+    const ctaText = document.getElementById('cta-button-text');
+    if (ctaBtn && ctaText) {
+      ctaBtn.className = "w-full h-12 rounded-lg text-on-primary font-headline-sm text-headline-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.99] " + config.ctaBg + " " + config.ctaHover;
+      ctaText.textContent = config.ctaText;
+    }
+
+    // 6. Update Register Footer Link
+    const regLink = document.getElementById('footer-register-link');
+    if (regLink) {
+      regLink.textContent = config.registerText;
+      regLink.className = "font-label-lg text-label-lg hover:underline ml-1 " + config.linkColor;
+    }
+  }
+
+  function togglePasswordVisibility() {
+    const pwdInput = document.getElementById('input-password');
+    const icon = document.getElementById('toggle-pwd-icon');
+    if (!pwdInput || !icon) return;
+
+    if (pwdInput.type === 'password') {
+      pwdInput.type = 'text';
+      icon.textContent = 'visibility_off';
+    } else {
+      pwdInput.type = 'password';
+      icon.textContent = 'visibility';
+    }
+  }
+
+  function handleLoginSubmit() {
+    const email = document.getElementById('input-email').value;
+    const roleId = document.getElementById('input-role-id').value;
+    const ctaText = document.getElementById('cta-button-text');
+    const originalText = ctaText.textContent;
+
+    ctaText.textContent = "Verifying Credentials...";
+    setTimeout(() => {
+      ctaText.textContent = "Authorized - Redirecting...";
+      setTimeout(() => {
+        ctaText.textContent = originalText;
+      }, 1500);
+    }, 900);
+  }
+</script></main></body></html>

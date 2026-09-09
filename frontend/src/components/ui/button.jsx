@@ -4,20 +4,20 @@ import { cn } from "cn"
 import { Slot } from "radix-ui"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-xl border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all duration-200 outline-none select-none focus-visible:border-evergreen focus-visible:ring-3 focus-visible:ring-evergreen/10 active:not-aria-[haspopup]:translate-y-px active:not-aria-[haspopup]:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 disabled:bg-disabledbg disabled:text-mutedtext aria-invalid:border-terracotta aria-invalid:ring-3 aria-invalid:ring-terracotta/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-xl border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all duration-200 outline-none select-none focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/10 active:not-aria-[haspopup]:translate-y-px active:not-aria-[haspopup]:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 disabled:bg-disabledbg disabled:text-on-surface-variant aria-invalid:border-error aria-invalid:ring-3 aria-invalid:ring-error/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-terracotta text-canvas hover:bg-terracotta-dark",
+        default: "bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container",
         outline:
-          "border-linen bg-white text-evergreen hover:bg-wash-muted hover:text-evergreen aria-expanded:bg-wash-muted aria-expanded:text-evergreen",
+          "border-outline-variant bg-surface-lowest text-on-surface hover:bg-surface-container aria-expanded:bg-surface-container",
         secondary:
-          "bg-evergreen text-canvas hover:bg-forest aria-expanded:bg-evergreen aria-expanded:text-canvas",
+          "bg-tertiary-container text-on-tertiary-container hover:bg-tertiary aria-expanded:bg-tertiary",
         ghost:
-          "text-evergreen hover:bg-wash-muted hover:text-evergreen aria-expanded:bg-wash-muted aria-expanded:text-evergreen",
+          "text-on-surface hover:bg-surface-container aria-expanded:bg-surface-container",
         destructive:
-          "bg-wash-terracotta text-terracotta hover:bg-wash-terracotta focus-visible:border-terracotta/40 focus-visible:ring-terracotta/20",
-        link: "text-terracotta underline-offset-4 hover:underline",
+          "bg-error-container text-error hover:bg-error hover:text-on-primary focus-visible:border-error/40 focus-visible:ring-error/20",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default:

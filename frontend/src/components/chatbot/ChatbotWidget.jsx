@@ -161,7 +161,7 @@ const ChatbotWidget = () => {
           aria-label="Kisan Mitra"
         >
           <MessageCircle className="h-7 w-7 text-white" />
-          <span className="absolute right-20 whitespace-nowrap bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="absolute right-20 whitespace-nowrap bg-on-surface text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
             Kisan Mitra
           </span>
         </button>
@@ -192,7 +192,7 @@ const ChatbotWidget = () => {
             </button>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 bg-surface space-y-4">
             {messages.map((msg, idx) => (
               <div key={idx}>
                 {msg.role === 'user' ? (
@@ -201,7 +201,7 @@ const ChatbotWidget = () => {
                       <div className="bg-kisan-700 text-white rounded-2xl rounded-br-sm px-4 py-2 max-w-xs">
                         {msg.content}
                       </div>
-                      <p className="text-xs text-gray-400 mt-1 text-right">
+                      <p className="text-xs text-on-surface-variant/70 mt-1 text-right">
                         {new Date(msg.timestamp).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -215,10 +215,10 @@ const ChatbotWidget = () => {
                       <span className="text-xs font-bold text-kisan-700">KM</span>
                     </div>
                     <div>
-                      <div className="bg-white text-gray-800 rounded-2xl rounded-bl-sm px-4 py-2 max-w-xs shadow-sm border border-gray-100">
+                      <div className="bg-white text-on-surface rounded-2xl rounded-bl-sm px-4 py-2 max-w-xs shadow-sm border border-outline-variant/60">
                         {msg.content}
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-on-surface-variant/70 mt-1">
                         {new Date(msg.timestamp).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -248,11 +248,11 @@ const ChatbotWidget = () => {
                 <div className="h-8 w-8 rounded-full bg-kisan-100 flex items-center justify-center shrink-0">
                   <span className="text-xs font-bold text-kisan-700">KM</span>
                 </div>
-                <div className="bg-white rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm border border-gray-100">
+                <div className="bg-white rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm border border-outline-variant/60">
                   <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span className="w-2 h-2 bg-on-surface-variant/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-on-surface-variant/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-on-surface-variant/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>

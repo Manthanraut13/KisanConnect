@@ -53,7 +53,7 @@ const Cart = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-kisan-700"></div>
       </div>
     );
@@ -61,15 +61,15 @@ const Cart = () => {
 
   if (totalItems === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-surface py-8">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="bg-white rounded-xl shadow-md p-8 text-center">
             <div className="text-6xl mb-4">🛒</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Your Cart is Empty</h2>
-            <p className="text-gray-600 mb-6">Looks like you haven't added any products to your cart yet.</p>
+            <h2 className="text-2xl font-bold text-on-surface mb-2">Your Cart is Empty</h2>
+            <p className="text-on-surface-variant mb-6">Looks like you haven't added any products to your cart yet.</p>
             <Link
               to="/marketplace"
-              className="inline-block bg-kisan-700 text-white px-6 py-3 rounded-lg hover:bg-kisan-800"
+              className="inline-block bg-kisan-700 text-white px-6 py-3 rounded-xl hover:bg-kisan-800"
             >
               Browse Marketplace
             </Link>
@@ -80,29 +80,29 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-surface py-8">
       <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Shopping Cart</h1>
+        <h1 className="text-3xl font-bold text-on-surface mb-6">Shopping Cart</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-4">
             {items.map((item) => (
-              <div key={item.listing_id} className="bg-white rounded-lg shadow-md p-4 flex gap-4">
+              <div key={item.listing_id} className="bg-white rounded-xl shadow-md p-4 flex gap-4">
                 <img
                   src={item.images?.[0] || 'https://placehold.co/100'}
                   alt={item.crop_name}
-                  className="w-24 h-24 object-cover rounded-md"
+                  className="w-24 h-24 object-cover rounded-xl"
                 />
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg">{item.crop_name}</h3>
-                  <p className="text-gray-600 text-sm">{item.farmer_name || 'Farmer'}</p>
+                  <p className="text-on-surface-variant text-sm">{item.farmer_name || 'Farmer'}</p>
                   <p className="text-kisan-700 font-medium mt-1">
                     ₹{item.price_per_kg || 0} / kg
                   </p>
                   <div className="flex items-center gap-3 mt-2">
                     <button
                       onClick={() => handleQuantityChange(item.listing_id, item.quantity_kg - 1)}
-                      className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300"
+                      className="w-8 h-8 bg-surface-high rounded flex items-center justify-center hover:bg-surface-high"
                       disabled={item.quantity_kg <= 1}
                     >
                       -
@@ -110,7 +110,7 @@ const Cart = () => {
                     <span className="w-12 text-center">{item.quantity_kg} kg</span>
                     <button
                       onClick={() => handleQuantityChange(item.listing_id, item.quantity_kg + 1)}
-                      className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300"
+                      className="w-8 h-8 bg-surface-high rounded flex items-center justify-center hover:bg-surface-high"
                     >
                       +
                     </button>
@@ -127,10 +127,10 @@ const Cart = () => {
           </div>
 
           <div className="md:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
+            <div className="bg-white rounded-xl shadow-md p-6 sticky top-4">
               <h2 className="text-xl font-bold mb-4">Order Summary</h2>
               
-              <div className="space-y-2 text-gray-600 mb-4">
+              <div className="space-y-2 text-on-surface-variant mb-4">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
                   <span>₹{subtotal.toFixed(2)}</span>
@@ -148,14 +148,14 @@ const Cart = () => {
 
               <Link
                 to="/checkout"
-                className="w-full bg-kisan-700 text-white py-3 rounded-lg hover:bg-kisan-800 text-center block"
+                className="w-full bg-kisan-700 text-white py-3 rounded-xl hover:bg-kisan-800 text-center block"
               >
                 Proceed to Checkout
               </Link>
 
               <Link
                 to="/marketplace"
-                className="w-full mt-3 border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 text-center block"
+                className="w-full mt-3 border border-outline text-on-surface py-3 rounded-xl hover:bg-surface text-center block"
               >
                 Continue Shopping
               </Link>

@@ -452,11 +452,6 @@ MSG91_SENDER_ID=your_sender_id
 GMAIL_USER=your-email@gmail.com
 GMAIL_APP_PASSWORD=your_gmail_app_password
 
-# ===== FIREBASE (Push Notifications) =====
-FIREBASE_PROJECT_ID=kisan-connect-xxxxx
-FIREBASE_SERVER_KEY=your_firebase_server_key
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@kisan-connect-xxxxx.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBg...\n-----END PRIVATE KEY-----\n"
 
 # ===== GOOGLE APIS (Optional) =====
 GOOGLE_CLIENT_ID=

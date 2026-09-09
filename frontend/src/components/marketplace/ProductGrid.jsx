@@ -2,14 +2,12 @@ import ProductCard from './ProductCard';
 
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-pulse">
-      <div className="aspect-square bg-gray-200 rounded-t-xl" />
-      <div className="space-y-3 mt-4">
-        <div className="h-4 bg-gray-200 rounded w-3/4" />
-        <div className="h-6 bg-gray-200 rounded w-1/2" />
-        <div className="h-3 bg-gray-200 rounded w-2/3" />
-        <div className="h-3 bg-gray-200 rounded w-1/2" />
-        <div className="h-10 bg-gray-200 rounded-lg mt-3" />
+    <div className="bg-surface-lowest rounded-2xl ring-1 ring-outline-variant/60 p-4 animate-pulse">
+      <div className="aspect-square bg-surface-container rounded-xl" />
+      <div className="space-y-2 mt-4">
+        <div className="h-4 bg-surface-container rounded w-3/4" />
+        <div className="h-6 bg-surface-container rounded w-1/2" />
+        <div className="h-10 bg-surface-container rounded-lg mt-3" />
       </div>
     </div>
   );
@@ -19,7 +17,7 @@ export default function ProductGrid({ listings, loading }) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 12 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <SkeletonCard key={i} />
         ))}
       </div>
@@ -29,10 +27,8 @@ export default function ProductGrid({ listings, loading }) {
   if (!listings || listings.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <span className="text-6xl mb-4" role="img" aria-label="leaf">
-          🌿
-        </span>
-        <p className="text-gray-500">No listings found</p>
+        <span className="material-symbols text-6xl text-outline mb-4">grass</span>
+        <p className="text-on-surface-variant">No listings found</p>
       </div>
     );
   }

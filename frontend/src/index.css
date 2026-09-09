@@ -1,21 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@100..900&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-:root {
-  --color-oat-canvas: #faf6ee;
-  --color-deep-evergreen: #14281b;
-  --color-terracotta: #c84c2c;
-  --color-harvest-amber: #e8a838;
-  --color-forest-green: #244b36;
-  --color-linen: #ede6d6;
-  --color-success-wash: #e7efea;
-  --color-amber-wash: #fdf6e7;
-  --color-terracotta-wash: #faece8;
-  --color-disabled-text: #8a8275;
-  --color-disabled-bg: #eae3d2;
-}
 
 @layer base {
   html,
@@ -24,11 +10,70 @@
     height: 100%;
   }
 
+  html {
+    overscroll-behavior: none;
+  }
+
   body {
-    @apply bg-canvas text-evergreen font-sans antialiased;
+    @apply bg-surface text-on-surface font-sans antialiased;
   }
 
   ::selection {
-    @apply bg-terracotta text-canvas;
+    @apply bg-primary text-on-primary;
+  }
+
+  ::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+  }
+
+  main > :first-child {
+    margin-top: 0 !important;
+  }
+
+  main > :last-child {
+    margin-bottom: 0 !important;
+  }
+}
+
+@layer components {
+  .material-symbols,
+  .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 200ms ease-out both;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

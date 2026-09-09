@@ -28,7 +28,7 @@ function TableHeader({
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b [&_tr]:border-linen", className)}
+      className={cn("[&_tr]:border-b [&_tr]:border-outline-variant/60", className)}
       {...props}
     />
   )
@@ -55,7 +55,7 @@ function TableFooter({
     <tfoot
       data-slot="table-footer"
       className={cn(
-        "border-t border-linen bg-wash-muted/70 font-medium [&>tr]:last:border-b-0",
+        "border-t border-outline-variant/60 bg-surface-container/70 font-medium [&>tr]:last:border-b-0",
         className
       )}
       {...props}
@@ -71,7 +71,7 @@ function TableRow({
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b border-linen transition-colors hover:bg-wash-muted/60 has-aria-expanded:bg-wash-muted data-[state=selected]:bg-wash-muted",
+        "border-b border-outline-variant/60 transition-colors hover:bg-surface-container/70 has-aria-expanded:bg-surface-container data-[state=selected]:bg-surface-container",
         className
       )}
       {...props}
@@ -87,7 +87,7 @@ function TableHead({
     <th
       data-slot="table-head"
       className={cn(
-        "h-10 px-2 text-left align-middle font-semibold whitespace-nowrap text-[11px] uppercase tracking-[0.03em] text-evergreen [&:has([role=checkbox])]:pr-0",
+        "h-10 px-2 text-left align-middle font-semibold whitespace-nowrap text-[11px] uppercase tracking-[0.03em] text-on-surface-variant [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}

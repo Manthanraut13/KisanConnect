@@ -58,32 +58,32 @@ const Analytics = () => {
 
   return (
     <AdminLayout pageTitle="Analytics">
-      {loading && <p className="text-gray-500 mb-6">Loading...</p>}
-      {error && <p className="mb-6 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{error}</p>}
+      {loading && <p className="text-on-surface-variant mb-6">Loading...</p>}
+      {error && <p className="mb-6 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">{error}</p>}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div className="bg-white rounded-xl shadow-sm border border-outline-variant/60 p-5">
           <div className="flex items-center gap-3">
             <IndianRupee className="h-6 w-6 text-kisan-700" />
             <div>
-              <p className="text-sm text-gray-500">Avg Order Value</p>
+              <p className="text-sm text-on-surface-variant">Avg Order Value</p>
               <p className="text-2xl font-bold">₹{analytics.avgOrderValue}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div className="bg-white rounded-xl shadow-sm border border-outline-variant/60 p-5">
           <div className="flex items-center gap-3">
             <CalendarDays className="h-6 w-6 text-kisan-700" />
             <div>
-              <p className="text-sm text-gray-500">Orders This Month</p>
+              <p className="text-sm text-on-surface-variant">Orders This Month</p>
               <p className="text-2xl font-bold">{analytics.ordersThisMonth}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div className="bg-white rounded-xl shadow-sm border border-outline-variant/60 p-5">
           <div className="flex items-center gap-3">
             <MapPin className="h-6 w-6 text-kisan-700" />
             <div>
-              <p className="text-sm text-gray-500">Active Districts</p>
+              <p className="text-sm text-on-surface-variant">Active Districts</p>
               <p className="text-2xl font-bold">{analytics.activeDistricts}</p>
             </div>
           </div>
@@ -91,7 +91,7 @@ const Analytics = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div className="bg-white rounded-xl shadow-sm border border-outline-variant/60 p-5">
           <h3 className="text-lg font-semibold mb-4">Top 5 Crops by Orders</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={analytics.topCrops} layout="vertical" margin={{ left: 8 }}>
@@ -99,11 +99,11 @@ const Analytics = () => {
               <XAxis type="number" />
               <YAxis type="category" dataKey="crop" width={70} />
               <Tooltip />
-              <Bar dataKey="orders" fill="#2D7A2D" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="orders" fill="#00685d" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div className="bg-white rounded-xl shadow-sm border border-outline-variant/60 p-5">
           <h3 className="text-lg font-semibold mb-4">Daily Orders (Last 14 Days)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={analytics.dailyOrders}>
@@ -111,7 +111,7 @@ const Analytics = () => {
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="orders" stroke="#2D7A2D" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="orders" stroke="#00685d" strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>

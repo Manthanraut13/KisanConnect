@@ -198,13 +198,13 @@ export default function DemandAdvisory() {
             <AreaChart data={forecast} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
               <defs>
                 <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#E8A838" stopOpacity={0.25} />
-                  <stop offset="100%" stopColor="#E8A838" stopOpacity={0.05} />
+                  <stop offset="0%" stopColor="#FE9251" stopOpacity={0.25} />
+                  <stop offset="100%" stopColor="#FE9251" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#EDE6D6" />
-              <XAxis dataKey="date" tick={{ fill: '#8A8275', fontSize: 12 }} />
-              <YAxis dataKey="predicted_price" tickFormatter={(v) => `₹${v}`} tick={{ fill: '#8A8275', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#D4E4F8" />
+              <XAxis dataKey="date" tick={{ fill: '#3D4947', fontSize: 12 }} />
+              <YAxis dataKey="predicted_price" tickFormatter={(v) => `₹${v}`} tick={{ fill: '#3D4947', fontSize: 12 }} />
               <Tooltip content={<ChartTooltip />} />
               <Area
                 type="monotone"
@@ -221,7 +221,7 @@ export default function DemandAdvisory() {
               <Area
                 type="monotone"
                 dataKey="predicted_price"
-                stroke="#E8A838"
+                stroke="#FE9251"
                 strokeWidth={2}
                 fill="url(#band)"
               />

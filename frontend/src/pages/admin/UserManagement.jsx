@@ -108,7 +108,7 @@ const UserManagement = () => {
     <AdminLayout pageTitle="User Management">
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-on-surface-variant/70" />
           <input
             value={searchQuery}
             onChange={(e) => {
@@ -116,7 +116,7 @@ const UserManagement = () => {
               setPage(1);
             }}
             placeholder="Search by name or mobile"
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
+            className="w-full pl-10 pr-3 py-2 border border-outline rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
           />
         </div>
         <select
@@ -125,7 +125,7 @@ const UserManagement = () => {
             setRoleFilter(e.target.value);
             setPage(1);
           }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
+          className="px-3 py-2 border border-outline rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
         >
           {roleOptions.map((r) => (
             <option key={r.value} value={r.value}>
@@ -134,15 +134,15 @@ const UserManagement = () => {
           ))}
         </select>
       </div>
-      {error && <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{error}</p>}
+      {error && <p className="mb-4 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">{error}</p>}
 
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-on-surface-variant">Loading...</p>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-outline-variant/60 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b border-gray-100">
+              <tr className="text-left text-on-surface-variant border-b border-outline-variant/60">
                 <th className="py-3 px-4">Full Name</th>
                 <th className="py-3 px-4">Mobile</th>
                 <th className="py-3 px-4">Role</th>
@@ -153,7 +153,7 @@ const UserManagement = () => {
             </thead>
             <tbody>
               {filteredUsers.length === 0 ? (
-                <tr><td colSpan="6" className="py-8 text-center text-gray-500">No users found.</td></tr>
+                <tr><td colSpan="6" className="py-8 text-center text-on-surface-variant">No users found.</td></tr>
               ) : filteredUsers.map((u) => (
                 <tr key={u.id} className="border-b border-gray-50">
                   <td className="py-3 px-4">
@@ -161,25 +161,25 @@ const UserManagement = () => {
                       {u.profile_image ? (
                         <img src={u.profile_image} alt="" className="h-8 w-8 rounded-full object-cover" />
                       ) : (
-                        <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                          <UserIcon className="h-4 w-4 text-gray-500" />
+                        <div className="h-8 w-8 rounded-full bg-surface-high flex items-center justify-center">
+                          <UserIcon className="h-4 w-4 text-on-surface-variant" />
                         </div>
                       )}
                       <span className="font-medium">{u.full_name}</span>
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-gray-500">{u.mobile}</td>
+                  <td className="py-3 px-4 text-on-surface-variant">{u.mobile}</td>
                   <td className="py-3 px-4">
                     <span className={`px-2 py-1 rounded text-xs ${roleStyles[u.role] || roleStyles.consumer}`}>
                       {normRole(u.role)}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-gray-500">{u.district}</td>
+                  <td className="py-3 px-4 text-on-surface-variant">{u.district}</td>
                   <td className="py-3 px-4">
                     <button
                       onClick={() => handleToggle(u)}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        u.is_active ? 'bg-kisan-600' : 'bg-gray-300'
+                        u.is_active ? 'bg-kisan-600' : 'bg-surface-high'
                       }`}
                     >
                       <span
@@ -208,7 +208,7 @@ const UserManagement = () => {
         <button
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page === 1}
-          className="px-3 py-1 border border-gray-300 rounded disabled:opacity-40"
+          className="px-3 py-1 border border-outline rounded disabled:opacity-40"
         >
           Previous
         </button>
@@ -218,7 +218,7 @@ const UserManagement = () => {
         <button
           onClick={() => setPage((p) => p + 1)}
           disabled={page >= totalPages}
-          className="px-3 py-1 border border-gray-300 rounded disabled:opacity-40"
+          className="px-3 py-1 border border-outline rounded disabled:opacity-40"
         >
           Next
         </button>
@@ -234,8 +234,8 @@ const UserManagement = () => {
               {selectedUser.profile_image ? (
                 <img src={selectedUser.profile_image} alt="" className="h-12 w-12 rounded-full object-cover" />
               ) : (
-                <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
-                  <UserIcon className="h-6 w-6 text-gray-500" />
+                <div className="h-12 w-12 rounded-full bg-surface-high flex items-center justify-center">
+                  <UserIcon className="h-6 w-6 text-on-surface-variant" />
                 </div>
               )}
               <div>
@@ -245,21 +245,21 @@ const UserManagement = () => {
                 </span>
               </div>
             </div>
-<div className="space-y-2 text-sm text-gray-700">
-              <p><span className="text-gray-500">Mobile:</span> {selectedUser.mobile}</p>
-              <p><span className="text-gray-500">Email:</span> {selectedUser.email || '—'}</p>
-              <p><span className="text-gray-500">District:</span> {selectedUser.district || userDetail?.farmerProfile?.district || userDetail?.logisticsProfile?.district || userDetail?.bulkBuyerProfile?.district || '—'}</p>
-              <p><span className="text-gray-500">Status:</span> {selectedUser.is_active ? 'Active' : 'Inactive'}</p>
+<div className="space-y-2 text-sm text-on-surface">
+              <p><span className="text-on-surface-variant">Mobile:</span> {selectedUser.mobile}</p>
+              <p><span className="text-on-surface-variant">Email:</span> {selectedUser.email || '—'}</p>
+              <p><span className="text-on-surface-variant">District:</span> {selectedUser.district || userDetail?.farmerProfile?.district || userDetail?.logisticsProfile?.district || userDetail?.bulkBuyerProfile?.district || '—'}</p>
+              <p><span className="text-on-surface-variant">Status:</span> {selectedUser.is_active ? 'Active' : 'Inactive'}</p>
               {userDetail && (
                 <>
-                  <p><span className="text-gray-500">Joined:</span> {new Date(userDetail.created_at).toLocaleDateString('en-IN')}</p>
-                  <p><span className="text-gray-500">Orders:</span> {userDetail.orders_count} · <span className="text-gray-500">Listings:</span> {userDetail.listings_count} · <span className="text-gray-500">Grievances:</span> {userDetail.grievances_count}</p>
+                  <p><span className="text-on-surface-variant">Joined:</span> {new Date(userDetail.created_at).toLocaleDateString('en-IN')}</p>
+                  <p><span className="text-on-surface-variant">Orders:</span> {userDetail.orders_count} · <span className="text-on-surface-variant">Listings:</span> {userDetail.listings_count} · <span className="text-on-surface-variant">Grievances:</span> {userDetail.grievances_count}</p>
                 </>
               )}
             </div>
             <button
               onClick={() => setSelectedUser(null)}
-              className="mt-5 w-full py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200"
+              className="mt-5 w-full py-2 bg-surface-container rounded-xl text-sm hover:bg-surface-high"
             >
               Close
             </button>

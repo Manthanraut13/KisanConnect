@@ -1,0 +1,272 @@
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Info, Star, ShoppingCart, MapPin } from 'lucide-react';
+import { toast } from 'sonner';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { listingService } from '../services/listing.service';
+import api from '../services/api';
+import { logger } from '../lib/logger';
+
+function RatingStars({ rating }) {
+  return (
+    <div className="flex gap-0.5">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Star
+          key={i}
+          className={`h-4 w-4 ${
+            i < Math.round(rating || 0) ? 'fill-amber-400 text-amber-400' : 'text-on-surface-variant/60'
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function Spinner() {
+  return (
+    <div className="min-h-screen bg-surface flex items-center justify-center">
+      <div className="h-12 w-12 border-4 border-outline-variant/80 border-t-green-600 rounded-full animate-spin" />
+    </div>
+  );
+}
+
+export default function ProductDetail() {
+  const { id } = useParams();
+  const [listing, setListing] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedQty, setSelectedQty] = useState(0);
+  const [adding, setAdding] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    listingService
+      .getById(id)
+      .then((res) => {
+        if (cancelled) return;
+        const data = res.data ?? res;
+        logger.info('PRODUCT_DETAIL', 'Listing loaded', { id, crop: data?.crop_name });
+        setListing(data);
+        const minQty = data.min_order_kg ?? 0;
+        setSelectedQty(minQty);
+        setSelectedImage(0);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          logger.error('PRODUCT_DETAIL', 'Failed to load listing', err);
+          toast.error('Could not load listing details');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  const handleAddToCart = async () => {
+    if (!selectedQty || selectedQty < (listing.min_order_kg ?? 0)) return;
+    setAdding(true);
+    try {
+      await api.post('/api/cart/add', {
+        listingId: listing.id ?? id,
+        quantity_kg: Number(selectedQty),
+      });
+      logger.info('CART', 'Item added from product detail', { listingId: listing.id, qty: selectedQty });
+      toast.success('Added to cart');
+    } catch (err) {
+      logger.error('CART', 'Failed to add to cart', err);
+      toast.error('Could not add to cart');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  if (loading) return <Spinner />;
+
+  if (!listing) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <p className="text-on-surface-variant">Listing not found</p>
+      </div>
+    );
+  }
+
+  const images = Array.isArray(listing.images) ? listing.images : [];
+  const displayImages = images.length > 0 ? images : ['/placeholder-crop.jpg'];
+  const farmer = listing.farmer || {};
+  const latitude = listing.latitude ?? farmer.latitude;
+  const longitude = listing.longitude ?? farmer.longitude;
+  const hasCoords = latitude != null && longitude != null;
+  const minQty = listing.min_order_kg ?? 0;
+  const maxQty = listing.available_kg ?? 0;
+
+  return (
+    <div className="min-h-screen bg-surface py-8">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div className="lg:col-span-3">
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <img
+                src={displayImages[selectedImage]}
+                alt={listing.crop_name}
+                className="w-full aspect-square object-cover"
+              />
+              {displayImages.length > 1 && (
+                <div className="flex gap-2 p-4 overflow-x-auto">
+                  {displayImages.map((img, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setSelectedImage(i)}
+                      className={`shrink-0 rounded-xl overflow-hidden border-2 ${
+                        i === selectedImage ? 'border-green-600' : 'border-transparent'
+                      }`}
+                    >
+                      <img src={img} alt="" className="h-20 w-20 object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-3xl font-bold mr-2">{listing.crop_name}</h1>
+              {listing.quality_grade && (
+                <span className="px-2 py-1 text-xs font-medium text-on-surface bg-surface-container rounded-full">
+                  Quality {listing.quality_grade}
+                </span>
+              )}
+              {listing.is_organic && (
+                <span className="px-2 py-1 text-xs font-medium text-white bg-green-600 rounded-full">
+                  Organic
+                </span>
+              )}
+            </div>
+
+            <p className="text-4xl font-bold text-green-700 mt-3">
+              ₹{listing.price_per_kg}/kg
+            </p>
+            <p className="text-on-surface-variant mt-1">{Math.max(0, maxQty)}kg available</p>
+
+            {listing.ai_suggested_price != null && (
+              <div className="mt-3 flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl px-4 py-3">
+                <Info className="h-5 w-5 shrink-0" />
+                <p className="text-sm">
+                  AI Suggests: ₹{listing.ai_suggested_price}/kg
+                </p>
+              </div>
+            )}
+
+            <div className="mt-4 space-y-1 text-sm text-on-surface-variant">
+              {listing.harvest_date && (
+                <p>
+                  Harvest date: <span className="font-medium">{listing.harvest_date}</span>
+                </p>
+              )}
+              {listing.expiry_date && (
+                <p>
+                  Expiry date: <span className="font-medium">{listing.expiry_date}</span>
+                </p>
+              )}
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3">
+              <label className="text-sm text-on-surface-variant">
+                Quantity (kg) — min {minQty}
+              </label>
+              <input
+                type="number"
+                min={minQty}
+                max={Math.max(minQty, maxQty)}
+                value={selectedQty}
+                onChange={(e) => setSelectedQty(e.target.value)}
+                className="px-4 py-2.5 border border-outline rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
+              />
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={adding || !selectedQty || Number(selectedQty) < minQty}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-green-700 hover:bg-green-800 text-white text-lg font-medium rounded-xl disabled:opacity-50"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {adding ? 'Adding...' : 'Add to Cart'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+          <section className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold mb-3">Farmer</h2>
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-semibold">
+                {(farmer.full_name || farmer.name || 'F').charAt(0)}
+              </div>
+              <div>
+                <p className="font-medium">{farmer.full_name || farmer.name || 'Unknown'}</p>
+                <p className="text-sm text-on-surface-variant">
+                  {farmer.village && `${farmer.village}, `}
+                  {farmer.district}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <RatingStars rating={farmer.rating} />
+              {farmer.rating != null && (
+                <span className="text-sm text-on-surface-variant">{farmer.rating}/5</span>
+              )}
+            </div>
+          </section>
+
+          <section className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-green-700" /> Origin
+            </h2>
+            {hasCoords ? (
+              <MapContainer
+                center={[latitude, longitude]}
+                zoom={13}
+                className="h-48 w-full rounded-xl"
+              >
+                <TileLayer
+                  attribution="&copy; OpenStreetMap contributors"
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <Marker position={[latitude, longitude]}>
+                  <Popup>{farmer.village || farmer.district || 'Farm'}</Popup>
+                </Marker>
+              </MapContainer>
+            ) : (
+              <div className="h-48 bg-surface-container flex items-center justify-center text-on-surface-variant/70">
+                Map not available
+              </div>
+            )}
+          </section>
+        </div>
+
+        <section className="bg-white rounded-xl shadow-sm p-6 mt-8">
+          <h2 className="text-lg font-semibold mb-3">Traceability</h2>
+          {listing.lot_number && (
+            <p className="text-sm text-on-surface-variant mb-3">
+              Lot number: <span className="font-mono font-medium">{listing.lot_number}</span>
+            </p>
+          )}
+          {listing.qr_code_url ? (
+            <img
+              src={listing.qr_code_url}
+              alt="Traceability QR code"
+              className="h-40 w-40 object-contain border border-outline-variant/80 rounded-xl"
+            />
+          ) : (
+            <p className="text-sm text-on-surface-variant/70">No QR code available</p>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}

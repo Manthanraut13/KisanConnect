@@ -1,0 +1,28 @@
+{
+  "nav": {
+    "home": "Home",
+    "marketplace": "Marketplace",
+    "dashboard": "Dashboard",
+    "orders": "Orders",
+    "support": "Support",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout"
+  },
+  "farmer": {
+    "welcome": "Hello, {{name}}!",
+    "totalEarnings": "Total Earnings",
+    "activeListings": "Active Listings",
+    "pendingOrders": "Pending Orders",
+    "forecastTitle": "7-Day Demand Forecast",
+    "addListing": "Add New Listing",
+    "viewOrders": "View All Orders",
+    "recentOrders": "Recent Orders"
+  },
+  "marketplace": {
+    "title": "Marketplace",
+    "searchPlaceholder": "Search crops or farmers...",
+    "viewDetails": "View Details",
+    "noResults": "No listings found"
+  }
+}

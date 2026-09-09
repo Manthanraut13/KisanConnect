@@ -11,7 +11,7 @@ const statusStyles = {
   in_transit: 'bg-indigo-100 text-indigo-800',
   delivered: 'bg-green-100 text-green-800',
   cancelled: 'bg-red-100 text-red-800',
-  refunded: 'bg-gray-100 text-gray-700',
+  refunded: 'bg-surface-container text-on-surface',
 };
 
 const paymentStyles = {
@@ -85,7 +85,7 @@ const AdminOrders = () => {
   return (
     <AdminLayout pageTitle="Orders">
       <div className="relative mb-4 max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-on-surface-variant/70" />
         <input
           value={search}
           onChange={(e) => {
@@ -93,7 +93,7 @@ const AdminOrders = () => {
             setPage(1);
           }}
           placeholder="Search by buyer name or mobile"
-          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
+          className="w-full pl-10 pr-3 py-2 border border-outline rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
         />
       </div>
       <div className="relative mb-4 max-w-sm">
@@ -103,7 +103,7 @@ const AdminOrders = () => {
             setStatusFilter(e.target.value);
             setPage(1);
           }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
+          className="w-full px-3 py-2 border border-outline rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-kisan-500"
         >
           <option value="">All statuses</option>
           {Object.keys(statusStyles).map((s) => (
@@ -111,16 +111,16 @@ const AdminOrders = () => {
           ))}
         </select>
       </div>
-      {error && <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{error}</p>}
+      {error && <p className="mb-4 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">{error}</p>}
 
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-on-surface-variant">Loading...</p>
       ) : (
         <>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+          <div className="bg-white rounded-xl shadow-sm border border-outline-variant/60 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b border-gray-100">
+              <tr className="text-left text-on-surface-variant border-b border-outline-variant/60">
                 <th className="py-3 px-4">Order ID</th>
                 <th className="py-3 px-4">Buyer Name</th>
                 <th className="py-3 px-4">Total Amount</th>
@@ -132,7 +132,7 @@ const AdminOrders = () => {
             </thead>
             <tbody>
               {orders.length === 0 ? (
-                <tr><td colSpan="7" className="py-8 text-center text-gray-500">No orders found.</td></tr>
+                <tr><td colSpan="7" className="py-8 text-center text-on-surface-variant">No orders found.</td></tr>
               ) : orders.map((o) => (
                 <tr key={o.id} className="border-b border-gray-50">
                   <td className="py-3 px-4 font-mono text-xs">#{shortId(o.id)}</td>
@@ -156,7 +156,7 @@ const AdminOrders = () => {
                       {o.payment_status}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-gray-500">{orderDate(o)}</td>
+                  <td className="py-3 px-4 text-on-surface-variant">{orderDate(o)}</td>
                   <td className="py-3 px-4">
                     <button
                       onClick={() => setSelected(o)}
@@ -174,7 +174,7 @@ const AdminOrders = () => {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1 border border-gray-300 rounded disabled:opacity-40"
+              className="px-3 py-1 border border-outline rounded disabled:opacity-40"
             >
               Previous
             </button>
@@ -182,7 +182,7 @@ const AdminOrders = () => {
             <button
               onClick={() => setPage((p) => p + 1)}
               disabled={page >= totalPages}
-              className="px-3 py-1 border border-gray-300 rounded disabled:opacity-40"
+              className="px-3 py-1 border border-outline rounded disabled:opacity-40"
             >
               Next
             </button>
@@ -197,13 +197,13 @@ const AdminOrders = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="font-semibold text-lg mb-2">Order #{shortId(selected.id)}</h3>
-            <p className="text-sm text-gray-700 mb-4">
+            <p className="text-sm text-on-surface mb-4">
               Buyer: {buyerName(selected)} · ₹{(selected.total_amount || 0).toLocaleString('en-IN')}
             </p>
-            <div className="border border-gray-100 rounded-lg overflow-hidden">
+            <div className="border border-outline-variant/60 rounded-xl overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 text-left text-gray-500">
+                  <tr className="bg-surface text-left text-on-surface-variant">
                     <th className="py-2 px-3">Item</th>
                     <th className="py-2 px-3">Qty (kg)</th>
                     <th className="py-2 px-3">Rate</th>
@@ -211,7 +211,7 @@ const AdminOrders = () => {
                 </thead>
                 <tbody>
                   {(selected.items || []).map((it, i) => (
-                    <tr key={i} className="border-t border-gray-100">
+                    <tr key={i} className="border-t border-outline-variant/60">
                       <td className="py-2 px-3">{it.crop_name}</td>
                       <td className="py-2 px-3">{it.quantity_kg}</td>
                       <td className="py-2 px-3">₹{it.price_per_kg}/kg</td>
@@ -220,18 +220,18 @@ const AdminOrders = () => {
                 </tbody>
               </table>
             </div>
-            <div className="mt-4 space-y-1 text-sm text-gray-700">
-              <p><span className="text-gray-500">Buyer:</span> {buyerName(selected)} <span className="text-gray-400">({selected.buyer?.mobile || '—'})</span></p>
-              <p><span className="text-gray-500">Payment:</span> {selected.payment_status} {selected.payment_method ? `· ${selected.payment_method}` : ''}</p>
-              <p><span className="text-gray-500">Status:</span> {orderStatus(selected).replace('_', ' ')} {selected.logisticsAssignment?.status ? `· Delivery: ${selected.logisticsAssignment.status.replace('_', ' ')}` : ''}</p>
+            <div className="mt-4 space-y-1 text-sm text-on-surface">
+              <p><span className="text-on-surface-variant">Buyer:</span> {buyerName(selected)} <span className="text-on-surface-variant/70">({selected.buyer?.mobile || '—'})</span></p>
+              <p><span className="text-on-surface-variant">Payment:</span> {selected.payment_status} {selected.payment_method ? `· ${selected.payment_method}` : ''}</p>
+              <p><span className="text-on-surface-variant">Status:</span> {orderStatus(selected).replace('_', ' ')} {selected.logisticsAssignment?.status ? `· Delivery: ${selected.logisticsAssignment.status.replace('_', ' ')}` : ''}</p>
               {selected.delivery_address?.district && (
-                <p><span className="text-gray-500">Deliver to:</span> {selected.delivery_address.district}{selected.delivery_address.city ? `, ${selected.delivery_address.city}` : ''}</p>
+                <p><span className="text-on-surface-variant">Deliver to:</span> {selected.delivery_address.district}{selected.delivery_address.city ? `, ${selected.delivery_address.city}` : ''}</p>
               )}
-              <p><span className="text-gray-500">Date:</span> {orderDate(selected)}</p>
+              <p><span className="text-on-surface-variant">Date:</span> {orderDate(selected)}</p>
             </div>
             <button
               onClick={() => setSelected(null)}
-              className="mt-5 w-full py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200"
+              className="mt-5 w-full py-2 bg-surface-container rounded-xl text-sm hover:bg-surface-high"
             >
               Close
             </button>

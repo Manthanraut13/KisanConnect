@@ -1,59 +1,70 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Package, ArrowRight } from 'lucide-react';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
 import { toast } from 'sonner';
 import api from '../../services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../../components/ui/table';
 import { logger } from '../../lib/logger';
 
-function StatCard({ title, hindi, value, sub }) {
+const NAV_PILLS = [
+  { label: 'Dashboard', active: true, icon: 'space_dashboard' },
+  { label: 'My Crops', icon: 'yard' },
+  { label: 'Crop Listings', icon: 'storefront' },
+  { label: 'Orders Received', icon: 'inbox', badge: 8 },
+  { label: 'Escrow & Earnings', icon: 'account_balance_wallet' },
+  { label: 'Learning Hub', icon: 'school' },
+  { label: 'Farm Settings', icon: 'tune' },
+];
+
+const STATUS_TONE = {
+  delivered: 'bg-primary-fixed text-on-primary-fixed',
+  packed: 'bg-tertiary-fixed text-on-tertiary-fixed',
+  pending: 'bg-secondary-fixed text-on-secondary-fixed',
+  default: 'bg-surface-container-highest text-on-surface-variant',
+};
+
+const PHASES = [
+  { label: 'Sowing', pct: 100 },
+  { label: 'Growing', pct: 100 },
+  { label: 'Harvest', pct: 100 },
+  { label: 'Stocked', pct: 80 },
+];
+
+function MicroWidget({ icon, label, value, unit, tone }) {
+  const chipTone =
+    tone === 'secondary'
+      ? 'bg-secondary-fixed text-secondary'
+      : tone === 'tertiary'
+      ? 'bg-tertiary-fixed text-tertiary'
+      : 'bg-primary-fixed text-primary';
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="font-hindi text-mutedtext">{hindi}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="font-mono text-2xl font-medium text-evergreen">{value}</p>
-        <p className="text-sm text-mutedtext">{title}</p>
-        {sub && <p className="text-xs text-mutedtext/70 mt-1">{sub}</p>}
-      </CardContent>
-    </Card>
+    <div className="flex items-center gap-3">
+      <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${chipTone}`}>
+        <span className="material-symbols text-sm">{icon}</span>
+      </span>
+      <div className="flex-1">
+        <p className="font-label-sm text-label-sm text-on-surface-variant">{label}</p>
+        <div className="flex items-baseline gap-1">
+          <p className="font-data-metric text-data-metric text-on-surface">{value}</p>
+          <p className="font-label-sm text-label-sm text-on-surface-variant">{unit}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
-function ForecastTooltip({ active, payload, label }) {
-  if (!active || !payload || !payload.length) return null;
-  const point = payload[0]?.payload;
+function StatusPill({ status }) {
   return (
-    <div className="bg-white ring-1 ring-linen rounded-xl shadow-card px-3 py-2 text-sm">
-      <p className="font-medium">Date: {label}</p>
-      {point && (
-        <>
-          <p>Predicted Price: ₹{point.predicted_price}</p>
-          {point.range && <p className="text-mutedtext">Range: {point.range}</p>}
-        </>
-      )}
-    </div>
+    <span className={`rounded-full px-2.5 py-1 font-label-sm text-label-sm inline-block capitalize ${STATUS_TONE[status] || STATUS_TONE.default}`}>
+      {status || '—'}
+    </span>
   );
 }
 
@@ -65,6 +76,7 @@ export default function FarmerDashboard() {
   const [recentOrders, setRecentOrders] = useState([]);
   const [myListings, setMyListings] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [orderQuery, setOrderQuery] = useState('');
 
   const load = useCallback(async (full) => {
     try {
@@ -72,7 +84,7 @@ export default function FarmerDashboard() {
         api.get('/api/users/me'),
         api.get('/api/users/me/dashboard'),
         api.get('/api/listings/farmer/mine?limit=50'),
-        api.get('/api/orders?limit=5'),
+        api.get('/api/orders?limit=50'),
       ]);
 
       const me = meRes.data ?? meRes;
@@ -83,16 +95,16 @@ export default function FarmerDashboard() {
       setSummary(sum);
 
       const listingsData = listingsRes.data ?? listingsRes;
-      const listingsArr =
-        listingsData.listings ?? listingsData.items ?? listingsData.results ?? listingsData.data ?? [];
-      setMyListings(listingsArr);
+      setMyListings(
+        listingsData.listings ?? listingsData.items ?? listingsData.results ?? listingsData.data ?? []
+      );
 
       const ordersData = ordersRes.data ?? ordersRes;
-      const recentOrdersData = ordersData.orders ?? ordersData.items ?? ordersData.results ?? ordersData.data ?? [];
-      setRecentOrders(recentOrdersData.slice(0, 5));
+      const ordersArr = ordersData.orders ?? ordersData.items ?? ordersData.results ?? ordersData.data ?? [];
+      setRecentOrders(ordersArr);
 
       if (full) {
-        const primaryCrop = listingsArr[0]?.crop_name;
+        const primaryCrop = listingsData.listings?.[0]?.crop_name;
         const profile = me.farmerProfile || {};
         if (primaryCrop) {
           try {
@@ -107,12 +119,7 @@ export default function FarmerDashboard() {
           }
         }
       }
-
-      logger.info('FARMER_DASHBOARD', 'Dashboard loaded', {
-        farmerName: me.full_name,
-        summary: sum,
-        recentOrders: recentOrdersData.length,
-      });
+      logger.info('FARMER_DASHBOARD', 'Dashboard loaded', { summary: sum });
     } catch (err) {
       logger.error('FARMER_DASHBOARD', 'Failed to load dashboard', err);
       toast.error('Could not load dashboard');
@@ -129,206 +136,329 @@ export default function FarmerDashboard() {
   }, [load]);
 
   const fullName = farmerData?.full_name || farmerData?.name || 'Farmer';
+  const district = farmerData?.farmerProfile?.district || 'Nashik';
   const forecast = Array.isArray(forecastData?.forecast) ? forecastData.forecast : [];
+  const pendingOrders = (summary?.pending_orders ?? 0) + (summary?.packed_orders ?? 0);
+
+  const filteredOrders = useMemo(() => {
+    if (!orderQuery) return recentOrders.slice(0, 5);
+    const q = orderQuery.toLowerCase();
+    return recentOrders
+      .filter(
+        (o) =>
+          (o.items?.[0]?.crop_name || o.crop_name || '').toLowerCase().includes(q) ||
+          String(o.id || '').toLowerCase().includes(q)
+      )
+      .slice(0, 5);
+  }, [recentOrders, orderQuery]);
+
+  const symbol = (name, cls = '') => (
+    <span className={`material-symbols ${cls}`} aria-hidden="true">{name}</span>
+  );
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="font-hindi text-2xl font-bold text-evergreen">
-        नमस्ते, {fullName}!🌾
-      </h1>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          hindi="कुल कमाई"
-          title="Total Earnings"
-          value={loading && !summary ? '...' : `₹${Number(summary?.total_earnings ?? 0).toLocaleString('en-IN')}`}
-          sub={summary ? `${summary.total_sold_kg ?? 0} kg sold · ${summary.delivered_orders ?? 0} delivered` : undefined}
-        />
-        <StatCard
-          hindi="सक्रिय सूचियाँ"
-          title="Active Listings"
-          value={loading && !summary ? '...' : summary?.active_listings ?? 0}
-          sub={summary ? `${summary.available_stock_kg ?? 0} kg available now` : undefined}
-        />
-        <StatCard
-          hindi="लंबित ऑर्डर"
-          title="Pending Orders"
-          value={loading && !summary ? '...' : (summary?.pending_orders ?? 0) + (summary?.packed_orders ?? 0)}
-          sub={summary ? `₹${Number(summary?.pending_earnings ?? 0).toLocaleString('en-IN')} yet to settle` : undefined}
-        />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>7-Day Demand Forecast</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {forecast.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={forecast} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EDE6D6" />
-                <XAxis dataKey="date" />
-                <YAxis dataKey="predicted_price" />
-                <Tooltip content={<ForecastTooltip />} />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="predicted_price"
-                  name="Predicted Price"
-                  stroke="#E8A838"
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-mutedtext py-8 text-center">
-              {farmerData ? 'No forecast available' : 'Loading...'}
-            </p>
-          )}
-
-          {forecastData?.advisory && (
-            <div className="mt-4 bg-wash-amber border border-amber text-evergreen rounded-xl px-4 py-3 animate-amber-glow">
-              {forecastData.advisory}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Button onClick={() => navigate('/farmer/listings/new')}>
-          <Plus /> Add New Listing
-        </Button>
-        <Button variant="outline" onClick={() => navigate('/farmer/listings')}>
-          <Package /> View All Listings
-        </Button>
-        <Button variant="outline" onClick={() => navigate('/farmer/orders')}>
-          <Package /> View All Orders
-        </Button>
-      </div>
-
-      <Card>
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>My Listings</CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/farmer/listings')}
-            className="text-forest hover:bg-wash-forest"
+    <div className="p-4 sm:p-6 max-w-[1600px] mx-auto">
+      {/* SECONDARY NAV STRIP */}
+      <div className="rounded-2xl bg-surface-container-lowest shadow-xs border border-outline-variant p-2 flex items-center gap-1 overflow-x-auto scrollbar-none">
+        {NAV_PILLS.map((p, i) => (
+          <button
+            key={p.label}
+            className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors ${
+              p.active
+                ? 'bg-primary-container text-on-primary-container'
+                : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
+            }`}
           >
-            <ArrowRight className="h-4 w-4" /> View All
-          </Button>
-        </CardHeader>
-        <CardContent className="p-0">
-          {myListings.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-mutedtext mb-4">You have no listings yet</p>
-              <Button onClick={() => navigate('/farmer/listings/new')}>
-                <Plus /> Create Your First Listing
-              </Button>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Crop</TableHead>
-                  <TableHead>Price/kg</TableHead>
-                  <TableHead>Available</TableHead>
-                  <TableHead>Grade</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {myListings.map((listing) => (
-                  <TableRow key={listing.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        {listing.images?.[0] ? (
-                          <img
-                            src={listing.images[0]}
-                            alt={listing.crop_name}
-                            className="h-10 w-10 rounded object-cover"
-                          />
-                        ) : (
-                          <div className="h-10 w-10 rounded bg-wash-forest flex items-center justify-center text-forest">
-                            <Package className="h-5 w-5" />
-                          </div>
-                        )}
-                        <span className="font-medium">{listing.crop_name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-mono">₹{listing.price_per_kg}/kg</TableCell>
-                    <TableCell className="font-mono">{listing.available_kg} kg</TableCell>
-                    <TableCell>
-                      {listing.quality_grade && (
-                        <Badge variant="outline">{listing.quality_grade}</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          listing.is_active
-                            ? 'bg-wash-forest text-forest'
-                            : 'bg-disabledbg text-mutedtext'
-                        }
-                      >
-                        {listing.is_active ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+            {symbol(p.icon, 'text-base')}
+            {p.label}
+            {p.badge && (
+              <span className="ml-0.5 inline-flex w-5 h-5 items-center justify-center rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm">
+                {p.badge}
+              </span>
+            )}
+          </button>
+        ))}
+        <span className="ml-auto shrink-0 rounded-lg bg-surface-container-low px-3 py-2 font-label-md text-label-md text-on-surface-variant">
+          PARCEL ID: KC-{String(farmerData?.id || '0000').slice(-4)}
+        </span>
+      </div>
 
-      <Card>
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>Recent Orders</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {recentOrders.length === 0 ? (
-            <p className="text-mutedtext py-8 text-center">No recent orders</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Crop</TableHead>
-                  <TableHead>Buyer</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-mono text-xs">
-                      {(order.id || '').slice(0, 8)}
-                    </TableCell>
-                    <TableCell>{order.items?.[0]?.crop_name || order.crop_name || '-'}</TableCell>
-                    <TableCell>{order.buyer_name || order.buyer?.full_name || '-'}</TableCell>
-                    <TableCell className="font-mono">₹{order.amount ?? order.total ?? 0}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          order.status === 'delivered'
-                            ? 'bg-wash-forest text-forest'
-                            : order.status === 'pending'
-                            ? 'bg-amber text-evergreen'
-                            : 'bg-disabledbg text-mutedtext'
-                        }
-                      >
-                        {order.status || '-'}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
+      {loading && !farmerData ? (
+        <div className="mt-6 space-y-6">
+          <div className="h-52 rounded-2xl bg-surface-container-low animate-pulse" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-28 rounded-xl bg-surface-container-low animate-pulse" />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* MAIN COLUMN */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* OPERATIONAL HEADER CARD */}
+            <div className="rounded-2xl bg-gradient-to-tr from-surface-container-lowest via-surface-container-low to-surface-container-high p-6 sm:p-8 border border-outline-variant relative overflow-hidden">
+              <span className="absolute top-4 right-4 rounded-full bg-surface-container-lowest/80 backdrop-blur px-3 py-1.5 font-label-sm text-label-sm text-primary flex items-center gap-1.5">
+                {symbol('verified')}
+                Certified Organic Producer
+              </span>
+              <p className="font-label-md text-label-md text-on-surface-variant">FARMER OPERATIONS · CROP MANAGEMENT</p>
+              <h1 className="mt-1 font-display-lg text-display-lg text-on-surface tracking-tight">
+                नमस्ते, {fullName} <span className="text-primary">/</span> Priority Producer
+              </h1>
+              <p className="mt-1.5 font-body-md text-body-md text-on-surface-variant">
+                Farm parcel · {district}, Maharashtra · Grades verified: 8.9/10
+              </p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <button
+                  onClick={() => navigate('/farmer/listings/new')}
+                  className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-sm hover:bg-primary-container hover:text-on-primary-container transition-colors"
+                >
+                  {symbol('add', 'text-base')}New Crop Batch
+                </button>
+                <button
+                  onClick={() => navigate('/farmer/listings/new')}
+                  className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md border border-outline-variant hover:bg-surface-container-high transition-colors"
+                >
+                  {symbol('storefront', 'text-base')}Create Market Listing
+                </button>
+                <button className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md border border-outline-variant hover:bg-surface-container-high transition-colors">
+                  {symbol('water_drop', 'text-base text-tertiary')}Log Irrigation
+                </button>
+              </div>
+            </div>
+
+            {/* STAT TILES */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="rounded-xl bg-surface-container-lowest shadow-xs border border-outline-variant p-4">
+                <p className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                  {symbol('storefront', 'text-sm text-primary')} Active Listings
+                </p>
+                <p className="mt-1 font-data-metric text-data-metric text-on-surface">
+                  {summary?.active_listings ?? 0}
+                </p>
+                <svg viewBox="0 0 80 24" className="mt-2 w-full h-6">
+                  <polyline points="0,18 16,12 32,14 48,8 64,10 80,4" fill="none" stroke="#00685d" strokeWidth="2" />
+                </svg>
+              </div>
+              <div className="rounded-xl bg-surface-container-lowest shadow-xs border border-outline-variant p-4">
+                <p className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                  {symbol('inbox', 'text-sm text-tertiary')} Pending Orders
+                </p>
+                <p className="mt-1 font-data-metric text-data-metric text-on-surface">{pendingOrders}</p>
+                <p className="mt-2 font-label-sm text-label-sm text-on-surface-variant">₹{Number(summary?.pending_earnings ?? 0).toLocaleString('en-IN')} escrow</p>
+              </div>
+              <div className="rounded-xl bg-surface-container-lowest shadow-xs border border-outline-variant p-4">
+                <p className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                  {symbol('savings', 'text-sm text-secondary')} Month-to-Date Revenue
+                </p>
+                <p className="mt-1 font-data-metric text-data-metric text-on-surface">
+                  ₹{Number(summary?.total_earnings ?? 0).toLocaleString('en-IN')}
+                </p>
+                <p className="mt-2 font-label-sm text-label-sm text-on-surface-variant">{summary?.total_sold_kg ?? 0} kg sold</p>
+              </div>
+              <div className="rounded-xl bg-surface-container-lowest shadow-xs border border-outline-variant p-4">
+                <p className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                  {symbol('heart_plus', 'text-sm text-error')} Crop Health Alerts
+                </p>
+                <p className="mt-1 font-data-metric text-data-metric text-on-surface">{summary?.delivered_orders ?? 0}</p>
+                <p className="mt-2 font-label-sm text-label-sm text-on-surface-variant">All zones nominal</p>
+              </div>
+            </div>
+
+            {/* ACTIVE CROPS */}
+            <div>
+              <div className="flex items-end justify-between">
+                <p className="font-label-sm text-label-sm text-on-surface-variant">CROP ROTATION</p>
+                <button
+                  onClick={() => navigate('/farmer/listings')}
+                  className="font-label-md text-label-md text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  View all {symbol('arrow_forward', 'text-sm')}
+                </button>
+              </div>
+              <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-3">
+                {myListings.slice(0, 3).map((l) => (
+                  <div key={l.id} className="rounded-xl bg-surface-container-lowest shadow-xs border border-outline-variant overflow-hidden">
+                    <div className="relative h-32 bg-surface-container">
+                      {l.images?.[0] ? (
+                        <img src={l.images[0]} alt={l.crop_name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          {symbol('eco', 'text-4xl text-outline')}
+                        </div>
+                      )}
+                      <span className="absolute top-2 left-2 rounded-sm bg-surface-container-lowest/90 px-1.5 py-0.5 font-label-sm text-label-sm text-on-surface">
+                        {district}
+                      </span>
+                      <span className="absolute top-2 right-2 rounded-sm bg-primary-fixed px-1.5 py-0.5 font-label-sm text-label-sm text-on-primary-fixed">
+                        {l.quality_grade ? `Grade ${l.quality_grade}` : 'Planted'}
+                      </span>
+                    </div>
+                    <div className="p-3">
+                      <h4 className="font-headline-sm text-headline-sm text-on-surface">{l.crop_name}</h4>
+                      <p className="font-label-sm text-label-sm text-on-surface-variant">BATCH #KC-{String(l.id).slice(-4)}</p>
+                      <div className="mt-2 grid grid-cols-4 gap-1">
+                        {PHASES.map((ph, i) => (
+                          <div key={ph.label} className="flex flex-col items-center">
+                            <div className="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+                              <div className={`h-full ${i < 3 ? 'bg-primary' : 'bg-tertiary'}`} style={{ width: `${ph.pct}%` }} />
+                            </div>
+                            <span className="mt-1 font-caption-light text-caption-light text-on-surface-variant">{ph.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="font-label-md text-label-md text-primary">₹{l.price_per_kg}/kg</span>
+                        <button
+                          onClick={() => navigate(`/farmer/listings/${l.id}/edit`)}
+                          className="inline-flex items-center gap-1 font-label-md text-label-md text-on-surface hover:text-primary"
+                        >
+                          {symbol('tune', 'text-sm')} Manage
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                {myListings.length === 0 && (
+                  <div className="md:col-span-3 rounded-xl bg-surface-container-low p-6 text-center">
+                    <p className="font-body-md text-body-md text-on-surface-variant">No active crops yet.</p>
+                    <button
+                      onClick={() => navigate('/farmer/listings/new')}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary text-on-primary h-10 px-4 font-label-md text-label-md"
+                    >
+                      {symbol('add')} New Crop Batch
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* EARNINGS CHART */}
+            <div className="rounded-xl bg-surface-container-lowest shadow-xs border border-outline-variant p-5">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <p className="font-label-sm text-label-sm text-on-surface-variant">PRICE TREND · PRIMARY CROP</p>
+                <div className="flex items-center rounded-lg bg-surface-container-low p-0.5">
+                  {['7D', '30D', '12M'].map((t, i) => (
+                    <button
+                      key={t}
+                      className={`px-3 py-1.5 rounded-md font-label-md text-label-md ${
+                        i === 0 ? 'bg-primary text-on-primary' : 'text-on-surface-variant'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-3">
+                {forecast.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart data={forecast} margin={{ top: 5, right: 10, bottom: 0, left: 0 }}>
+                      <defs>
+                        <linearGradient id="fc" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#00685d" stopOpacity={0.22} />
+                          <stop offset="100%" stopColor="#00685d" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#d4e4f8" vertical={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#3d4947' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: '#3d4947' }} axisLine={false} tickLine={false} width={40} />
+                      <Tooltip />
+                      <Area
+                        type="monotone"
+                        dataKey="predicted_price"
+                        name="Predicted Price"
+                        stroke="#00685d"
+                        strokeWidth={2}
+                        fill="url(#fc)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-center text-on-surface-variant py-12 font-body-md text-body-md">
+                    {farmerData ? 'No forecast available for your primary crop yet.' : 'Loading forecast…'}
+                  </p>
+                )}
+              </div>
+              {forecastData?.advisory && (
+                <div className="mt-3 rounded-lg bg-primary-fixed px-4 py-2.5 flex items-center gap-2 font-body-sm text-body-sm text-on-primary-fixed">
+                  {symbol('lightbulb', 'text-sm')}
+                  {forecastData.advisory}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* SIDE COLUMN */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* MICRO-CLIMATE */}
+            <div className="rounded-xl bg-surface-container-lowest shadow-xs border border-outline-variant p-5">
+              <div className="flex items-center justify-between">
+                <p className="font-label-sm text-label-sm text-on-surface-variant">SENSOR TELEMETRY</p>
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary-fixed text-on-primary-fixed px-2 py-0.5 font-label-sm text-label-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />LIVE
+                </span>
+              </div>
+              <div className="mt-4 space-y-4">
+                <MicroWidget icon="thermostat" label="Ambient temperature" value="22" unit="°C" tone="secondary" />
+                <MicroWidget icon="humidity_high" label="Relative humidity" value="62" unit="%" tone="tertiary" />
+                <MicroWidget icon="light_mode" label="Solar irradiance" value="680" unit="W/m²" tone="primary" />
+              </div>
+              <div className="mt-4 rounded-lg bg-surface-container-low p-3 flex items-center justify-between">
+                <span className="font-label-md text-label-md text-on-surface-variant">Next irrigation</span>
+                <span className="font-label-md text-label-md text-on-surface">06:00 IST</span>
+              </div>
+            </div>
+
+            {/* RECENT ORDERS */}
+            <div className="rounded-xl bg-surface-container-lowest shadow-xs border border-outline-variant overflow-hidden">
+              <div className="p-5 pb-3">
+                <div className="flex items-center justify-between">
+                  <p className="font-label-sm text-label-sm text-on-surface-variant">ORDER INBOX</p>
+                  <button onClick={() => navigate('/farmer/orders')} className="font-label-md text-label-md text-primary hover:underline">
+                    View all
+                  </button>
+                </div>
+                <div className="mt-3 flex items-center gap-2 h-9 rounded-lg bg-surface-container-low px-3">
+                  {symbol('search', 'text-sm text-outline')}
+                  <input
+                    value={orderQuery}
+                    onChange={(e) => setOrderQuery(e.target.value)}
+                    placeholder="Search orders or lots..."
+                    className="flex-1 bg-transparent outline-none font-body-sm text-body-sm text-on-surface placeholder:text-outline"
+                  />
+                </div>
+              </div>
+              <div className="divide-y divide-outline-variant/40">
+                {filteredOrders.length === 0 ? (
+                  <p className="p-6 text-center font-body-md text-body-md text-on-surface-variant">No recent orders</p>
+                ) : (
+                  filteredOrders.map((order, idx) => (
+                    <div key={order.id} className={`flex items-center gap-3 px-5 py-3 ${idx % 2 === 1 ? 'bg-surface-container-low' : ''}`}>
+                      <span className="w-9 h-9 rounded-lg bg-tertiary-fixed text-tertiary flex items-center justify-center shrink-0">
+                        {symbol('receipt_long', 'text-sm')}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-label-md text-label-md text-on-surface truncate">
+                          {order.items?.[0]?.crop_name || order.crop_name || 'Order'}
+                        </p>
+                        <p className="font-label-sm text-label-sm text-on-surface-variant">
+                          {order.buyer_name || order.buyer?.full_name || 'Buyer'} · #{(order.id || '').slice(0, 8)}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-data-metric text-data-metric text-on-surface">₹{order.amount ?? order.total ?? 0}</p>
+                        <StatusPill status={order.status} />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -36,7 +36,7 @@ const Orders = () => {
       delivered: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800',
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'bg-surface-container text-on-surface';
   };
 
   const filteredOrders = filter === 'all'
@@ -45,29 +45,29 @@ const Orders = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-kisan-700 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading your orders...</p>
+          <p className="mt-2 text-on-surface-variant">Loading your orders...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-surface py-8">
       <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">My Orders</h1>
+        <h1 className="text-3xl font-bold text-on-surface mb-6">My Orders</h1>
 
         <div className="flex flex-wrap gap-2 mb-6">
           {['all', 'pending', 'confirmed', 'in_transit', 'delivered', 'cancelled'].map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-lg capitalize text-sm font-medium ${
+              className={`px-4 py-2 rounded-xl capitalize text-sm font-medium ${
                 filter === status
                   ? 'bg-green-700 text-white'
-                  : 'bg-white border border-gray-300 hover:bg-gray-50'
+                  : 'bg-white border border-outline hover:bg-surface'
               }`}
             >
               {status.replace('_', ' ')}
@@ -76,13 +76,13 @@ const Orders = () => {
         </div>
 
         {filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="bg-white rounded-xl shadow-md p-8 text-center">
             <div className="text-6xl mb-4">📦</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">No Orders Found</h2>
-            <p className="text-gray-600">You haven't placed any orders yet.</p>
+            <h2 className="text-2xl font-bold text-on-surface mb-2">No Orders Found</h2>
+            <p className="text-on-surface-variant">You haven't placed any orders yet.</p>
             <button
               onClick={() => navigate('/marketplace')}
-              className="mt-4 bg-kisan-700 text-white px-6 py-2 rounded-lg hover:bg-kisan-800"
+              className="mt-4 bg-kisan-700 text-white px-6 py-2 rounded-xl hover:bg-kisan-800"
             >
               Start Shopping
             </button>
@@ -93,12 +93,12 @@ const Orders = () => {
               <div
                 key={order.id}
                 onClick={() => navigate(`/orders/${order.id}`)}
-                className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg cursor-pointer transition-shadow"
+                className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg cursor-pointer transition-shadow"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <p className="text-sm font-mono text-gray-800">Order #{order.id?.slice(0, 8).toUpperCase()}</p>
-                    <p className="text-sm text-gray-500">{new Date(order.createdAt || order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    <p className="text-sm font-mono text-on-surface">Order #{order.id?.slice(0, 8).toUpperCase()}</p>
+                    <p className="text-sm text-on-surface-variant">{new Date(order.createdAt || order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                     {order.status?.replace('_', ' ') || 'Pending'}
@@ -107,17 +107,17 @@ const Orders = () => {
 
                 <div className="space-y-1 mb-4">
                   {order.items?.slice(0, 3).map((item, idx) => (
-                    <p key={idx} className="text-sm text-gray-700">
+                    <p key={idx} className="text-sm text-on-surface">
                       {item.crop_name || item.listing?.crop_name} × {item.quantity_kg}kg
                     </p>
                   ))}
                   {order.items?.length > 3 && (
-                    <p className="text-sm text-gray-500">+{order.items.length - 3} more items</p>
+                    <p className="text-sm text-on-surface-variant">+{order.items.length - 3} more items</p>
                   )}
                 </div>
 
                 <div className="border-t pt-4 flex justify-between items-center">
-                  <span className="text-gray-600">Total</span>
+                  <span className="text-on-surface-variant">Total</span>
                   <span className="text-xl font-bold text-green-700">₹{order.total_amount || order.totalAmount}</span>
                 </div>
               </div>

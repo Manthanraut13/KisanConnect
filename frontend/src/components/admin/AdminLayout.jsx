@@ -11,7 +11,7 @@ const AdminLayout = ({ children, pageTitle }) => {
   const desktopContentClass = collapsed ? 'lg:ml-16' : 'lg:ml-60';
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-surface">
       <AdminSidebar
         collapsed={collapsed}
         mobileOpen={mobileOpen}
@@ -19,29 +19,29 @@ const AdminLayout = ({ children, pageTitle }) => {
       />
 
       <div className={`flex-1 flex flex-col overflow-hidden ${desktopContentClass}`}>
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center gap-4 px-4 sm:px-6 shrink-0">
+        <header className="h-16 bg-surface-container-lowest border-b border-outline-variant flex items-center gap-4 px-4 sm:px-6 shrink-0">
           <button
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+            className="lg:hidden p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant"
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
           >
-            <Menu className="h-5 w-5 text-gray-700" />
+            <Menu className="h-5 w-5" />
           </button>
           <button
-            className="hidden lg:block p-2 hover:bg-gray-100 rounded-lg"
+            className="hidden lg:block p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant"
             onClick={() => setCollapsed((c) => !c)}
             aria-label="Toggle sidebar"
           >
             {collapsed ? (
-              <PanelLeftOpen className="h-5 w-5 text-gray-700" />
+              <PanelLeftOpen className="h-5 w-5" />
             ) : (
-              <PanelLeftClose className="h-5 w-5 text-gray-700" />
+              <PanelLeftClose className="h-5 w-5" />
             )}
           </button>
-          <h1 className="text-xl font-semibold text-gray-800 flex-1">
+          <h1 className="font-headline-sm text-headline-sm tracking-tight text-on-surface flex-1">
             {pageTitle}
           </h1>
-          <div className="text-sm text-gray-600 whitespace-nowrap">
+          <div className="font-label-md text-label-md text-on-surface-variant whitespace-nowrap">
             {user?.full_name || user?.name || 'Admin'}
           </div>
         </header>

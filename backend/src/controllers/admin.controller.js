@@ -20,18 +20,19 @@ const getStats = async (req, res, next) => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    const [totalUsers, totalFarmers, totalOrders, totalListings, gmvResult, todayOrders, openGrievances, pendingOrders] = await Promise.all([
+    const [totalUsers, totalFarmers, totalOrders, totalListings, gmvResult, todayOrders, todaysRevenue, openGrievances, pendingOrders] = await Promise.all([
       User.count({ where: { is_active: true } }),
       Farmer.count(),
       Order.count(),
       Listing.count({ where: { is_active: true } }),
       Payment.sum('amount', { where: { status: 'captured' } }),
       Order.count({ where: { createdAt: { [Op.gte]: todayStart } } }),
+      Payment.sum('amount', { where: { status: 'captured', createdAt: { [Op.gte]: todayStart } } }),
       Grievance.count({ where: { status: { [Op.in]: ['open', 'in_progress'] } } }),
       Order.count({ where: { status: 'pending' } }),
     ]);
 
-    const stats = { totalUsers, totalFarmers, totalOrders, totalListings, gmv: gmvResult || 0, todayOrders, openGrievances, pendingOrders };
+    const stats = { totalUsers, totalFarmers, totalOrders, totalListings, gmv: gmvResult || 0, todayOrders, todaysRevenue: todaysRevenue || 0, openGrievances, pendingOrders };
     await redis.set('admin:stats', JSON.stringify(stats), { ex: 60 });
 
     return res.json({ success: true, message: 'Stats fetched', data: stats });

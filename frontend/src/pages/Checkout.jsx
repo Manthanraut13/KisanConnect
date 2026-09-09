@@ -238,7 +238,7 @@ const Checkout = () => {
           name: formData.full_name,
           contact: formData.mobile,
         },
-        theme: { color: '#2D7A2D' },
+        theme: { color: '#00685d' },
         modal: {
           ondismiss: () => {
             setPaymentLoading(false);
@@ -260,33 +260,33 @@ const Checkout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-surface py-8">
       <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Checkout</h1>
+        <h1 className="text-3xl font-bold text-on-surface mb-6">Checkout</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <form onSubmit={handlePayment} className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <form onSubmit={handlePayment} className="bg-white rounded-xl shadow-md p-6 mb-6">
               <h2 className="text-xl font-bold mb-4">Delivery Details</h2>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-700 mb-1">Full Name *</label>
-                    <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" />
+                    <label className="block text-on-surface mb-1">Full Name *</label>
+                    <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} required className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface-lowest focus:ring-2 focus:ring-primary outline-none" />
                   </div>
                   <div>
-                    <label className="block text-gray-700 mb-1">Mobile *</label>
-                    <input type="text" name="mobile" value={formData.mobile} onChange={handleChange} required maxLength={10} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" />
+                    <label className="block text-on-surface mb-1">Mobile *</label>
+                    <input type="text" name="mobile" value={formData.mobile} onChange={handleChange} required maxLength={10} className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface-lowest focus:ring-2 focus:ring-primary outline-none" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-gray-700 mb-1">Full Address *</label>
-                  <textarea name="full_address" value={formData.full_address} onChange={handleChange} required minLength={10} rows={3} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" placeholder="House no, street, landmark..." />
+                  <label className="block text-on-surface mb-1">Full Address *</label>
+                  <textarea name="full_address" value={formData.full_address} onChange={handleChange} required minLength={10} rows={3} className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface-lowest focus:ring-2 focus:ring-primary outline-none" placeholder="House no, street, landmark..." />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-700 mb-1">District *</label>
-                    <input list="india-districts" type="text" name="district" value={formData.district} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" placeholder="Start typing your district" />
+                    <label className="block text-on-surface mb-1">District *</label>
+                    <input list="india-districts" type="text" name="district" value={formData.district} onChange={handleChange} required className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface-lowest focus:ring-2 focus:ring-primary outline-none" placeholder="Start typing your district" />
                     <datalist id="india-districts">
                       {Object.keys(INDIA_DISTRICTS).map((d) => (
                         <option key={d} value={d} />
@@ -294,8 +294,8 @@ const Checkout = () => {
                     </datalist>
                   </div>
                   <div>
-                    <label className="block text-gray-700 mb-1">State *</label>
-                    <input list="india-states" type="text" name="state" value={formData.state} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" placeholder="Auto-filled or type" />
+                    <label className="block text-on-surface mb-1">State *</label>
+                    <input list="india-states" type="text" name="state" value={formData.state} onChange={handleChange} required className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface-lowest focus:ring-2 focus:ring-primary outline-none" placeholder="Auto-filled or type" />
                     <datalist id="india-states">
                       {stateOptions.map((s) => (
                         <option key={s} value={s} />
@@ -305,25 +305,25 @@ const Checkout = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-700 mb-1">PIN Code *</label>
-                    <input type="text" name="pin_code" value={formData.pin_code} onChange={handleChange} required maxLength={6} pattern="\d{6}" className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" />
+                    <label className="block text-on-surface mb-1">PIN Code *</label>
+                    <input type="text" name="pin_code" value={formData.pin_code} onChange={handleChange} required maxLength={6} pattern="\d{6}" className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface-lowest focus:ring-2 focus:ring-primary outline-none" />
                   </div>
                   <div>
-                    <label className="block text-gray-700 mb-1">Delivery Date</label>
-                    <input type="date" name="delivery_slot" value={formData.delivery_slot} onChange={handleChange} min={minDate} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" />
-                    <p className="text-xs text-gray-400 mt-1">Optional — leave blank for ASAP delivery</p>
+                    <label className="block text-on-surface mb-1">Delivery Date</label>
+                    <input type="date" name="delivery_slot" value={formData.delivery_slot} onChange={handleChange} min={minDate} className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface-lowest focus:ring-2 focus:ring-primary outline-none" />
+                    <p className="text-xs text-on-surface-variant/70 mt-1">Optional — leave blank for ASAP delivery</p>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-gray-700 mb-1">Order Notes (optional)</label>
-                  <textarea name="notes" value={formData.notes} onChange={handleChange} rows={2} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-600" />
+                  <label className="block text-on-surface mb-1">Order Notes (optional)</label>
+                  <textarea name="notes" value={formData.notes} onChange={handleChange} rows={2} className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface-lowest focus:ring-2 focus:ring-primary outline-none" />
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={paymentLoading || items.length === 0}
-                className="w-full mt-6 bg-green-700 text-white py-3 rounded-lg hover:bg-green-800 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+                className="w-full mt-6 bg-primary text-on-primary py-3 rounded-xl hover:bg-primary-container disabled:bg-on-surface-variant/60 disabled:cursor-not-allowed font-medium"
               >
                 {paymentLoading ? 'Processing Payment...' : `Pay ₹${totalAmount.toFixed(2)}`}
               </button>
@@ -331,7 +331,7 @@ const Checkout = () => {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
+            <div className="bg-white rounded-xl shadow-md p-6 sticky top-4">
               <h2 className="text-xl font-bold mb-4">Order Summary</h2>
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
                 {items.map((item) => (
@@ -343,11 +343,11 @@ const Checkout = () => {
               </div>
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
+                  <span className="text-on-surface-variant">Subtotal</span>
                   <span>₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Delivery</span>
+                  <span className="text-on-surface-variant">Delivery</span>
                   <span>₹{deliveryCharge.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg pt-2">
@@ -355,8 +355,8 @@ const Checkout = () => {
                   <span>₹{totalAmount.toFixed(2)}</span>
                 </div>
               </div>
-              <p className="text-xs text-gray-400 mt-3">0% GST on fresh produce</p>
-              <Link to="/cart" className="block w-full mt-4 border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 text-center text-sm">
+              <p className="text-xs text-on-surface-variant/70 mt-3">0% GST on fresh produce</p>
+              <Link to="/cart" className="block w-full mt-4 border border-outline text-on-surface py-2 rounded-xl hover:bg-surface text-center text-sm">
                 Edit Cart
               </Link>
             </div>

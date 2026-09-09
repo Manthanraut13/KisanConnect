@@ -50,10 +50,10 @@ const OrderDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-kisan-700 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading order details...</p>
+          <p className="mt-2 text-on-surface-variant">Loading order details...</p>
         </div>
       </div>
     );
@@ -61,9 +61,9 @@ const OrderDetail = () => {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800">Order not found</h2>
+          <h2 className="text-2xl font-bold text-on-surface">Order not found</h2>
           <Link to="/orders" className="text-kisan-700 mt-4 block">Back to Orders</Link>
         </div>
       </div>
@@ -73,10 +73,10 @@ const OrderDetail = () => {
   const statusSteps = getStatusSteps();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-surface py-8">
       <div className="max-w-4xl mx-auto px-4">
         <div className="flex items-center gap-4 mb-6">
-          <Link to="/orders" className="text-gray-600 hover:text-gray-800">
+          <Link to="/orders" className="text-on-surface-variant hover:text-on-surface">
             ← Back to Orders
           </Link>
           <h1 className="text-2xl font-bold">Order #{order.id?.slice(0, 8).toUpperCase()}</h1>
@@ -85,26 +85,26 @@ const OrderDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* Status Timeline */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-xl font-bold mb-4">Order Status</h2>
               <div className="relative">
-                <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-gray-200"></div>
+                <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-surface-high"></div>
                 {statusSteps.map((step, idx) => (
                   <div key={step.id} className="relative pl-12 pb-6 last:pb-0">
                     <div className={`absolute left-0 top-0 w-8 h-8 rounded-full flex items-center justify-center border-4 ${
                       step.completed
-                        ? 'bg-green-700 border-green-700 text-white'
+                        ? 'bg-primary border-primary text-white'
                         : step.current
-                          ? 'bg-white border-green-500 text-green-500 animate-pulse'
-                          : 'bg-gray-100 border-gray-200 text-gray-400'
+                          ? 'bg-white border-primary text-primary animate-pulse'
+                          : 'bg-surface-container border-outline-variant/80 text-on-surface-variant/70'
                     }`}>
                       {step.completed ? '✓' : idx + 1}
                     </div>
                     <div className="flex flex-col">
-                      <span className={`font-medium ${step.current ? 'text-green-700' : step.completed ? 'text-green-700' : 'text-gray-800'}`}>
+                      <span className={`font-medium ${step.current ? 'text-primary' : step.completed ? 'text-primary' : 'text-on-surface'}`}>
                         {step.label}
                       </span>
-                      <span className="text-sm text-gray-500">{step.desc}</span>
+                      <span className="text-sm text-on-surface-variant">{step.desc}</span>
                     </div>
                   </div>
                 ))}
@@ -112,20 +112,20 @@ const OrderDetail = () => {
             </div>
 
             {/* Order Items */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-xl font-bold mb-4">Items Ordered</h2>
               <div className="space-y-4">
                 {order.items?.map((item, idx) => (
-                  <div key={idx} className="flex gap-4 py-3 border-b border-gray-100 last:border-0">
-                    <div className="w-16 h-16 bg-gray-100 rounded-md flex-shrink-0 overflow-hidden">
+                  <div key={idx} className="flex gap-4 py-3 border-b border-outline-variant/60 last:border-0">
+                    <div className="w-16 h-16 bg-surface-container rounded-xl flex-shrink-0 overflow-hidden">
                       {item.images?.[0] && <img src={item.images[0]} alt="" className="w-full h-full object-cover" />}
                     </div>
                     <div className="flex-1">
                       <h3 className="font-medium">{item.crop_name || item.listing?.crop_name}</h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-on-surface-variant">
                         ₹{item.price_per_kg || 0} × {item.quantity_kg}kg = ₹{item.total_price || (item.price_per_kg * item.quantity_kg)}
                       </p>
-                      <p className="text-sm text-gray-500">by {item.farmer_name || 'Farmer'}</p>
+                      <p className="text-sm text-on-surface-variant">by {item.farmer_name || 'Farmer'}</p>
                     </div>
                   </div>
                 ))}
@@ -133,60 +133,60 @@ const OrderDetail = () => {
             </div>
 
             {/* Delivery Address */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-xl font-bold mb-4">Delivery Address</h2>
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-surface p-4 rounded-xl">
                 <p className="font-medium">{order.delivery_address?.full_name || order.user?.full_name}</p>
-                <p className="text-gray-600">{order.delivery_address?.full_address}</p>
-                <p className="text-gray-600">
+                <p className="text-on-surface-variant">{order.delivery_address?.full_address}</p>
+                <p className="text-on-surface-variant">
                   {order.delivery_address?.district}, {order.delivery_address?.state} - {order.delivery_address?.pin_code}
                 </p>
-                <p className="text-gray-600">Mobile: {order.delivery_address?.mobile || order.user?.mobile}</p>
+                <p className="text-on-surface-variant">Mobile: {order.delivery_address?.mobile || order.user?.mobile}</p>
               </div>
             </div>
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
+            <div className="bg-white rounded-xl shadow-md p-6 sticky top-4">
               <h2 className="text-xl font-bold mb-4">Order Summary</h2>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Order ID</span>
+                  <span className="text-on-surface-variant">Order ID</span>
                   <span className="font-mono">#{order.id?.slice(0, 8).toUpperCase()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Date</span>
+                  <span className="text-on-surface-variant">Date</span>
                   <span>{new Date(order.createdAt || order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Status</span>
+                  <span className="text-on-surface-variant">Status</span>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                    order.status === 'delivered' ? 'bg-primary-container/25 text-primary' :
                     order.status === 'in_transit' ? 'bg-orange-100 text-orange-800' :
                     order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
+                    'bg-surface-container text-on-surface'
                   }`}>
                     {order.status?.replace('_', ' ') || 'Pending'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Payment</span>
-                  <span className="text-green-600 font-medium">Paid via Razorpay</span>
+                  <span className="text-on-surface-variant">Payment</span>
+                  <span className="text-primary font-medium">Paid via Razorpay</span>
                 </div>
               </div>
 
               <div className="border-t pt-4 mt-4 space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
+                  <span className="text-on-surface-variant">Subtotal</span>
                   <span>₹{order.subtotal || 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Delivery</span>
+                  <span className="text-on-surface-variant">Delivery</span>
                   <span>{order.delivery_charge === 0 ? 'Free' : `₹${order.delivery_charge}`}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg pt-2">
                   <span>Total</span>
-                  <span className="text-green-700">₹{order.total_amount || order.totalAmount}</span>
+                  <span className="text-primary">₹{order.total_amount || order.totalAmount}</span>
                 </div>
               </div>
 
@@ -195,7 +195,7 @@ const OrderDetail = () => {
                   href={order.invoice_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full mt-4 bg-kisan-700 text-white py-2 rounded-lg hover:bg-kisan-800 text-center text-sm"
+                  className="block w-full mt-4 bg-kisan-700 text-white py-2 rounded-xl hover:bg-kisan-800 text-center text-sm"
                 >
                   Download Invoice
                 </a>

@@ -58,7 +58,7 @@ const ActiveDelivery = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="h-10 w-10 border-4 border-kisan-700 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -66,8 +66,8 @@ const ActiveDelivery = () => {
 
   if (!assignment) {
     return (
-      <div className="min-h-screen bg-gray-50 max-w-lg mx-auto p-4">
-        <p className="text-gray-600">Assignment not found.</p>
+      <div className="min-h-screen bg-surface max-w-lg mx-auto p-4">
+        <p className="text-on-surface-variant">Assignment not found.</p>
         <button onClick={() => navigate('/driver')} className="mt-4 text-kisan-700">
           ← Back
         </button>
@@ -80,7 +80,7 @@ const ActiveDelivery = () => {
   const items = assignment.order?.items || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 max-w-lg mx-auto p-4 pb-8">
+    <div className="min-h-screen bg-surface max-w-lg mx-auto p-4 pb-8">
       <button
         onClick={() => navigate('/driver')}
         className="flex items-center gap-1 text-kisan-700 text-base mb-4"
@@ -92,17 +92,17 @@ const ActiveDelivery = () => {
         <h2 className="text-xl font-bold mb-3">{dl.full_name}</h2>
         <a
           href={`tel:${dl.mobile}`}
-          className="block w-full min-h-12 bg-kisan-700 text-white text-base rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-kisan-800"
+          className="block w-full min-h-12 bg-kisan-700 text-white text-base rounded-xl flex items-center justify-center gap-2 mb-3 hover:bg-kisan-800"
         >
           <Phone className="h-5 w-5" /> Call Customer
         </a>
-        <p className="flex items-start gap-2 text-gray-700 text-base mb-3">
-          <MapPin className="h-5 w-5 text-gray-400 shrink-0 mt-1" />
+        <p className="flex items-start gap-2 text-on-surface text-base mb-3">
+          <MapPin className="h-5 w-5 text-on-surface-variant/70 shrink-0 mt-1" />
           {dl.full_address}, {dl.district}, {dl.state} - {dl.pin_code}
         </p>
-        <div className="border-t border-gray-100 pt-3">
+        <div className="border-t border-outline-variant/60 pt-3">
           <p className="font-semibold mb-2">Items</p>
-          <ul className="space-y-1 text-gray-700">
+          <ul className="space-y-1 text-on-surface">
             {items.map((it, i) => (
               <li key={i} className="flex justify-between">
                 <span>{it.crop_name}</span>
@@ -130,7 +130,7 @@ const ActiveDelivery = () => {
             </Marker>
           </MapContainer>
         ) : (
-          <div className="h-48 bg-gray-100 flex items-center justify-center text-gray-400">
+          <div className="h-48 bg-surface-container flex items-center justify-center text-on-surface-variant/70">
             Map not available
           </div>
         )}
@@ -139,21 +139,21 @@ const ActiveDelivery = () => {
       {assignment.status === 'in_transit' && (
         <section className="bg-white rounded-xl shadow-sm p-4">
           <h3 className="text-lg font-semibold mb-1">Confirm Delivery</h3>
-          <p className="text-gray-600 text-base mb-4">
+          <p className="text-on-surface-variant text-base mb-4">
             Take a photo of the delivered package as proof.
           </p>
 
-          <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg py-6 cursor-pointer mb-4">
+          <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-outline rounded-xl py-6 cursor-pointer mb-4">
             {proofFile ? (
               <img
                 src={URL.createObjectURL(proofFile)}
                 alt="Proof preview"
-                className="h-40 w-full object-cover rounded-lg"
+                className="h-40 w-full object-cover rounded-xl"
               />
             ) : (
               <>
-                <Camera className="h-8 w-8 text-gray-400" />
-                <span className="text-gray-500 text-base">{`Take / choose photo`}</span>
+                <Camera className="h-8 w-8 text-on-surface-variant/70" />
+                <span className="text-on-surface-variant text-base">{`Take / choose photo`}</span>
               </>
             )}
             <input
@@ -168,7 +168,7 @@ const ActiveDelivery = () => {
           <button
             onClick={handleConfirm}
             disabled={uploading}
-            className="w-full min-h-14 bg-kisan-700 text-white text-lg rounded-lg hover:bg-kisan-800 disabled:opacity-60"
+            className="w-full min-h-14 bg-kisan-700 text-white text-lg rounded-xl hover:bg-kisan-800 disabled:opacity-60"
           >
             {uploading ? 'Uploading...' : 'Confirm Delivery'}
           </button>

@@ -87,8 +87,8 @@ JWT_REFRESH_SECRET=<paste different 32+ char random string here>
 ```env
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.xxxxxxxxxxxx.supabase.co:5432/postgres
 SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ey...
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ey...
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_KEY=your_supabase_service_key
 ```
 
 ---
@@ -118,7 +118,7 @@ SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ey...
 **What to copy:**
 ```env
 UPSTASH_REDIS_REST_URL=https://xxxxxxx.upstash.io
-UPSTASH_REDIS_REST_TOKEN=AXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_rest_token
 REDIS_URL=rediss://default:xxxxxxxxxxxxx@xxxxxx.upstash.io:6379
 ```
 
@@ -141,8 +141,8 @@ REDIS_URL=rediss://default:xxxxxxxxxxxxx@xxxxxx.upstash.io:6379
 **What to copy:**
 ```env
 CLOUDINARY_CLOUD_NAME=dxxxxxxxxxxxx
-CLOUDINARY_API_KEY=123456789012345
-CLOUDINARY_API_SECRET=aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 ```
 
 **Free Tier Limits:** 25 credits/month (enough for 25GB bandwidth + 25GB storage)
@@ -180,9 +180,9 @@ CLOUDINARY_API_SECRET=aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890
 
 **What to copy:**
 ```env
-RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
-RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
-RAZORPAY_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxxxxxx
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
 ```
 
 ---
@@ -220,9 +220,9 @@ RAZORPAY_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxxxxxx
 
 **What to copy:**
 ```env
-MSG91_AUTH_KEY=123456AaBbCcDdEeFfGgHhIi123456
-MSG91_TEMPLATE_ID=1234567890abcdef12345678
-MSG91_SENDER_ID=MSGIND
+MSG91_AUTH_KEY=your_msg91_auth_key
+MSG91_TEMPLATE_ID=your_msg91_template_id
+MSG91_SENDER_ID=your_sender_id
 ```
 
 **Free Tier:** 10 SMS/day (enough for testing)
@@ -250,7 +250,7 @@ MSG91_SENDER_ID=MSGIND
 **What to copy:**
 ```env
 GMAIL_USER=your-email@gmail.com
-GMAIL_APP_PASSWORD=abcdabcdabcdabcd
+GMAIL_APP_PASSWORD=your_gmail_app_password
 ```
 
 **Note:** Remove spaces from the app password when pasting.
@@ -294,7 +294,7 @@ GMAIL_APP_PASSWORD=abcdabcdabcdabcd
 **What to copy:**
 ```env
 FIREBASE_PROJECT_ID=kisan-connect-xxxxx
-FIREBASE_SERVER_KEY=AAAAxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_SERVER_KEY=your_firebase_server_key
 FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@kisan-connect-xxxxx.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBg...\n-----END PRIVATE KEY-----\n"
 ```
@@ -319,7 +319,7 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBg...\n-----END P
 
 **What to copy:**
 ```env
-GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GROQ_API_KEY=your_groq_api_key
 ```
 
 **Free Tier:** 14,400 requests/day (enough for prototype)
@@ -357,7 +357,7 @@ GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 **What to copy:**
 ```env
-GOOGLE_MAPS_API_KEY=AIzaSyXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
 **Free Tier:** $200 credit/month (enough for 28,000+ map loads)
@@ -380,7 +380,7 @@ GOOGLE_MAPS_API_KEY=AIzaSyXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 **What to copy:**
 ```env
-ORS_API_KEY=5b3ce3597851110001cf6248xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ORS_API_KEY=your_ors_api_key
 ```
 
 **Free Tier:** 2000 requests/day, 40 requests/minute
@@ -425,46 +425,46 @@ JWT_REFRESH_EXPIRES_IN=30d
 # ===== DATABASE (Supabase PostgreSQL) =====
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.xxxxxxxxxxxx.supabase.co:5432/postgres
 SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_KEY=your_supabase_service_key
 
 # ===== REDIS (Upstash) =====
 UPSTASH_REDIS_REST_URL=https://xxxxxxx.upstash.io
-UPSTASH_REDIS_REST_TOKEN=AXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_rest_token
 REDIS_URL=rediss://default:xxxxxxxxxxxxx@xxxxxx.upstash.io:6379
 
 # ===== CLOUDINARY =====
 CLOUDINARY_CLOUD_NAME=dxxxxxxxxxxxx
-CLOUDINARY_API_KEY=123456789012345
-CLOUDINARY_API_SECRET=aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
 # ===== PAYMENT (Razorpay) =====
-RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
-RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
-RAZORPAY_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxxxxxx
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
 
 # ===== SMS (MSG91) =====
-MSG91_AUTH_KEY=123456AaBbCcDdEeFfGgHhIi123456
-MSG91_TEMPLATE_ID=1234567890abcdef12345678
-MSG91_SENDER_ID=MSGIND
+MSG91_AUTH_KEY=your_msg91_auth_key
+MSG91_TEMPLATE_ID=your_msg91_template_id
+MSG91_SENDER_ID=your_sender_id
 
 # ===== EMAIL (Gmail SMTP) =====
 GMAIL_USER=your-email@gmail.com
-GMAIL_APP_PASSWORD=abcdabcdabcdabcd
+GMAIL_APP_PASSWORD=your_gmail_app_password
 
 # ===== FIREBASE (Push Notifications) =====
 FIREBASE_PROJECT_ID=kisan-connect-xxxxx
-FIREBASE_SERVER_KEY=AAAAxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_SERVER_KEY=your_firebase_server_key
 FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@kisan-connect-xxxxx.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBg...\n-----END PRIVATE KEY-----\n"
 
 # ===== GOOGLE APIS (Optional) =====
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-GOOGLE_MAPS_API_KEY=AIzaSyXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 
 # ===== AI SERVICES =====
-GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GROQ_API_KEY=your_groq_api_key
 GEMINI_API_KEY=
 AI_SERVICE_URL=http://localhost:8000
 
@@ -477,7 +477,7 @@ AGMARKNET_API_KEY=
 ENAM_API_KEY=
 
 # ===== OPEN ROUTING =====
-ORS_API_KEY=5b3ce3597851110001cf6248xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ORS_API_KEY=your_ors_api_key
 
 # ===== ANTIGRAVITY =====
 ANTIGRAVITY_WEBHOOK_SECRET=<your generated 32+ char string>

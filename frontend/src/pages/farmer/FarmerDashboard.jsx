@@ -104,8 +104,17 @@ export default function FarmerDashboard() {
 
   const fullName = farmerData?.full_name || farmerData?.name || 'Farmer';
   const district = farmerData?.farmerProfile?.district || 'Nashik';
+  const farmerId = farmerData?.farmerProfile?.id;
   const forecast = Array.isArray(forecastData?.forecast) ? forecastData.forecast : [];
   const pendingOrders = (summary?.pending_orders ?? 0) + (summary?.packed_orders ?? 0);
+
+  // Calculate farmer's earnings from an order (sum of farmer_payout for this farmer's items)
+  const getFarmerEarnings = (order) => {
+    if (!farmerId || !order.items) return 0;
+    return order.items
+      .filter((item) => item.farmer_id === farmerId)
+      .reduce((sum, item) => sum + (Number(item.farmer_payout) || 0), 0);
+  };
 
   const filteredOrders = useMemo(() => {
     if (!orderQuery) return recentOrders.slice(0, 5);
@@ -371,7 +380,7 @@ export default function FarmerDashboard() {
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="font-data-metric text-data-metric text-on-surface">₹{order.amount ?? order.total ?? 0}</p>
+                        <p className="font-data-metric text-data-metric text-on-surface">₹{getFarmerEarnings(order).toLocaleString('en-IN')}</p>
                         <StatusPill status={order.status} />
                       </div>
                     </div>

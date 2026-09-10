@@ -37,14 +37,6 @@ const ORDER_TONES = {
   default: 'bg-surface-container-highest text-on-surface-variant',
 };
 
-const SERVICES = [
-  { name: 'Auth Gateway', status: 'Operational', tone: 'bg-primary', uptime: 99.99 },
-  { name: 'Listing & Grading API', status: 'Operational', tone: 'bg-primary', uptime: 99.97 },
-  { name: 'Order & Escrow Engine', status: 'Operational', tone: 'bg-primary', uptime: 99.95 },
-  { name: 'Logistics / Telematics', status: 'Operational', tone: 'bg-primary', uptime: 99.9 },
-  { name: 'AI Demand Forecast', status: 'Degraded', tone: 'bg-error', uptime: 87.3 },
-];
-
 const AdminDashboard = () => {
   const [stats, setStats] = useState(emptyStats);
   const [recentGrievances, setRecentGrievances] = useState([]);
@@ -381,30 +373,27 @@ const AdminDashboard = () => {
             </div>
             <div className="lg:col-span-5 rounded-xl bg-surface-container-lowest shadow-xs border border-outline-variant">
               <div className="p-5 pb-3 flex items-center justify-between">
-                <p className="font-label-sm text-label-sm text-on-surface-variant">MICROSERVICES &amp; NODE HEALTH</p>
-                <span className="rounded-full bg-primary-fixed text-on-primary-fixed px-2 py-0.5 font-label-sm text-label-sm">4/5 UP</span>
+                <p className="font-label-sm text-label-sm text-on-surface-variant">GRIEVANCE SLA TRACKER</p>
+                <span className="rounded-full bg-primary-fixed text-on-primary-fixed px-2 py-0.5 font-label-sm text-label-sm">{recentGrievances.length} OPEN</span>
               </div>
               <div className="divide-y divide-outline-variant/40">
-                {SERVICES.map((s) => (
-                  <div key={s.name} className="flex items-center gap-3 px-5 py-3">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: 'currentColor' }} />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-label-md text-label-md text-on-surface truncate">{s.name}</p>
-                      <div className="mt-1.5 h-1 rounded-full bg-surface-container-highest overflow-hidden max-w-[200px]">
-                        <div className={`h-full ${s.tone}`} style={{ width: `${s.uptime}%` }} />
+                {recentGrievances.length > 0 ? (
+                  recentGrievances.map((g) => (
+                    <div key={g.id} className="flex items-center gap-3 px-5 py-3">
+                      <span className="w-9 h-9 rounded-lg bg-error-container text-on-error-container flex items-center justify-center">
+                        {symbol('gavel', 'text-sm')}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-label-md text-label-md text-on-surface truncate">{g.title || 'Grievance'}</p>
+                        <p className="font-label-sm text-label-sm text-on-surface-variant">{g.farmer_name || g.user?.full_name || 'User'} · {g.created_at ? new Date(g.created_at).toLocaleDateString() : 'Recent'}</p>
                       </div>
+                      <span className={`rounded-full px-2 py-0.5 font-label-sm text-label-sm ${g.status === 'open' ? 'bg-error-container text-on-error-container' : 'bg-primary-fixed text-on-primary-fixed'}`}>
+                        {g.status || 'open'}
+                      </span>
                     </div>
-                    <span className={`rounded-full px-2 py-0.5 font-label-sm text-label-sm ${s.status === 'Operational' ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-error-container text-on-error-container'}`}>
-                      {s.status}
-                    </span>
-                  </div>
-                ))}
-                {recentGrievances.length > 0 && (
-                  <div className="px-5 py-3 bg-surface-container-low">
-                    <p className="font-label-sm text-label-sm text-on-surface-variant">
-                      {symbol('support_agent', 'text-sm')} {recentGrievances.length} grievances in SLA queue
-                    </p>
-                  </div>
+                  ))
+                ) : (
+                  <p className="p-6 text-center font-body-md text-body-md text-on-surface-variant">No grievances in SLA queue</p>
                 )}
               </div>
             </div>

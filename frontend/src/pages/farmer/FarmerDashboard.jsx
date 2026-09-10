@@ -13,16 +13,6 @@ import { toast } from 'sonner';
 import api from '../../services/api';
 import { logger } from '../../lib/logger';
 
-const NAV_PILLS = [
-  { label: 'Dashboard', active: true, icon: 'space_dashboard' },
-  { label: 'My Crops', icon: 'yard' },
-  { label: 'Crop Listings', icon: 'storefront' },
-  { label: 'Orders Received', icon: 'inbox', badge: 8 },
-  { label: 'Escrow & Earnings', icon: 'account_balance_wallet' },
-  { label: 'Learning Hub', icon: 'school' },
-  { label: 'Farm Settings', icon: 'tune' },
-];
-
 const STATUS_TONE = {
   delivered: 'bg-primary-fixed text-on-primary-fixed',
   packed: 'bg-tertiary-fixed text-on-tertiary-fixed',
@@ -36,29 +26,6 @@ const PHASES = [
   { label: 'Harvest', pct: 100 },
   { label: 'Stocked', pct: 80 },
 ];
-
-function MicroWidget({ icon, label, value, unit, tone }) {
-  const chipTone =
-    tone === 'secondary'
-      ? 'bg-secondary-fixed text-secondary'
-      : tone === 'tertiary'
-      ? 'bg-tertiary-fixed text-tertiary'
-      : 'bg-primary-fixed text-primary';
-  return (
-    <div className="flex items-center gap-3">
-      <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${chipTone}`}>
-        <span className="material-symbols text-sm">{icon}</span>
-      </span>
-      <div className="flex-1">
-        <p className="font-label-sm text-label-sm text-on-surface-variant">{label}</p>
-        <div className="flex items-baseline gap-1">
-          <p className="font-data-metric text-data-metric text-on-surface">{value}</p>
-          <p className="font-label-sm text-label-sm text-on-surface-variant">{unit}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function StatusPill({ status }) {
   return (
@@ -137,8 +104,17 @@ export default function FarmerDashboard() {
 
   const fullName = farmerData?.full_name || farmerData?.name || 'Farmer';
   const district = farmerData?.farmerProfile?.district || 'Nashik';
+  const farmerId = farmerData?.farmerProfile?.id;
   const forecast = Array.isArray(forecastData?.forecast) ? forecastData.forecast : [];
   const pendingOrders = (summary?.pending_orders ?? 0) + (summary?.packed_orders ?? 0);
+
+  // Calculate farmer's earnings from an order (sum of farmer_payout for this farmer's items)
+  const getFarmerEarnings = (order) => {
+    if (!farmerId || !order.items) return 0;
+    return order.items
+      .filter((item) => item.farmer_id === farmerId)
+      .reduce((sum, item) => sum + (Number(item.farmer_payout) || 0), 0);
+  };
 
   const filteredOrders = useMemo(() => {
     if (!orderQuery) return recentOrders.slice(0, 5);
@@ -158,31 +134,6 @@ export default function FarmerDashboard() {
 
   return (
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto">
-      {/* SECONDARY NAV STRIP */}
-      <div className="rounded-2xl bg-surface-container-lowest shadow-xs border border-outline-variant p-2 flex items-center gap-1 overflow-x-auto scrollbar-none">
-        {NAV_PILLS.map((p, i) => (
-          <button
-            key={p.label}
-            className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors ${
-              p.active
-                ? 'bg-primary-container text-on-primary-container'
-                : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
-            }`}
-          >
-            {symbol(p.icon, 'text-base')}
-            {p.label}
-            {p.badge && (
-              <span className="ml-0.5 inline-flex w-5 h-5 items-center justify-center rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm">
-                {p.badge}
-              </span>
-            )}
-          </button>
-        ))}
-        <span className="ml-auto shrink-0 rounded-lg bg-surface-container-low px-3 py-2 font-label-md text-label-md text-on-surface-variant">
-          PARCEL ID: KC-{String(farmerData?.id || '0000').slice(-4)}
-        </span>
-      </div>
-
       {loading && !farmerData ? (
         <div className="mt-6 space-y-6">
           <div className="h-52 rounded-2xl bg-surface-container-low animate-pulse" />
@@ -392,25 +343,6 @@ export default function FarmerDashboard() {
 
           {/* SIDE COLUMN */}
           <div className="lg:col-span-4 space-y-6">
-            {/* MICRO-CLIMATE */}
-            <div className="rounded-xl bg-surface-container-lowest shadow-xs border border-outline-variant p-5">
-              <div className="flex items-center justify-between">
-                <p className="font-label-sm text-label-sm text-on-surface-variant">SENSOR TELEMETRY</p>
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary-fixed text-on-primary-fixed px-2 py-0.5 font-label-sm text-label-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />LIVE
-                </span>
-              </div>
-              <div className="mt-4 space-y-4">
-                <MicroWidget icon="thermostat" label="Ambient temperature" value="22" unit="°C" tone="secondary" />
-                <MicroWidget icon="humidity_high" label="Relative humidity" value="62" unit="%" tone="tertiary" />
-                <MicroWidget icon="light_mode" label="Solar irradiance" value="680" unit="W/m²" tone="primary" />
-              </div>
-              <div className="mt-4 rounded-lg bg-surface-container-low p-3 flex items-center justify-between">
-                <span className="font-label-md text-label-md text-on-surface-variant">Next irrigation</span>
-                <span className="font-label-md text-label-md text-on-surface">06:00 IST</span>
-              </div>
-            </div>
-
             {/* RECENT ORDERS */}
             <div className="rounded-xl bg-surface-container-lowest shadow-xs border border-outline-variant overflow-hidden">
               <div className="p-5 pb-3">
@@ -448,7 +380,7 @@ export default function FarmerDashboard() {
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="font-data-metric text-data-metric text-on-surface">₹{order.amount ?? order.total ?? 0}</p>
+                        <p className="font-data-metric text-data-metric text-on-surface">₹{getFarmerEarnings(order).toLocaleString('en-IN')}</p>
                         <StatusPill status={order.status} />
                       </div>
                     </div>

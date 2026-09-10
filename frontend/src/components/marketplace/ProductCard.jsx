@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import cartService from '../../services/cart.service';
+import { useCartStore } from '../../stores/cartStore';
 import { logger } from '../../lib/logger';
 
 export default function ProductCard({ listing }) {
   const navigate = useNavigate();
+  const setCart = useCartStore((s) => s.setCart);
   const [added, setAdded] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -32,7 +34,10 @@ export default function ProductCard({ listing }) {
     if (busy) return;
     setBusy(true);
     try {
-      await cartService.addItem(id, 1);
+      const res = await cartService.addItem(id, 1);
+      const data = res.data?.data ?? res.data;
+      const items = Array.isArray(data) ? data : data?.items ?? [];
+      setCart(items);
       logger.info('CART', 'Item added', { id });
       setAdded(true);
       setTimeout(() => setAdded(false), 1600);

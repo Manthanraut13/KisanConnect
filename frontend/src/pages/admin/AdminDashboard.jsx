@@ -115,7 +115,7 @@ const AdminDashboard = () => {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="font-label-sm text-label-sm text-on-surface-variant">
-            Root Access > Executive Governance > Platform Operations
+            Root Access &gt; Executive Governance &gt; Platform Operations
           </p>
           <h1 className="mt-1 font-display-lg text-display-lg text-on-surface tracking-tight">Executive Platform Oversight</h1>
         </div>

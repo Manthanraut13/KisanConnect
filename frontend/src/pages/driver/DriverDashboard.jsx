@@ -118,7 +118,7 @@ const DriverDashboard = () => {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="font-label-sm text-label-sm text-on-surface-variant">
-            Logistics > Dispatch Command > Sector {summary.district || 'Nashik'}
+            Logistics &gt; Dispatch Command &gt; Sector {summary.district || 'Nashik'}
           </p>
           <h1 className="mt-1 font-display-lg text-display-lg text-on-surface tracking-tight">Active Fleet & Dispatch</h1>
         </div>
@@ -177,11 +177,10 @@ const DriverDashboard = () => {
           <div className="mt-3 flex gap-2">
             <button
               onClick={() => setRouteFilter('All')}
-              className={`rounded-full px-3 py-1 font-label-sm text-label-sm ${
-                routeFilter === 'All'
+              className={`rounded-full px-3 py-1 font-label-sm text-label-sm ${routeFilter === 'All'
                   ? 'bg-primary text-on-primary'
                   : 'bg-surface-container-low text-on-surface-variant'
-              }`}
+                }`}
             >
               All
             </button>
@@ -189,11 +188,10 @@ const DriverDashboard = () => {
               <button
                 key={t}
                 onClick={() => setRouteFilter(t)}
-                className={`rounded-full px-3 py-1 font-label-sm text-label-sm ${
-                  routeFilter === t
+                className={`rounded-full px-3 py-1 font-label-sm text-label-sm ${routeFilter === t
                     ? 'bg-primary text-on-primary'
                     : 'bg-surface-container-low text-on-surface-variant'
-                }`}
+                  }`}
               >
                 {t}
               </button>

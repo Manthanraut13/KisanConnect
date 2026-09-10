@@ -2,10 +2,11 @@ const rateLimit = require('express-rate-limit');
 
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: process.env.NODE_ENV === 'development' ? 1000 : 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later' },
+  skip: (req) => process.env.NODE_ENV === 'development' && req.path.startsWith('/api/users/me') && (req.path.includes('/dashboard') || req.path.includes('/profile')),
 });
 
 // Disable auth rate limiting in development

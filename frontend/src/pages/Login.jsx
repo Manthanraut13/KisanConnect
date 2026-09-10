@@ -16,10 +16,6 @@ const ROLE_CONFIGS = {
     ctaBg: 'bg-primary',
     ctaHover: 'hover:bg-primary-container',
     ctaText: 'Sign in as Farmer',
-    inputLabel: 'Farm Registration ID',
-    inputHint: 'USDA/FSA Standard',
-    inputIcon: 'badge',
-    inputPlaceholder: 'e.g. FSA-8829-01TX',
     registerText: 'Register as Farmer',
     linkColor: 'text-primary',
     tabActiveClasses: 'bg-surface-container-lowest text-primary shadow-sm',
@@ -33,10 +29,6 @@ const ROLE_CONFIGS = {
     ctaBg: 'bg-secondary',
     ctaHover: 'hover:bg-on-secondary-container',
     ctaText: 'Sign in as Consumer',
-    inputLabel: 'Phone Number or Buyer ID',
-    inputHint: 'E.164 Format or BID',
-    inputIcon: 'contact_phone',
-    inputPlaceholder: '+1 (555) 019-2831',
     registerText: 'Register as Consumer',
     linkColor: 'text-secondary',
     tabActiveClasses: 'bg-surface-container-lowest text-secondary shadow-sm',
@@ -50,10 +42,6 @@ const ROLE_CONFIGS = {
     ctaBg: 'bg-tertiary',
     ctaHover: 'hover:bg-tertiary-container',
     ctaText: 'Sign in as Logistics Operator',
-    inputLabel: 'Carrier DOT / Operator License No',
-    inputHint: 'USDOT or MC/FF Num',
-    inputIcon: 'commute',
-    inputPlaceholder: 'DOT #3928102-X',
     registerText: 'Register as Carrier Fleet',
     linkColor: 'text-tertiary',
     tabActiveClasses: 'bg-surface-container-lowest text-tertiary shadow-sm',
@@ -67,10 +55,6 @@ const ROLE_CONFIGS = {
     ctaBg: 'bg-inverse-surface',
     ctaHover: 'hover:bg-on-surface',
     ctaText: 'Sign in as Admin',
-    inputLabel: 'Hardware MFA / Admin Access Token',
-    inputHint: 'FIPS 140-2 Key',
-    inputIcon: 'key',
-    inputPlaceholder: 'SEC-KEY-9941-XXXX',
     registerText: 'Request System Credentials',
     linkColor: 'text-on-surface',
     tabActiveClasses: 'bg-surface-container-lowest text-on-surface shadow-sm',
@@ -80,7 +64,6 @@ const ROLE_CONFIGS = {
 const Login = () => {
   const [role, setRole] = useState('farmer');
   const [email, setEmail] = useState('');
-  const [roleId, setRoleId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -93,7 +76,6 @@ const Login = () => {
 
   const selectRole = (r) => {
     setRole(r);
-    setRoleId('');
     setError('');
   };
 
@@ -108,10 +90,9 @@ const Login = () => {
     setCtaLabel('Verifying Credentials...');
 
     try {
-      const isMobile = /^[6-9]\d{9}$/.test(email.replace(/[\s-]/g, ''));
-      const payload = isMobile ? { mobile: email.replace(/[\s-]/g, ''), password } : { email, password };
+      const payload = { email, password };
       const result = await api.post('/api/auth/login', payload);
-      logger.form.submit('Login', { role, isMobile });
+      logger.form.submit('Login', { role });
 
       setCtaLabel('Authorized - Redirecting...');
       setUser(result.data.data.user, result.data.data.access_token);
@@ -159,34 +140,19 @@ const Login = () => {
           </div>
           {/* Form Elements */}
           <form className="space-y-4" onSubmit={handleSubmit}>
-            {/* Identity Field (email or mobile) */}
+            {/* Identity Field (email only) */}
             <div>
-              <label className="block font-label-md text-label-md text-on-surface-variant mb-1.5">Enterprise Email</label>
+              <label className="block font-label-md text-label-md text-on-surface-variant mb-1.5">Email Address</label>
               <div className="relative">
                 <span className="material-symbols absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg">mail</span>
                 <input
                   className="w-full h-11 pl-10 pr-4 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:bg-surface-bright focus:shadow-md transition-all"
-                  placeholder="name@agri-coop.org"
+                  placeholder="name@example.com"
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="username"
-                />
-              </div>
-            </div>
-            {/* Role-Specific Identifier Field (Dynamic) */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="font-label-md text-label-md text-on-surface-variant">{config.inputLabel}</label>
-                <span className="font-caption-light text-caption-light text-outline">{config.inputHint}</span>
-              </div>
-              <div className="relative">
-                <span className="material-symbols absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg">{config.inputIcon}</span>
-                <input
-                  className="w-full h-11 pl-10 pr-4 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:bg-surface-bright focus:shadow-md transition-all"
-                  placeholder={config.inputPlaceholder}
-                  value={roleId}
-                  onChange={(e) => setRoleId(e.target.value)}
                 />
               </div>
             </div>

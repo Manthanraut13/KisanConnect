@@ -18,7 +18,7 @@ def test_live_routes():
         assert res.status_code == 200
 
         # 3. Batch Forecast
-        res = client.post('/ai/forecast/batch')
+        res = client.post('/ai/forecast/batch', headers={"X-Internal-Secret": "kisan_connect_internal_2026"})
         print(f"[3/7] Batch Forecast status: {res.status_code} -> Processed: {res.get_json()['data']['processed']} combinations")
         assert res.status_code == 200
 

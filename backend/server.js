@@ -15,17 +15,20 @@ const start = async () => {
       await sequelize.sync({ alter: true });
       logger.info('Models synced');
     }
+  } catch (err) {
+    logger.warn(`Database connection warning: ${err.message}. Server starting...`);
+  }
 
+  try {
     // Initialize scheduled cron jobs
     initJobs();
-
-    app.listen(PORT, () => {
-      logger.info(`Server running on port ${PORT}`);
-    });
   } catch (err) {
-    logger.error(`Startup failed: ${err.message}`);
-    process.exit(1);
+    logger.warn(`Cron init warning: ${err.message}`);
   }
+
+  app.listen(PORT, () => {
+    logger.info(`Server running on port ${PORT}`);
+  });
 };
 
 start();

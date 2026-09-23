@@ -19,25 +19,35 @@ class VoiceEngine:
     def __init__(self):
         self.sarvam_key = os.getenv('SARVAM_API_KEY')
 
-    def process_stt(self, audio_data, language: str = 'hi') -> str:
-        """Speech-to-Text conversion using Sarvam AI with fallback to client-side STT."""
+    def process_stt(self, audio_input, language: str = 'hi') -> str:
+        """
+        Speech-to-Text conversion using Sarvam AI saaras:v1.
+        Accepts raw audio bytes or base64-encoded string.
+        """
         if not self.sarvam_key or self.sarvam_key.startswith('your_'):
-            logger.info("Sarvam API key unconfigured. Using Web Speech API client-side STT.")
+            logger.info("Sarvam API key unconfigured. Using client transcript fallback.")
             return None
 
         try:
+            if isinstance(audio_input, str):
+                if ',' in audio_input:
+                    audio_input = audio_input.split(',')[1]
+                audio_bytes = base64.b64decode(audio_input)
+            else:
+                audio_bytes = audio_input
+
             url = "https://api.sarvam.ai/speech-to-text"
             headers = {"api-subscription-key": self.sarvam_key}
-            files = {"file": ("audio.wav", audio_data, "audio/wav")}
+            files = {"file": ("audio.wav", audio_bytes, "audio/wav")}
             data = {"language_code": self._map_lang_code(language), "model": "saaras:v1"}
 
-            resp = requests.post(url, headers=headers, files=files, data=data, timeout=5)
+            resp = requests.post(url, headers=headers, files=files, data=data, timeout=8)
             if resp.status_code == 200:
                 transcript = resp.json().get("transcript", "").strip()
                 if transcript:
                     return transcript
         except Exception as e:
-            logger.error(f"Sarvam STT failed or quota exhausted: {e}. Falling back to client-side STT.")
+            logger.error(f"Sarvam STT failed: {e}. Falling back to client-side transcript.")
 
         return None
 
@@ -64,8 +74,11 @@ class VoiceEngine:
                 if resp.status_code == 200:
                     audios = resp.json().get("audios", [])
                     if audios and audios[0]:
+                        audio_val = audios[0]
+                        if not audio_val.startswith("data:audio"):
+                            audio_val = f"data:audio/wav;base64,{audio_val}"
                         logger.info("Generated TTS audio via Sarvam AI.")
-                        return audios[0], "sarvam"
+                        return audio_val, "sarvam"
             except Exception as e:
                 logger.warning(f"Sarvam TTS failed or quota exhausted: {e}. Triggering Tier 2 gTTS fallback.")
 

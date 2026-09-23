@@ -488,7 +488,7 @@ Run tests: `pytest tests/ -v`
 ### Environment Variables for Railway
 
 ```
-GROQ_API_KEY=gsk_xxxx
+GROQ_API_KEY=your_groq_api_key
 GEMINI_API_KEY=AIza_xxxx
 BACKEND_URL=https://kisan-connect-api.onrender.com
 FRONTEND_URL=https://kisan-connect.vercel.app

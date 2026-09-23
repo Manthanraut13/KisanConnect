@@ -875,7 +875,7 @@ CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
 # ===== PAYMENT (Razorpay) =====
-RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
+RAZORPAY_KEY_ID=your_razorpay_key_id
 RAZORPAY_KEY_SECRET=your_razorpay_secret
 RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
 
@@ -900,7 +900,7 @@ GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
 GOOGLE_MAPS_API_KEY=AIzaXXXXXXXXXXXXXXXXXXXXXXXX
 
 # ===== AI SERVICES =====
-GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GROQ_API_KEY=your_groq_api_key
 GEMINI_API_KEY=AIzaXXXXXXXXXXXXXXXXXXXXXXXX
 
 # ===== BHASHINI =====
